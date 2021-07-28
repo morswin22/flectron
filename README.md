@@ -1,0 +1,2 @@
+# mindless
+Done without concern
