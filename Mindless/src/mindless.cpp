@@ -1,5 +1,5 @@
 #include <iostream>
-#include <MindlessEngine/vector.hpp>
+#include <MindlessEngine/MindlessEngine.hpp>
 
 using namespace MindlessEngine;
 
@@ -12,6 +12,9 @@ int main(void)
   Vector c = a + b;
 
   std::cout << c << "\n";
+
+  Window window(640, 480, "Mindless Test");
+  window.mainloop();
 
   return 0;
 }

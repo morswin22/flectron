@@ -2,7 +2,10 @@ project(MindlessEngine)
 
 set(MindlessEngineSource
   src/vector.cpp
+  src/window.cpp
   include/MindlessEngine/vector.hpp
+  include/MindlessEngine/window.hpp
+  include/MindlessEngine/MindlessEngine.hpp
 )
 
 add_library(MindlessEngine STATIC ${MindlessEngineSource})
