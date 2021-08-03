@@ -11,4 +11,12 @@ namespace MindlessEngine
 
   Transform::Transform(Vector position, float angle) : Transform(position.x, position.y, angle) {}
 
+  Vector transform(const Vector& v, const Transform& transform)
+  {
+    return { 
+      transform.cos * v.x - transform.sin * v.y + transform.x, 
+      transform.sin * v.x + transform.cos * v.y + transform.y
+    };
+  }
+
 };

@@ -6,6 +6,11 @@
 namespace MindlessEngine 
 {
 
+  enum WindingOrder 
+  { 
+    Invalid, Clockwise, CounterClockwise 
+  };
+
   enum BodyType
   {
     Circle, Box
@@ -66,5 +71,16 @@ namespace MindlessEngine
   Vector* createCircleVertices(float radius);
 
   int* trianglesFromVertices(Vector* vertices, int numVertices);
+  int getIndex(int index, int length);
+
+  bool isPointInTriangle(const Vector& point, const Vector& a, const Vector& b, const Vector& c);
+  WindingOrder getWindingOrder(Vector* vertices, int numVertices);
+  int orientation(const Vector& p, const Vector& q, const Vector& r);
+
+  bool containsColinearEdges(Vector* vertices, int numVertices);
+  
+  bool isSimplePolygon(Vector* vertices, int numVertices);
+  bool intersectLines(const Vector& a, const Vector& b, const Vector& c, const Vector& d);
+  bool isOnLineSegment(const Vector& p, const Vector& q, const Vector& r);
 
 };

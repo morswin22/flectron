@@ -17,4 +17,6 @@ namespace MindlessEngine
     Transform(Vector position, float angle);
   };
 
+  Vector transform(const Vector& v, const Transform& transform);
+
 };
