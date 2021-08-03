@@ -1,0 +1,20 @@
+project(MindlessEngine)
+
+set(MindlessEngineSource
+  src/vector.cpp
+  include/MindlessEngine/vector.hpp
+)
+
+add_library(MindlessEngine STATIC ${MindlessEngineSource})
+
+target_include_directories(MindlessEngine 
+  PUBLIC include
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/glew/include  
+)
+
+target_link_libraries(MindlessEngine 
+  glfw
+  libglew_static
+  glm
+)
