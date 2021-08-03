@@ -2,8 +2,10 @@ project(MindlessEngine)
 
 set(MindlessEngineSource
   src/vector.cpp
+  src/math.cpp
   src/window.cpp
   include/MindlessEngine/vector.hpp
+  include/MindlessEngine/math.hpp
   include/MindlessEngine/window.hpp
   include/MindlessEngine/MindlessEngine.hpp
 )

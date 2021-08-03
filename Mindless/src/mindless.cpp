@@ -11,7 +11,7 @@ int main(void)
 
   Vector c = a + b;
 
-  std::cout << c << "\n";
+  std::cout << normalize(c) << "\n";
 
   Window window(640, 480, "Mindless Test");
   window.mainloop();
