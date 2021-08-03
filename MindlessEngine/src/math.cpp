@@ -1,10 +1,27 @@
 #include <MindlessEngine/math.hpp>
-#include <MindlessEngine/vector.hpp>
 
 #include <math.h>
+#include <exception>
 
 namespace MindlessEngine 
 {
+
+  float clamp(float value, float min, float max)
+  {
+    if (min == max)
+      return min;
+
+    if (min > max)
+      throw std::invalid_argument("Min must be less than max");
+
+    if (value < min)
+      return min;
+
+    if (value > max)
+      return max;
+
+    return value;
+  } 
 
   float length(const Vector& v)
   {

@@ -3,7 +3,7 @@
 namespace MindlessEngine
 {
   
-  Window::Window(int width, int height, const std::string& title) : width(width), height(height), title(title)
+  Window::Window(int width, int height, const std::string& title) : window(nullptr), width(width), height(height), title(title)
   {
     if (!glfwInit())
       return;

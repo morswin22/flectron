@@ -18,8 +18,11 @@ namespace MindlessEngine
   public:
     int width;
     int height;
+
+  private:
     std::string title;
 
+  public:
     Window(int width, int height, const std::string& title);
     ~Window();
 

@@ -1,11 +1,19 @@
 project(MindlessEngine)
 
 set(MindlessEngineSource
+  src/random.cpp
   src/vector.cpp
   src/math.cpp
+  src/body.cpp
+  src/transform.cpp
+  src/world.cpp
   src/window.cpp
+  include/MindlessEngine/random.hpp
   include/MindlessEngine/vector.hpp
   include/MindlessEngine/math.hpp
+  include/MindlessEngine/body.hpp
+  include/MindlessEngine/transform.hpp
+  include/MindlessEngine/world.hpp
   include/MindlessEngine/window.hpp
   include/MindlessEngine/MindlessEngine.hpp
 )

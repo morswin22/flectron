@@ -1,9 +1,11 @@
 #pragma once
 
+#include <MindlessEngine/vector.hpp>
+
 namespace MindlessEngine 
 {
 
-  class Vector;
+  float clamp(float value, float min, float max);
 
   float length(const Vector& v);
   float lengthSquared(const Vector& v);
