@@ -5,12 +5,13 @@
 
 #include <math.h>
 #include <exception>
+#include <iostream>
 
 namespace MindlessEngine 
 {
 
   Body::Body(const Vector& position, float density, float mass, float resitution, float area, bool isStatic, BodyType bodyType, float radius, float width, float height)
-    : position(position), linearVelocity(), rotation(0.0f), rotationalVelocity(0.0f), density(density), mass(mass), resitution(resitution), area(area), isStatic(isStatic), numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true), bodyType(bodyType), radius(radius), width(width), height(height)
+    : position(position), linearVelocity(), rotation(0.0f), rotationalVelocity(0.0f), density(density), mass(mass), resitution(resitution), area(area), isStatic(isStatic), numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true), vertexLayout(), vertexArray(nullptr), vertexBuffer(nullptr), indexBuffer(nullptr), bodyType(bodyType), radius(radius), width(width), height(height)
   {
     if (bodyType == BodyType::Box)
     {
@@ -22,7 +23,14 @@ namespace MindlessEngine
       numVertices = World::numCircleVerticies;
       vertices = createCircleVertices(radius);
     }
+    transformedVertices = new Vector[numVertices];
+
+    int numTriangles = numVertices - 2;
     triangles = trianglesFromVertices(vertices, numVertices);
+    indexBuffer = new IndexBuffer(triangles, numTriangles * 3);
+
+    vertexLayout.pushFloat(2);
+    vertexArray = new VertexArray();
   }
 
   Body::~Body()
@@ -30,6 +38,69 @@ namespace MindlessEngine
     delete[] vertices;
     delete[] triangles;
     delete[] transformedVertices;
+    delete vertexArray;
+    if (vertexBuffer != nullptr)
+      delete vertexBuffer;
+    delete indexBuffer;
+  }
+
+  Body::Body(Body&& other)
+    : position(other.position), linearVelocity(other.linearVelocity), rotation(other.rotation), rotationalVelocity(other.rotationalVelocity), 
+      density(other.density), mass(other.mass), resitution(other.resitution), area(other.area), isStatic(other.isStatic), 
+      numVertices(other.numVertices), vertices(other.vertices), triangles(other.triangles), transformedVertices(other.transformedVertices), isTransformUpdateRequired(other.isTransformUpdateRequired), 
+      vertexLayout(other.vertexLayout), vertexArray(other.vertexArray), vertexBuffer(other.vertexBuffer), indexBuffer(other.indexBuffer), 
+      bodyType(other.bodyType), radius(other.radius), width(other.width), height(other.height)
+  {
+    other.vertices = nullptr;
+    other.triangles = nullptr;
+    other.transformedVertices = nullptr;
+    other.vertexArray = nullptr;
+    other.vertexBuffer = nullptr;
+    other.indexBuffer = nullptr;
+  }
+
+  Body& Body::operator=(Body&& other)
+  {
+    if (this != &other)
+    {
+      delete[] vertices;
+      delete[] triangles;
+      delete[] transformedVertices;
+      delete vertexArray;
+      delete indexBuffer;
+
+      position = other.position;
+      linearVelocity = other.linearVelocity;
+      rotation = other.rotation;
+      rotationalVelocity = other.rotationalVelocity;
+      density = other.density;
+      mass = other.mass;
+      resitution = other.resitution;
+      area = other.area;
+      isStatic = other.isStatic;
+      numVertices = other.numVertices;
+      vertices = other.vertices;
+      triangles = other.triangles;
+      transformedVertices = other.transformedVertices;
+      isTransformUpdateRequired = other.isTransformUpdateRequired;
+      vertexLayout = other.vertexLayout;
+      vertexArray = other.vertexArray;
+      vertexBuffer = other.vertexBuffer;
+      indexBuffer = other.indexBuffer;
+      bodyType = other.bodyType;
+      radius = other.radius;
+      width = other.width;
+      height = other.height;
+
+      other.vertices = nullptr;
+      other.triangles = nullptr;
+      other.transformedVertices = nullptr;
+      other.vertexArray = nullptr;
+      other.vertexBuffer = nullptr;
+      other.indexBuffer = nullptr;
+    }
+
+    return *this;
   }
 
   int Body::getNumVertices() const
@@ -43,18 +114,45 @@ namespace MindlessEngine
     {
       Transform tf(position, rotation);
 
+      float* unpackedVertices = new float[numVertices * 2];
       for (int i = 0; i < numVertices; i++)
       {
         transformedVertices[i] = transform(vertices[i], tf);
+        unpackedVertices[i * 2]     = transformedVertices[i].x;
+        unpackedVertices[i * 2 + 1] = transformedVertices[i].y;
       }
+
+      delete vertexArray;
+      vertexArray = new VertexArray();
+
+      if (vertexBuffer != nullptr)
+        delete vertexBuffer;
+      
+      vertexBuffer = new VertexBuffer(unpackedVertices, numVertices * 2 * sizeof(float));
+      vertexArray->addBuffer(*vertexBuffer, vertexLayout);
+
+      delete[] unpackedVertices;
+
+      isTransformUpdateRequired = false;
     }
 
     return transformedVertices;
   }
 
-  int* Body::getTriangles() const
+  unsigned int* Body::getTriangles() const
   {
     return triangles;
+  }
+
+  VertexArray* Body::getVertexArray()
+  {
+    getTransformedVertices();
+    return vertexArray;
+  }
+
+  IndexBuffer* Body::getIndexBuffer() const
+  {
+    return indexBuffer;
   }
 
   void Body::rotate(float amount)
@@ -114,7 +212,7 @@ namespace MindlessEngine
     float left = -width / 2.0f;
     float right = left + width;
     float top = height / 2.0f;
-    float bottom = height - top;
+    float bottom = -top;
 
     return new Vector[4]{
       { left, top },
@@ -127,29 +225,29 @@ namespace MindlessEngine
   Vector* createCircleVertices(float radius)
   {
     Vector* vertices = new Vector[World::numCircleVerticies];
+    float step = 2.0f * (float)M_PI / (float)World::numCircleVerticies;
     for (int i = 0; i < World::numCircleVerticies; i++)
     {
-      float x = radius * cos(i * (float)M_PI / 180.0f);
-      float y = radius * sin(i * (float)M_PI / 180.0f);
-      vertices[i] = { x, y };
+      vertices[i].x = radius * cos(i * step);
+      vertices[i].y = radius * sin(i * step);
     }
     return vertices;
   }
 
-  int* trianglesFromVertices(Vector* vertices, int numVertices)
+  unsigned int* trianglesFromVertices(Vector* vertices, int numVertices)
   {
     if (numVertices < 3)
-      return nullptr;
+      throw std::invalid_argument("Too few vertices");
 
     if (!isSimplePolygon(vertices, numVertices))
-      return nullptr;
+      throw std::invalid_argument("Not a simple polygon");
     
     if (containsColinearEdges(vertices, numVertices))
-      return nullptr;
+      throw std::invalid_argument("Polygon contains colinear edges");
 
     WindingOrder order = getWindingOrder(vertices, numVertices);
     if (order == WindingOrder::Invalid)
-      return nullptr;
+      throw std::invalid_argument("Invalid winding order");
     
     if (order == WindingOrder::CounterClockwise)
     {
@@ -161,20 +259,20 @@ namespace MindlessEngine
       }
     }
 
-    std::vector<int> indexList;
-    for (int i = 0; i < numVertices; i++)
+    std::vector<unsigned int> indexList;
+    for (unsigned int i = 0; i < numVertices; i++)
       indexList.push_back(i);
 
-    int* triangles = new int[(numVertices - 2) * 3];
+    unsigned int* triangles = new unsigned int[(numVertices - 2) * 3];
     int index = 0;
 
     while (indexList.size() > 3)
     {
       for (int i = 0; i < indexList.size(); i++)
       {
-        int a = indexList[i];
-        int b = indexList[getIndex(i - 1, indexList.size())];
-        int c = indexList[getIndex(i + 1, indexList.size())];
+        unsigned int a = indexList[i];
+        unsigned int b = indexList[getIndex(i - 1, indexList.size())];
+        unsigned int c = indexList[getIndex(i + 1, indexList.size())];
 
         Vector va = vertices[a];
         Vector vb = vertices[b];

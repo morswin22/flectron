@@ -1,6 +1,7 @@
 #pragma once
 
 #include <MindlessEngine/vector.hpp>
+#include <MindlessEngine/renderer.hpp>
 #include <vector>
 
 namespace MindlessEngine 
@@ -36,14 +37,22 @@ namespace MindlessEngine
   private:
     int numVertices;
     Vector* vertices;
-    int* triangles;
+    unsigned int* triangles;
     Vector* transformedVertices;
     bool isTransformUpdateRequired;
+
+    VertexBufferLayout vertexLayout;
+    VertexArray* vertexArray;
+    VertexBuffer* vertexBuffer;
+    IndexBuffer* indexBuffer;
 
   public:
     int getNumVertices() const;
     Vector* getTransformedVertices();
-    int* getTriangles() const;
+    unsigned int* getTriangles() const;
+
+    VertexArray* getVertexArray();
+    IndexBuffer* getIndexBuffer() const;
 
     BodyType bodyType;
 
@@ -58,6 +67,12 @@ namespace MindlessEngine
   public:
     ~Body();
 
+    Body(const Body& body) = delete;
+    Body& operator=(const Body& body) = delete;
+
+    Body(Body&& body);
+    Body& operator=(Body&& body);
+
     void rotate(float amount);
 
     friend Body createCircleBody(float radius, const Vector& position, float density, float resitution, bool isStatic);
@@ -70,7 +85,7 @@ namespace MindlessEngine
   Vector* createBoxVertices(float width, float height);
   Vector* createCircleVertices(float radius);
 
-  int* trianglesFromVertices(Vector* vertices, int numVertices);
+  unsigned int* trianglesFromVertices(Vector* vertices, int numVertices);
   int getIndex(int index, int length);
 
   bool isPointInTriangle(const Vector& point, const Vector& a, const Vector& b, const Vector& c);
