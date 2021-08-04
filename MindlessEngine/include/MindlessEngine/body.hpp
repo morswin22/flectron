@@ -19,8 +19,10 @@ namespace MindlessEngine
 
   class Body 
   {
-  private:
+  public:
     Vector position;
+
+  private:
     Vector linearVelocity;
 
     float rotation;
@@ -67,13 +69,18 @@ namespace MindlessEngine
   public:
     ~Body();
 
-    Body(const Body& body) = delete;
+    Body(const Body& body);
     Body& operator=(const Body& body) = delete;
 
     Body(Body&& body);
     Body& operator=(Body&& body);
 
+    void update(float deltaTime);
+
     void rotate(float amount);
+    
+    void move(const Vector& amount);
+    void moveTo(const Vector& position);
 
     friend Body createCircleBody(float radius, const Vector& position, float density, float resitution, bool isStatic);
     friend Body createBoxBody(float width, float height, const Vector& position, float density, float resitution, bool isStatic);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <MindlessEngine/window.hpp>
+#include <MindlessEngine/world.hpp>
 
 namespace MindlessEngine
 {
@@ -10,6 +11,7 @@ namespace MindlessEngine
   protected:
     Window window;
     Vector mousePosition;
+    World world;
 
   public:
     Game();

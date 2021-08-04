@@ -1,5 +1,6 @@
 #include <MindlessEngine/window.hpp>
 
+#include <MindlessEngine/input.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace MindlessEngine
@@ -44,6 +45,9 @@ namespace MindlessEngine
 
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(GLMessageCallback, 0);
+
+    glfwSetKeyCallback(window, keyboardCallback);
+    glfwSetMouseButtonCallback(window, mouseCallback);
   }
 
   Window::~Window()

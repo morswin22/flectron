@@ -5,19 +5,25 @@ configure_file(include/MindlessEngine/shaders/basic.frag shaders/basic.frag COPY
 
 set(MindlessEngineSource
   src/random.cpp
+  src/color.cpp
+  src/input.cpp
   src/vector.cpp
   src/math.cpp
   src/body.cpp
   src/transform.cpp
+  src/collisions.cpp
   src/renderer.cpp
   src/world.cpp
   src/window.cpp
   src/game.cpp
   include/MindlessEngine/random.hpp
+  include/MindlessEngine/color.hpp
+  include/MindlessEngine/input.hpp
   include/MindlessEngine/vector.hpp
   include/MindlessEngine/math.hpp
   include/MindlessEngine/body.hpp
   include/MindlessEngine/transform.hpp
+  include/MindlessEngine/collisions.hpp
   include/MindlessEngine/renderer.hpp
   include/MindlessEngine/world.hpp
   include/MindlessEngine/window.hpp

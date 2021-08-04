@@ -44,6 +44,23 @@ namespace MindlessEngine
     delete indexBuffer;
   }
 
+  Body::Body(const Body& other)
+    : Body(other.position, other.density, other.mass, other.resitution, other.area, other.isStatic, other.bodyType, other.radius, other.width, other.height)
+  {
+    numVertices = other.numVertices;
+    vertices = new Vector[numVertices];
+    for (int i = 0; i < numVertices; i++)
+      vertices[i] = other.vertices[i];
+    transformedVertices = new Vector[numVertices];
+
+    int numTriangles = numVertices - 2;
+    triangles = trianglesFromVertices(vertices, numVertices);
+    indexBuffer = new IndexBuffer(triangles, numTriangles * 3);
+
+    vertexLayout = other.vertexLayout;
+    vertexArray = new VertexArray();
+  }
+
   Body::Body(Body&& other)
     : position(other.position), linearVelocity(other.linearVelocity), rotation(other.rotation), rotationalVelocity(other.rotationalVelocity), 
       density(other.density), mass(other.mass), resitution(other.resitution), area(other.area), isStatic(other.isStatic), 
@@ -155,9 +172,23 @@ namespace MindlessEngine
     return indexBuffer;
   }
 
+  void Body::update(float deltaTime) {}
+
   void Body::rotate(float amount)
   {
     rotation += amount;
+    isTransformUpdateRequired = true;
+  }
+
+  void Body::move(const Vector& amount)
+  {
+    position = position + amount;
+    isTransformUpdateRequired = true;
+  }
+
+  void Body::moveTo(const Vector& position)
+  {
+    this->position = position;
     isTransformUpdateRequired = true;
   }
 
