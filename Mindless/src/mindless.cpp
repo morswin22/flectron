@@ -35,12 +35,11 @@ public:
 
       if (type == BodyType::Circle)
       {
-        // TODO fix circle body creation
-        // bodyList.push_back(createCircleBody(3.0f, { x, y }, 2.0f, 0.5f, false));
+        bodyList.push_back(createCircleBody(1.77f, { x, y }, 2.0f, 0.5f, false));
       }
       else if (type == BodyType::Box)
       {
-        bodyList.push_back(createBoxBody(1.77f, 1.77f, { x, y }, 2.0f, 0.5f, false));
+        bodyList.push_back(createBoxBody(3.0f, 3.0f, { x, y }, 2.0f, 0.5f, false));
       }
       else
         throw std::invalid_argument("Invalid body type");

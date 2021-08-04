@@ -228,8 +228,8 @@ namespace MindlessEngine
     float step = 2.0f * (float)M_PI / (float)World::numCircleVerticies;
     for (int i = 0; i < World::numCircleVerticies; i++)
     {
-      vertices[i].x = radius * cos(i * step);
-      vertices[i].y = radius * sin(i * step);
+      vertices[i].x = radius * cos(-i * step);
+      vertices[i].y = radius * sin(-i * step);
     }
     return vertices;
   }
@@ -373,7 +373,7 @@ namespace MindlessEngine
   int orientation(const Vector& p, const Vector& q, const Vector& r)
   {
     // See https://www.geeksforgeeks.org/orientation-3-ordered-points/
-    int value = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+    float value = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
     if (value == 0) 
       return 0;  // colinear
     return (value > 0) ? 1 : -1; // clock or counterclock wise
