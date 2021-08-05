@@ -10,11 +10,10 @@ class Mindless : public Game
 {
 private:
   std::unique_ptr<Shader> basicShader;
-  std::list<Color> colorList;
 
 public:
   Mindless()
-   : Game(), basicShader(nullptr), colorList()
+   : Game(), basicShader(nullptr)
   {
     window.setTitle("Mindless");
     window.setScale(15.0f);
@@ -25,38 +24,35 @@ public:
     float left, top, right, bottom;
     window.getCameraConstrains(&left, &top, &right, &bottom);
 
-    float padding = (right - left) * 0.05f;
+    float padding = (right - left) * 0.10f;
 
-    for (int i = 0; i < 30; i++)
-    {
-      BodyType type = static_cast<BodyType>(randomInt(0, 2));
-      if (i == 0)
-        type = BodyType::Box;
-
-      float x = randomFloat(left + padding, right - padding);
-      float y = randomFloat(bottom + padding, top - padding);
-
-      bool isStatic = randomBool() && i != 0;
-
-      colorList.push_back(isStatic ? Colors::black() : Colors::random());
-
-      if (type == BodyType::Circle)
-      {
-        world.addBody(createCircleBody(1.0f, { x, y }, 2.0f, 0.5f, isStatic));
-      }
-      else if (type == BodyType::Box)
-      {
-        world.addBody(createBoxBody(1.77f, 1.77f, { x, y }, 2.0f, 0.5f, isStatic));
-      }
-      else
-        throw std::invalid_argument("Invalid body type");
-    }
+    world.addBody(createBoxBody(right - left - padding * 2.0f, 3.0f, { 0.0f, -10.0f }, 1.0f, 0.5f, true));
+    world.getBody(0).color = Colors::darkGreen();
   }
 
   void update(float elapsedTime) override
   {
     std::cout << "Elapsed time: " << elapsedTime * 1000.0f << "ms" << std::endl;
 
+    // TODO change for Mouse::isClicked()
+    if (Mouse::isPressed(Buttons::LEFT))
+    {
+      float radius = randomFloat(0.75f, 1.25f);
+
+      world.addBody(createCircleBody(radius, mouseWorldPosition, 2.0f, 0.6f, false));
+      world.getBody(world.getBodyCount() - 1).color = Colors::random();
+    }
+
+    if (Mouse::isPressed(Buttons::RIGHT))
+    {
+      float width = randomFloat(1.0f, 2.0f);
+      float height = randomFloat(1.0f, 2.0f);
+
+      world.addBody(createBoxBody(width, height, mouseWorldPosition, 2.0f, 0.6f, false));
+      world.getBody(world.getBodyCount() - 1).color = Colors::random();
+    }
+
+#if false
     if (world.getBodyCount() > 0)
     {
       Body& myBody = world.getBody(0);
@@ -86,25 +82,27 @@ public:
       if (Keyboard::isPressed(Keys::E))
         myBody.rotate(-elapsedTime * (float)M_PI * 0.5f);
     }
+#endif
 
     world.update(elapsedTime);
-    wrapScreen();
+    removeOffscreen();
+
+    std::cout << "Number of bodies: " << world.getBodyCount() << "\n";
   }
 
   void render() override
   {
+    window.clear();
+
     basicShader->bind();
     basicShader->setUniformMat4f("uMVP", window.getProjectionMatrix());
     
-    auto color = colorList.begin();
     for (int i = 0; i < world.getBodyCount(); i++)
     {
       Body& body = world.getBody(i);
 
-      basicShader->setUniform4f("uColor", color->r, color->g, color->b, color->a);
+      basicShader->setUniform4f("uColor", body.color.r, body.color.g, body.color.b, body.color.a);
       draw(body);
-
-      std::advance(color, 1);
     }
   }
 };

@@ -11,6 +11,7 @@ namespace MindlessEngine
   protected:
     Window window;
     Vector mousePosition;
+    Vector mouseWorldPosition;
     World world;
 
   public:
@@ -22,6 +23,7 @@ namespace MindlessEngine
     void run();
 
     void wrapScreen();
+    void removeOffscreen();
   };
 
 };

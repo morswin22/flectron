@@ -83,6 +83,66 @@ namespace MindlessEngine
     return true;
   }
 
+  bool intersectPolygons(const Vector& centerA, const Vector* verticesA, int numVerticesA, const Vector& centerB, const Vector* verticesB, int numVerticesB, Vector& normal, float& depth)
+  {
+    float minA, maxA;
+    float minB, maxB;
+
+    depth = FLT_MAX;
+
+    for (int i = 0; i < numVerticesA; i++)
+    {
+      Vector va = verticesA[i];
+      Vector vb = verticesA[(i + 1) % numVerticesA];
+
+      Vector edge = vb - va;
+      Vector axis = normalize({ -edge.y, edge.x });
+
+      projectVertices(verticesA, numVerticesA, axis, minA, maxA);
+      projectVertices(verticesB, numVerticesB, axis, minB, maxB);
+
+      if (minA >= maxB || minB >= maxA)
+        return false;
+
+      float axisDepth = std::min(maxB - minA, maxA - minB);
+      if (axisDepth < depth)
+      {
+        depth = axisDepth;
+        normal = axis;
+      }
+    }
+
+    for (int i = 0; i < numVerticesB; i++)
+    {
+      Vector va = verticesB[i];
+      Vector vb = verticesB[(i + 1) % numVerticesB];
+
+      Vector edge = vb - va;
+      Vector axis = normalize({ -edge.y, edge.x });
+
+      projectVertices(verticesA, numVerticesA, axis, minA, maxA);
+      projectVertices(verticesB, numVerticesB, axis, minB, maxB);
+
+      if (minA >= maxB || minB >= maxA)
+        return false;
+
+      float axisDepth = std::min(maxB - minA, maxA - minB);
+      if (axisDepth < depth)
+      {
+        depth = axisDepth;
+        normal = axis;
+      }
+    }
+
+    Vector direction = centerB - centerA;
+    if (dot(normal, direction) < 0)
+    {
+      normal = -normal;
+    }
+
+    return true;
+  }
+
   bool intersectCirclePolygon(const Vector& center, float radius, const Vector* vertices, int numVertices, Vector& normal, float& depth)
   {
     float minA, maxA;
@@ -132,6 +192,63 @@ namespace MindlessEngine
     }
 
     Vector polygonCenter = findArithmeticMean(vertices, numVertices);
+
+    Vector direction = polygonCenter - center;
+    if (dot(normal, direction) < 0)
+    {
+      normal = -normal;
+    }
+
+    return true;
+  }
+
+  bool intersectCirclePolygon(const Vector& center, float radius, const Vector& polygonCenter, const Vector* vertices, int numVertices, Vector& normal, float& depth)
+  {
+    float minA, maxA;
+    float minB, maxB;
+
+    depth = FLT_MAX;
+
+    for (int i = 0; i < numVertices; i++)
+    {
+      Vector va = vertices[i];
+      Vector vb = vertices[(i + 1) % numVertices];
+
+      Vector edge = vb - va;
+      Vector axis = normalize({ -edge.y, edge.x });
+
+      projectVertices(vertices, numVertices, axis, minA, maxA);
+      projectCircle(center, radius, axis, minB, maxB);
+
+      if (minA >= maxB || minB >= maxA)
+        return false;
+
+      float axisDepth = std::min(maxB - minA, maxA - minB);
+      if (axisDepth < depth)
+      {
+        depth = axisDepth;
+        normal = axis;
+      }
+    }
+
+    int closestPointIndex = findClosestPointOnPolygon(center, vertices, numVertices);
+    Vector closestPoint = vertices[closestPointIndex];
+
+    Vector axis = normalize(closestPoint - center);
+
+    projectVertices(vertices, numVertices, axis, minA, maxA);
+    projectCircle(center, radius, axis, minB, maxB);
+
+    if (minA >= maxB || minB >= maxA)
+      return false;
+
+    float axisDepth = std::min(maxB - minA, maxA - minB);
+
+    if (axisDepth < depth)
+    {
+      depth = axisDepth;
+      normal = axis;
+    }
 
     Vector direction = polygonCenter - center;
     if (dot(normal, direction) < 0)

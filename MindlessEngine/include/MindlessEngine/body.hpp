@@ -2,6 +2,7 @@
 
 #include <MindlessEngine/vector.hpp>
 #include <MindlessEngine/renderer.hpp>
+#include <MindlessEngine/color.hpp>
 #include <vector>
 
 namespace MindlessEngine 
@@ -65,6 +66,8 @@ namespace MindlessEngine
     float width;
     float height;
 
+    Color color;
+
   private:
     Body(const Vector& position, float density, float mass, float resitution, float area, bool isStatic, BodyType bodyType, float radius, float width, float height);
 
@@ -77,7 +80,7 @@ namespace MindlessEngine
     Body(Body&& body);
     Body& operator=(Body&& body);
 
-    void update(float deltaTime);
+    void update(float deltaTime, const Vector& gravity);
 
     void rotate(float amount);
     

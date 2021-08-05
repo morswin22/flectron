@@ -11,7 +11,10 @@ namespace MindlessEngine
 {
 
   Body::Body(const Vector& position, float density, float mass, float resitution, float area, bool isStatic, BodyType bodyType, float radius, float width, float height)
-    : position(position), linearVelocity(), rotation(0.0f), rotationalVelocity(0.0f), force(), density(density), mass(mass), invMass(0.0f), resitution(resitution), area(area), isStatic(isStatic), numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true), vertexLayout(), vertexArray(nullptr), vertexBuffer(nullptr), indexBuffer(nullptr), bodyType(bodyType), radius(radius), width(width), height(height)
+    : position(position), linearVelocity(), rotation(0.0f), rotationalVelocity(0.0f), force(), 
+      density(density), mass(mass), invMass(0.0f), resitution(resitution), area(area), isStatic(isStatic), 
+      numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true), vertexLayout(), vertexArray(nullptr), vertexBuffer(nullptr), indexBuffer(nullptr), 
+      bodyType(bodyType), radius(radius), width(width), height(height), color(Colors::lightPurple())
   {
     if (!isStatic)
     {
@@ -79,7 +82,7 @@ namespace MindlessEngine
       force(other.force), density(other.density), mass(other.mass), invMass(other.invMass), resitution(other.resitution), area(other.area), isStatic(other.isStatic), 
       numVertices(other.numVertices), vertices(other.vertices), triangles(other.triangles), transformedVertices(other.transformedVertices), isTransformUpdateRequired(other.isTransformUpdateRequired), 
       vertexLayout(other.vertexLayout), vertexArray(other.vertexArray), vertexBuffer(other.vertexBuffer), indexBuffer(other.indexBuffer), 
-      bodyType(other.bodyType), radius(other.radius), width(other.width), height(other.height)
+      bodyType(other.bodyType), radius(other.radius), width(other.width), height(other.height), color(other.color)
   {
     other.vertices = nullptr;
     other.triangles = nullptr;
@@ -123,6 +126,7 @@ namespace MindlessEngine
       radius = other.radius;
       width = other.width;
       height = other.height;
+      color = other.color;
 
       other.vertices = nullptr;
       other.triangles = nullptr;
@@ -187,10 +191,15 @@ namespace MindlessEngine
     return indexBuffer;
   }
 
-  void Body::update(float deltaTime) 
+  void Body::update(float deltaTime, const Vector& gravity) 
   {
-    Vector acceleration = force / mass;
-    linearVelocity = linearVelocity + acceleration * deltaTime;
+    if (isStatic)
+      return;
+
+    // Vector acceleration = force / mass;
+    // linearVelocity = linearVelocity + acceleration * deltaTime;
+
+    linearVelocity = linearVelocity + gravity * deltaTime;
 
     // TODO look into this later
     if (length(linearVelocity) > 0.0f)

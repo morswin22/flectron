@@ -50,11 +50,12 @@ namespace MindlessEngine
 
   void World::update(float deltaTime)
   {
+    if (bodyList.empty())
+      return;
+
     // Movement
     for (auto it = bodyList.begin(); it != bodyList.end(); ++it)
-    {
-      it->update(deltaTime);
-    }
+      it->update(deltaTime, gravity);
 
     // Collision step
     Vector normal;
@@ -66,6 +67,12 @@ namespace MindlessEngine
       std::advance(bodyB, i + 1);
       for (int j = i + 1; j < bodyList.size(); j++)
       {
+        if (bodyA->isStatic && bodyB->isStatic)
+        {
+          std::advance(bodyB, 1);
+          continue;
+        }
+
         if (collide(*bodyA, *bodyB, normal, depth))
         {
           if (bodyA->isStatic)
@@ -97,11 +104,11 @@ namespace MindlessEngine
     {
       if (bodyB.bodyType == BodyType::Box)
       {
-        return intersectPolygons(bodyA.getTransformedVertices(), bodyA.getNumVertices(), bodyB.getTransformedVertices(), bodyB.getNumVertices(), normal, depth);
+        return intersectPolygons(bodyA.position, bodyA.getTransformedVertices(), bodyA.getNumVertices(), bodyB.position, bodyB.getTransformedVertices(), bodyB.getNumVertices(), normal, depth);
       }
       else if (bodyB.bodyType == BodyType::Circle)
       {
-        bool result = intersectCirclePolygon(bodyB.position, bodyB.radius, bodyA.getTransformedVertices(), bodyA.getNumVertices(), normal, depth);
+        bool result = intersectCirclePolygon(bodyB.position, bodyB.radius, bodyA.position, bodyA.getTransformedVertices(), bodyA.getNumVertices(), normal, depth);
         if (result)
           normal = -normal;
         return result;
@@ -111,7 +118,7 @@ namespace MindlessEngine
     {
       if (bodyB.bodyType == BodyType::Box)
       {
-        return intersectCirclePolygon(bodyA.position, bodyA.radius, bodyB.getTransformedVertices(), bodyB.getNumVertices(), normal, depth);
+        return intersectCirclePolygon(bodyA.position, bodyA.radius, bodyB.position, bodyB.getTransformedVertices(), bodyB.getNumVertices(), normal, depth);
       }
       else if (bodyB.bodyType == BodyType::Circle)
       {
@@ -132,10 +139,8 @@ namespace MindlessEngine
 
     float j = -(1.0f + e) * dot(relativeVelocity, normal);
 
-    // TODO check if this is correct
     float invMassSum = bodyA.invMass + bodyB.invMass;
-    if (invMassSum != 0.0f)
-      j /= bodyA.invMass + bodyB.invMass;
+    j /= bodyA.invMass + bodyB.invMass;
 
     Vector impulse = j * normal;
 

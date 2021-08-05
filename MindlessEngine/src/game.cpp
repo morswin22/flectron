@@ -3,7 +3,7 @@
 namespace MindlessEngine
 {
   
-  Game::Game() : window(640, 480, "Mindless Game"), mousePosition() {}
+  Game::Game() : window(640, 480, "Mindless Game"), mousePosition(), mouseWorldPosition(), world() {}
 
   void Game::run()
   {
@@ -13,9 +13,10 @@ namespace MindlessEngine
       window.getCursorPosition(mousePosition);
       window.getFrameSize();
 
-      update(window.getElapsedTime());
+      mouseWorldPosition.x = (mousePosition.x - window.cameraPosition.x) / window.cameraScale.x;
+      mouseWorldPosition.y = -(mousePosition.y - window.cameraPosition.y) / window.cameraScale.y;
 
-      window.clear();
+      update(window.getElapsedTime());
 
       render();
 
@@ -44,6 +45,23 @@ namespace MindlessEngine
 
       if (body.position.y > top)
         body.moveTo({ body.position.x, bottom });
+    }
+  }
+
+  void Game::removeOffscreen()
+  {
+    float left, top, right, bottom;
+    window.getCameraConstrains(&left, &top, &right, &bottom);
+
+    for (int i = world.getBodyCount() - 1; i >= 0; i--)
+    {
+      Body& body = world.getBody(i);
+
+      if (body.position.x < left || body.position.x > right ||
+          body.position.y < bottom || body.position.y > top)
+      {
+        world.removeBody(i);
+      }
     }
   }
 

@@ -27,9 +27,11 @@ namespace MindlessEngine
     std::string title;
     float lastMeasuredTime;
 
+  public:
     glm::vec3 cameraPosition;
     glm::vec3 cameraScale;
 
+  private:
     glm::mat4 projection;
     glm::mat4 view;
 
