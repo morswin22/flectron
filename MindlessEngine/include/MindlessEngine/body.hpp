@@ -32,6 +32,7 @@ namespace MindlessEngine
   public:
     float density;
     float mass;
+    float invMass;
     float resitution;
     float area;
 

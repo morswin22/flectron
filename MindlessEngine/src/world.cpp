@@ -68,8 +68,19 @@ namespace MindlessEngine
       {
         if (collide(*bodyA, *bodyB, normal, depth))
         {
-          bodyA->move(-normal * depth * 0.5f);
-          bodyB->move(normal * depth * 0.5f);
+          if (bodyA->isStatic)
+          {
+            bodyB->move(normal * depth);
+          }
+          else if (bodyB->isStatic)
+          {
+            bodyA->move(-normal * depth);
+          }
+          else 
+          {
+            bodyA->move(-normal * depth * 0.5f);
+            bodyB->move(normal * depth * 0.5f);
+          }
 
           resolveCollision(*bodyA, *bodyB, normal, depth);
         }
@@ -114,13 +125,22 @@ namespace MindlessEngine
   {
     Vector relativeVelocity = bodyB.linearVelocity - bodyA.linearVelocity;
 
+    if (dot(relativeVelocity, normal) > 0.0f)
+      return;
+
     float e = std::min(bodyA.resitution, bodyB.resitution);
 
     float j = -(1.0f + e) * dot(relativeVelocity, normal);
-    j /= (1.0f/bodyA.mass) + (1.0f/bodyB.mass);
 
-    bodyA.linearVelocity = bodyA.linearVelocity - (j / bodyA.mass * normal);
-    bodyB.linearVelocity = bodyB.linearVelocity + (j / bodyB.mass * normal);
+    // TODO check if this is correct
+    float invMassSum = bodyA.invMass + bodyB.invMass;
+    if (invMassSum != 0.0f)
+      j /= bodyA.invMass + bodyB.invMass;
+
+    Vector impulse = j * normal;
+
+    bodyA.linearVelocity = bodyA.linearVelocity - (impulse * bodyA.invMass);
+    bodyB.linearVelocity = bodyB.linearVelocity + (impulse * bodyB.invMass);
   }
   
 };

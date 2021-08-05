@@ -5,6 +5,11 @@
 namespace MindlessEngine 
 {
 
+  bool randomBool()
+  {
+    return rand() % 2 == 0;
+  }
+
   int randomInt(int min, int max)
   {
     return rand() % (max - min) + min;

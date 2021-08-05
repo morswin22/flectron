@@ -17,7 +17,7 @@ public:
    : Game(), basicShader(nullptr), colorList()
   {
     window.setTitle("Mindless");
-    window.setScale(12.0f);
+    window.setScale(15.0f);
     window.setBackground(Colors::darkGray());
 
     basicShader = std::make_unique<Shader>("../MindlessEngine/shaders/basic.vert", "../MindlessEngine/shaders/basic.frag");
@@ -30,19 +30,23 @@ public:
     for (int i = 0; i < 30; i++)
     {
       BodyType type = static_cast<BodyType>(randomInt(0, 2));
+      if (i == 0)
+        type = BodyType::Box;
 
       float x = randomFloat(left + padding, right - padding);
       float y = randomFloat(bottom + padding, top - padding);
 
-      colorList.push_back(Colors::random());
+      bool isStatic = randomBool() && i != 0;
+
+      colorList.push_back(isStatic ? Colors::black() : Colors::random());
 
       if (type == BodyType::Circle)
       {
-        world.addBody(createCircleBody(1.77f, { x, y }, 2.0f, 0.5f, false));
+        world.addBody(createCircleBody(1.0f, { x, y }, 2.0f, 0.5f, isStatic));
       }
       else if (type == BodyType::Box)
       {
-        world.addBody(createBoxBody(3.0f, 3.0f, { x, y }, 2.0f, 0.5f, false));
+        world.addBody(createBoxBody(1.77f, 1.77f, { x, y }, 2.0f, 0.5f, isStatic));
       }
       else
         throw std::invalid_argument("Invalid body type");
@@ -77,10 +81,10 @@ public:
         myBody.addForce(force);
       }
 
-      if (Keyboard::isPressed(Keys::R))
-      {
+      if (Keyboard::isPressed(Keys::Q))
         myBody.rotate(elapsedTime * (float)M_PI * 0.5f);
-      }
+      if (Keyboard::isPressed(Keys::E))
+        myBody.rotate(-elapsedTime * (float)M_PI * 0.5f);
     }
 
     world.update(elapsedTime);
