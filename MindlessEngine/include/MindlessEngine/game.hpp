@@ -20,6 +20,8 @@ namespace MindlessEngine
     virtual void render() = 0;
 
     void run();
+
+    void wrapScreen();
   };
 
 };

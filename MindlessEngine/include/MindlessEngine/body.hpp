@@ -21,12 +21,13 @@ namespace MindlessEngine
   {
   public:
     Vector position;
-
-  private:
     Vector linearVelocity;
 
+  private:
     float rotation;
     float rotationalVelocity;
+
+    Vector force;
 
   public:
     float density;
@@ -81,6 +82,8 @@ namespace MindlessEngine
     
     void move(const Vector& amount);
     void moveTo(const Vector& position);
+
+    void addForce(const Vector& amount);
 
     friend Body createCircleBody(float radius, const Vector& position, float density, float resitution, bool isStatic);
     friend Body createBoxBody(float width, float height, const Vector& position, float density, float resitution, bool isStatic);

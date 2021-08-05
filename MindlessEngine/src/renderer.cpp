@@ -4,6 +4,8 @@
 #include <fstream>
 #include <iostream>
 
+#include <MindlessEngine/body.hpp>
+
 namespace MindlessEngine
 {
 
@@ -234,6 +236,13 @@ namespace MindlessEngine
     va.bind();
     ib.bind();
     glDrawElements(GL_TRIANGLES, ib.numIndices, GL_UNSIGNED_INT, 0);
+  }
+
+  void draw(Body& body)
+  {
+    body.getVertexArray()->bind();
+    body.getIndexBuffer()->bind();
+    glDrawElements(GL_TRIANGLES, (body.getNumVertices() - 2) * 3, GL_UNSIGNED_INT, 0);
   }
 
 };

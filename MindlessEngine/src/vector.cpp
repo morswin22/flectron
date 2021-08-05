@@ -26,6 +26,11 @@ namespace MindlessEngine
     return { v.x * s, v.y * s };
   }
 
+  Vector operator*(float s, const Vector& v)
+  {
+    return { v.x * s, v.y * s };
+  }
+
   Vector operator/(const Vector& v, float s)
   {
     return { v.x / s, v.y / s };

@@ -105,6 +105,9 @@ namespace MindlessEngine
     void setUniformMat4f(const std::string& name, const glm::mat4& matrix);
   };
 
+  class Body;
+
   void draw(const VertexArray& va, const IndexBuffer& ib);
+  void draw(Body& body);
 
 };

@@ -144,4 +144,9 @@ namespace MindlessEngine
     projection = glm::ortho(0.0f, (float)width, 0.0f, (float)height, -1.0f, 1.0f);
   }
 
+  void Window::setBackground(const Color& color)
+  {
+    glClearColor(color.r, color.g, color.b, color.a);
+  }
+
 };

@@ -11,7 +11,7 @@ namespace MindlessEngine
 {
 
   Body::Body(const Vector& position, float density, float mass, float resitution, float area, bool isStatic, BodyType bodyType, float radius, float width, float height)
-    : position(position), linearVelocity(), rotation(0.0f), rotationalVelocity(0.0f), density(density), mass(mass), resitution(resitution), area(area), isStatic(isStatic), numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true), vertexLayout(), vertexArray(nullptr), vertexBuffer(nullptr), indexBuffer(nullptr), bodyType(bodyType), radius(radius), width(width), height(height)
+    : position(position), linearVelocity(), rotation(0.0f), rotationalVelocity(0.0f), force(), density(density), mass(mass), resitution(resitution), area(area), isStatic(isStatic), numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true), vertexLayout(), vertexArray(nullptr), vertexBuffer(nullptr), indexBuffer(nullptr), bodyType(bodyType), radius(radius), width(width), height(height)
   {
     if (bodyType == BodyType::Box)
     {
@@ -47,6 +47,8 @@ namespace MindlessEngine
   Body::Body(const Body& other)
     : Body(other.position, other.density, other.mass, other.resitution, other.area, other.isStatic, other.bodyType, other.radius, other.width, other.height)
   {
+    // TODO copy also all the changed data that is not set by the default constructor
+
     numVertices = other.numVertices;
     vertices = new Vector[numVertices];
     for (int i = 0; i < numVertices; i++)
@@ -63,7 +65,7 @@ namespace MindlessEngine
 
   Body::Body(Body&& other)
     : position(other.position), linearVelocity(other.linearVelocity), rotation(other.rotation), rotationalVelocity(other.rotationalVelocity), 
-      density(other.density), mass(other.mass), resitution(other.resitution), area(other.area), isStatic(other.isStatic), 
+      force(other.force), density(other.density), mass(other.mass), resitution(other.resitution), area(other.area), isStatic(other.isStatic), 
       numVertices(other.numVertices), vertices(other.vertices), triangles(other.triangles), transformedVertices(other.transformedVertices), isTransformUpdateRequired(other.isTransformUpdateRequired), 
       vertexLayout(other.vertexLayout), vertexArray(other.vertexArray), vertexBuffer(other.vertexBuffer), indexBuffer(other.indexBuffer), 
       bodyType(other.bodyType), radius(other.radius), width(other.width), height(other.height)
@@ -90,6 +92,7 @@ namespace MindlessEngine
       linearVelocity = other.linearVelocity;
       rotation = other.rotation;
       rotationalVelocity = other.rotationalVelocity;
+      force = other.force;
       density = other.density;
       mass = other.mass;
       resitution = other.resitution;
@@ -172,7 +175,21 @@ namespace MindlessEngine
     return indexBuffer;
   }
 
-  void Body::update(float deltaTime) {}
+  void Body::update(float deltaTime) 
+  {
+    Vector acceleration = force / mass;
+    linearVelocity = linearVelocity + acceleration * deltaTime;
+
+    // TODO look into this later
+    if (length(linearVelocity) > 0.0f)
+      isTransformUpdateRequired = true;
+
+    position = position + linearVelocity * deltaTime;
+    rotation += rotationalVelocity * deltaTime;
+
+    force.x = 0.0f;
+    force.y = 0.0f;
+  }
 
   void Body::rotate(float amount)
   {
@@ -190,6 +207,11 @@ namespace MindlessEngine
   {
     this->position = position;
     isTransformUpdateRequired = true;
+  }
+
+  void Body::addForce(const Vector& amount)
+  {
+    force = force + amount;
   }
 
   Body createCircleBody(float radius, const Vector& position, float density, float resitution, bool isStatic)

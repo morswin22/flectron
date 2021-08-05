@@ -35,6 +35,14 @@ namespace MindlessEngine
     Color darkMagenta();
     Color darkOrange();
     Color darkPurple();
+    Color lightRed();
+    Color lightGreen();
+    Color lightBlue();
+    Color lightYellow();
+    Color lightCyan();
+    Color lightMagenta();
+    Color lightOrange();
+    Color lightPurple();
     Color random();
   };
 

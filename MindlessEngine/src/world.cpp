@@ -1,6 +1,7 @@
 #include <MindlessEngine/world.hpp>
 
 #include <MindlessEngine/collisions.hpp>
+#include <MindlessEngine/math.hpp>
 
 namespace MindlessEngine 
 {
@@ -69,6 +70,8 @@ namespace MindlessEngine
         {
           bodyA->move(-normal * depth * 0.5f);
           bodyB->move(normal * depth * 0.5f);
+
+          resolveCollision(*bodyA, *bodyB, normal, depth);
         }
 
         std::advance(bodyB, 1);
@@ -105,6 +108,19 @@ namespace MindlessEngine
       }
     }
     return false;
+  }
+
+  void World::resolveCollision(Body& bodyA, Body& bodyB, const Vector& normal, float depth)
+  {
+    Vector relativeVelocity = bodyB.linearVelocity - bodyA.linearVelocity;
+
+    float e = std::min(bodyA.resitution, bodyB.resitution);
+
+    float j = -(1.0f + e) * dot(relativeVelocity, normal);
+    j /= (1.0f/bodyA.mass) + (1.0f/bodyB.mass);
+
+    bodyA.linearVelocity = bodyA.linearVelocity - (j / bodyA.mass * normal);
+    bodyB.linearVelocity = bodyB.linearVelocity + (j / bodyB.mass * normal);
   }
   
 };

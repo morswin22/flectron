@@ -32,6 +32,14 @@ namespace MindlessEngine
     Color darkMagenta() { return Color(0.5f, 0.0f, 0.5f, 1.0f); }
     Color darkOrange() { return Color(0.5f, 0.25f, 0.0f, 1.0f); }
     Color darkPurple() { return Color(0.25f, 0.0f, 0.25f, 1.0f); }
+    Color lightRed() { return Color(1.0f, 0.5f, 0.5f, 1.0f); }
+    Color lightGreen() { return Color(0.5f, 1.0f, 0.5f, 1.0f); }
+    Color lightBlue() { return Color(0.5f, 0.5f, 1.0f, 1.0f); }
+    Color lightYellow() { return Color(1.0f, 1.0f, 0.5f, 1.0f); }
+    Color lightCyan() { return Color(0.5f, 1.0f, 1.0f, 1.0f); }
+    Color lightMagenta() { return Color(1.0f, 0.5f, 1.0f, 1.0f); }
+    Color lightOrange() { return Color(1.0f, 0.75f, 0.5f, 1.0f); }
+    Color lightPurple() { return Color(0.75f, 0.5f, 0.75f, 1.0f); }
     Color random() { return Color(randomFloat(0.0f, 1.0f), randomFloat(0.0f, 1.0f), randomFloat(0.0f, 1.0f), 1.0f); }
   };
 

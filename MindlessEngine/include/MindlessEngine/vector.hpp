@@ -18,6 +18,7 @@ namespace MindlessEngine
   Vector operator-(const Vector& a, const Vector& b);
   Vector operator-(const Vector& v);
   Vector operator*(const Vector& v, float s);
+  Vector operator*(float s, const Vector& v);
   Vector operator/(const Vector& v, float s);
 
   bool operator==(const Vector& a, const Vector& b);

@@ -18,6 +18,7 @@ public:
   {
     window.setTitle("Mindless");
     window.setScale(12.0f);
+    window.setBackground(Colors::darkGray());
 
     basicShader = std::make_unique<Shader>("../MindlessEngine/shaders/basic.vert", "../MindlessEngine/shaders/basic.frag");
     
@@ -26,7 +27,7 @@ public:
 
     float padding = (right - left) * 0.05f;
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 30; i++)
     {
       BodyType type = static_cast<BodyType>(randomInt(0, 2));
 
@@ -58,7 +59,7 @@ public:
 
       float dx = 0.0f;
       float dy = 0.0f;
-      float speed = 16.0f;
+      float forceMagnitude = 48.0f;
 
       if (Keyboard::isPressed(Keys::W))
         dy++;
@@ -71,10 +72,9 @@ public:
 
       if (dx != 0.0f || dy != 0.0f)
       {
-        Vector direction = normalize({ dx, dy });
-        Vector velocity = direction * speed * elapsedTime;
-
-        myBody.move(velocity);
+        Vector forceDirection = normalize({ dx, dy });
+        Vector force = forceDirection * forceMagnitude;
+        myBody.addForce(force);
       }
 
       if (Keyboard::isPressed(Keys::R))
@@ -84,6 +84,7 @@ public:
     }
 
     world.update(elapsedTime);
+    wrapScreen();
   }
 
   void render() override
@@ -97,7 +98,7 @@ public:
       Body& body = world.getBody(i);
 
       basicShader->setUniform4f("uColor", color->r, color->g, color->b, color->a);
-      draw(*body.getVertexArray(), *body.getIndexBuffer());
+      draw(body);
 
       std::advance(color, 1);
     }

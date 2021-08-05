@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <MindlessEngine/body.hpp>
+#include <MindlessEngine/color.hpp>
 
 namespace MindlessEngine
 {
@@ -58,6 +59,7 @@ namespace MindlessEngine
     void setScale(float a);
 
     void setSize(int width, int height);
+    void setBackground(const Color& color);
   };
 
 };

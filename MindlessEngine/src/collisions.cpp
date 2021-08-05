@@ -33,7 +33,7 @@ namespace MindlessEngine
       Vector vb = verticesA[(i + 1) % numVerticesA];
 
       Vector edge = vb - va;
-      Vector axis(-edge.y, edge.x);
+      Vector axis = normalize({ -edge.y, edge.x });
 
       projectVertices(verticesA, numVerticesA, axis, minA, maxA);
       projectVertices(verticesB, numVerticesB, axis, minB, maxB);
@@ -55,7 +55,7 @@ namespace MindlessEngine
       Vector vb = verticesB[(i + 1) % numVerticesB];
 
       Vector edge = vb - va;
-      Vector axis(-edge.y, edge.x);
+      Vector axis = normalize({ -edge.y, edge.x });
 
       projectVertices(verticesA, numVerticesA, axis, minA, maxA);
       projectVertices(verticesB, numVerticesB, axis, minB, maxB);
@@ -70,9 +70,6 @@ namespace MindlessEngine
         normal = axis;
       }
     }
-
-    depth /= length(normal);
-    normal = normalize(normal);
 
     Vector centerA = findArithmeticMean(verticesA, numVerticesA);
     Vector centerB = findArithmeticMean(verticesB, numVerticesB);
@@ -99,7 +96,7 @@ namespace MindlessEngine
       Vector vb = vertices[(i + 1) % numVertices];
 
       Vector edge = vb - va;
-      Vector axis(-edge.y, edge.x);
+      Vector axis = normalize({ -edge.y, edge.x });
 
       projectVertices(vertices, numVertices, axis, minA, maxA);
       projectCircle(center, radius, axis, minB, maxB);
@@ -118,7 +115,7 @@ namespace MindlessEngine
     int closestPointIndex = findClosestPointOnPolygon(center, vertices, numVertices);
     Vector closestPoint = vertices[closestPointIndex];
 
-    Vector axis = closestPoint - center;
+    Vector axis = normalize(closestPoint - center);
 
     projectVertices(vertices, numVertices, axis, minA, maxA);
     projectCircle(center, radius, axis, minB, maxB);
@@ -133,9 +130,6 @@ namespace MindlessEngine
       depth = axisDepth;
       normal = axis;
     }
-
-    depth /= length(normal);
-    normal = normalize(normal);
 
     Vector polygonCenter = findArithmeticMean(vertices, numVertices);
 

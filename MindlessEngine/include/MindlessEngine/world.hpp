@@ -32,6 +32,7 @@ namespace MindlessEngine
     void update(float deltaTime);
 
     bool collide(Body& bodyA, Body& bodyB, Vector& normal, float& depth);
+    void resolveCollision(Body& bodyA, Body& bodyB, const Vector& normal, float depth);
 
   };
 
