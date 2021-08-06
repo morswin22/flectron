@@ -158,9 +158,6 @@ namespace MindlessEngine
         unpackedVertices[i * 2 + 1] = transformedVertices[i].y;
       }
 
-      delete vertexArray;
-      vertexArray = new VertexArray();
-
       if (vertexBuffer != nullptr)
         delete vertexBuffer;
       

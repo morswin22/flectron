@@ -66,6 +66,8 @@ namespace MindlessEngine
   {
   private:
     GLuint rendererID;
+
+  public:
     unsigned int numIndices;
   
   public:
@@ -74,8 +76,6 @@ namespace MindlessEngine
 
     void bind() const;
     void unbind() const;
-
-    friend void draw(const VertexArray& va, const IndexBuffer& ib);
   };
 
   class Shader
@@ -104,10 +104,5 @@ namespace MindlessEngine
     void setUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
     void setUniformMat4f(const std::string& name, const glm::mat4& matrix);
   };
-
-  class Body;
-
-  void draw(const VertexArray& va, const IndexBuffer& ib);
-  void draw(Body& body);
 
 };

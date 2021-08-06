@@ -6,6 +6,8 @@
 
 using namespace MindlessEngine;
 
+// #define RENDER_BODIES_WITH_STROKE
+
 class Mindless : public Game
 {
 private:
@@ -18,6 +20,10 @@ public:
     window.setTitle("Mindless");
     window.setScale(15.0f);
     window.setBackground(Colors::darkGray());
+
+#ifdef RENDER_BODIES_WITH_STROKE
+    World::numCircleVerticies = 12;
+#endif
 
     basicShader = std::make_unique<Shader>("../MindlessEngine/shaders/basic.vert", "../MindlessEngine/shaders/basic.frag");
     
@@ -52,11 +58,12 @@ public:
       world.getBody(world.getBodyCount() - 1).color = Colors::random();
     }
 
-#if false
+#if true
     if (world.getBodyCount() > 0)
     {
       Body& myBody = world.getBody(0);
 
+#if false
       float dx = 0.0f;
       float dy = 0.0f;
       float forceMagnitude = 48.0f;
@@ -76,6 +83,7 @@ public:
         Vector force = forceDirection * forceMagnitude;
         myBody.addForce(force);
       }
+#endif
 
       if (Keyboard::isPressed(Keys::Q))
         myBody.rotate(elapsedTime * (float)M_PI * 0.5f);
@@ -97,12 +105,23 @@ public:
     basicShader->bind();
     basicShader->setUniformMat4f("uMVP", window.getProjectionMatrix());
     
+    Color strokeColor = Colors::white();
     for (int i = 0; i < world.getBodyCount(); i++)
     {
       Body& body = world.getBody(i);
 
+#ifdef RENDER_BODIES_WITH_STROKE
+      basicShader->setUniform4f("uColor", strokeColor.r, strokeColor.g, strokeColor.b, strokeColor.a);
+      Vector* vertices = body.getTransformedVertices();
+      int numVertices = body.getNumVertices();
+      for (int j = 0; j < numVertices; j++)
+      {
+        window.drawLine(vertices[j], vertices[(j + 1) % numVertices]);
+      }
+#endif
+
       basicShader->setUniform4f("uColor", body.color.r, body.color.g, body.color.b, body.color.a);
-      draw(body);
+      window.draw(body);
     }
   }
 };

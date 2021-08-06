@@ -1,6 +1,7 @@
 #include <MindlessEngine/window.hpp>
 
 #include <MindlessEngine/input.hpp>
+#include <MindlessEngine/math.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace MindlessEngine
@@ -13,11 +14,13 @@ namespace MindlessEngine
   }
   
   Window::Window(int width, int height, const std::string& title) 
-  : window(nullptr), width(width), height(height), title(title), lastMeasuredTime(0), 
+  : window(nullptr), width(width), height(height), title(title), 
+    desiredFrameRate(60.0f), desiredInterval(1.0f / desiredFrameRate), lastMeasuredTime(0), 
     cameraPosition(glm::vec3(width * 0.5f, height * 0.5f, 0.0f)), 
     cameraScale(glm::vec3(1.0f, 1.0f, 1.0f)),
     projection(glm::ortho(0.0f, (float)width, 0.0f, (float)height, -1.0f, 1.0f)), 
-    view(glm::scale(glm::translate(glm::mat4(1.0f), cameraPosition), cameraScale))
+    view(glm::scale(glm::translate(glm::mat4(1.0f), cameraPosition), cameraScale)),
+    lineVertexArray(nullptr), lineVertexLayout(), lineIndexBuffer(nullptr), strokeWeight(1.0f)
   {
     if (!glfwInit())
       return;
@@ -33,7 +36,7 @@ namespace MindlessEngine
     }
 
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     if (glewInit() != GLEW_OK)
       return;
@@ -48,6 +51,15 @@ namespace MindlessEngine
 
     glfwSetKeyCallback(window, keyboardCallback);
     glfwSetMouseButtonCallback(window, mouseCallback);
+    
+    lineVertexArray = std::make_unique<VertexArray>();
+    lineVertexLayout.pushFloat(2);
+
+    unsigned int lineIndices[]{
+      0, 1, 2,
+      2, 3, 0
+    };
+    lineIndexBuffer = std::make_unique<IndexBuffer>(lineIndices, 6);
   }
 
   Window::~Window()
@@ -104,6 +116,9 @@ namespace MindlessEngine
 
   float Window::getElapsedTime()
   {
+    while ((float) glfwGetTime() - lastMeasuredTime < desiredInterval && !shouldClose())
+      pollEvents();
+
     float temp = lastMeasuredTime;
     lastMeasuredTime = (float) glfwGetTime();
     return lastMeasuredTime - temp;
@@ -147,6 +162,66 @@ namespace MindlessEngine
   void Window::setBackground(const Color& color)
   {
     glClearColor(color.r, color.g, color.b, color.a);
+  }
+
+  void Window::setDesiredFrameRate(float desiredFrameRate)
+  {
+    this->desiredFrameRate = desiredFrameRate;
+    desiredInterval = 1.0f / desiredFrameRate;
+  }
+
+  float Window::getDesiredFrameRate() const
+  {
+    return desiredFrameRate;
+  }
+
+  void Window::draw(const VertexArray& va, const IndexBuffer& ib)
+  {
+    va.bind();
+    ib.bind();
+    glDrawElements(GL_TRIANGLES, ib.numIndices, GL_UNSIGNED_INT, 0);
+  }
+
+  void Window::draw(Body& body)
+  {
+    body.getVertexArray()->bind();
+    body.getIndexBuffer()->bind();
+    glDrawElements(GL_TRIANGLES, (body.getNumVertices() - 2) * 3, GL_UNSIGNED_INT, 0);
+  }
+
+  void Window::drawLine(const Vector& a, const Vector& b)
+  {
+    Vector line = b - a;
+
+    Vector invCameraScale( 1.0f / cameraScale.x, 1.0f / cameraScale.y );
+    Vector axis = normalize(line) * strokeWeight;
+    Vector normal = normalize({ -axis.y, axis.x  }) * strokeWeight;
+
+    axis.x *= invCameraScale.x;
+    axis.y *= invCameraScale.y;
+
+    normal.x *= invCameraScale.x;
+    normal.y *= invCameraScale.y;
+
+    Vector p0 = a + normal - axis;
+    Vector p1 = a - normal - axis;
+
+    Vector p2 = b - normal + axis;
+    Vector p3 = b + normal + axis;
+
+    float positions[]{
+      p0.x, p0.y,
+      p1.x, p1.y,
+      p2.x, p2.y,
+      p3.x, p3.y
+    };
+
+    VertexBuffer vb(positions, 8 * sizeof(float));
+    lineVertexArray->addBuffer(vb, lineVertexLayout);
+
+    lineVertexArray->bind();
+    lineIndexBuffer->bind();
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
   }
 
 };

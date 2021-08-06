@@ -1,15 +1,12 @@
 #pragma once
 
-#include <GL/glew.h>
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-
-#include <string>
-
-#include <vector>
 #include <MindlessEngine/body.hpp>
 #include <MindlessEngine/color.hpp>
+#include <MindlessEngine/renderer.hpp>
+
+#include <string>
+#include <memory>
+#include <vector>
 
 namespace MindlessEngine
 {
@@ -25,6 +22,10 @@ namespace MindlessEngine
 
   private:
     std::string title;
+
+  private:
+    float desiredFrameRate;
+    float desiredInterval;
     float lastMeasuredTime;
 
   public:
@@ -35,12 +36,23 @@ namespace MindlessEngine
     glm::mat4 projection;
     glm::mat4 view;
 
+  private:
+    std::unique_ptr<VertexArray> lineVertexArray;
+    VertexBufferLayout lineVertexLayout;
+    std::unique_ptr<IndexBuffer> lineIndexBuffer;
+
+  public:
+    float strokeWeight;
+
   public:
     Window(int width, int height, const std::string& title);
     ~Window();
 
     Window(const Window&) = delete;
     Window& operator=(const Window&) = delete;
+
+    Window(Window&&) = delete;
+    Window& operator=(Window&&) = delete;
 
     void setTitle(const std::string& title);
     std::string getTitle() const;
@@ -62,6 +74,14 @@ namespace MindlessEngine
 
     void setSize(int width, int height);
     void setBackground(const Color& color);
+
+    void setDesiredFrameRate(float desiredFrameRate);
+    float getDesiredFrameRate() const;
+    
+    void draw(const VertexArray& va, const IndexBuffer& ib);
+    void draw(Body& body);
+
+    void drawLine(const Vector& a, const Vector& b);
   };
 
 };
