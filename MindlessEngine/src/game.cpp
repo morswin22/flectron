@@ -18,7 +18,10 @@ namespace MindlessEngine
 
       update(window.getElapsedTime());
 
+      Renderer::beginBatch();
       render();
+      Renderer::endBatch();
+      Renderer::flush();
 
       window.swapBuffers();
       window.pollEvents();

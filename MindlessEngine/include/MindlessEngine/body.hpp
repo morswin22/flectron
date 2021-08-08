@@ -46,18 +46,10 @@ namespace MindlessEngine
     Vector* transformedVertices;
     bool isTransformUpdateRequired;
 
-    VertexBufferLayout vertexLayout;
-    VertexArray* vertexArray;
-    VertexBuffer* vertexBuffer;
-    IndexBuffer* indexBuffer;
-
   public:
     int getNumVertices() const;
     Vector* getTransformedVertices();
     unsigned int* getTriangles() const;
-
-    VertexArray* getVertexArray();
-    IndexBuffer* getIndexBuffer() const;
 
     BodyType bodyType;
 
@@ -66,7 +58,10 @@ namespace MindlessEngine
     float width;
     float height;
 
-    Color color;
+    Color fillColor;
+    Color strokeColor;
+    bool isFilled;
+    bool isStroked;
 
   private:
     Body(const Vector& position, float density, float mass, float resitution, float area, bool isStatic, BodyType bodyType, float radius, float width, float height);
@@ -79,6 +74,12 @@ namespace MindlessEngine
 
     Body(Body&& body);
     Body& operator=(Body&& body);
+
+    void fill(const Color& color);
+    void noFill();
+
+    void stroke(const Color& color);
+    void noStroke();
 
     void update(float deltaTime, const Vector& gravity);
 

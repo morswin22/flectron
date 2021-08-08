@@ -13,8 +13,8 @@ namespace MindlessEngine
   Body::Body(const Vector& position, float density, float mass, float resitution, float area, bool isStatic, BodyType bodyType, float radius, float width, float height)
     : position(position), linearVelocity(), rotation(0.0f), rotationalVelocity(0.0f), force(), 
       density(density), mass(mass), invMass(0.0f), resitution(resitution), area(area), isStatic(isStatic), 
-      numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true), vertexLayout(), vertexArray(nullptr), vertexBuffer(nullptr), indexBuffer(nullptr), 
-      bodyType(bodyType), radius(radius), width(width), height(height), color(Colors::lightPurple())
+      numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true),
+      bodyType(bodyType), radius(radius), width(width), height(height), fillColor(Colors::lightPurple()), strokeColor(Colors::white()), isFilled(true), isStroked(false)
   {
     if (!isStatic)
     {
@@ -39,10 +39,6 @@ namespace MindlessEngine
 
     int numTriangles = numVertices - 2;
     triangles = trianglesFromVertices(vertices, numVertices);
-    indexBuffer = new IndexBuffer(triangles, numTriangles * 3);
-
-    vertexLayout.pushFloat(2);
-    vertexArray = new VertexArray();
   }
 
   Body::~Body()
@@ -50,16 +46,15 @@ namespace MindlessEngine
     delete[] vertices;
     delete[] triangles;
     delete[] transformedVertices;
-    delete vertexArray;
-    if (vertexBuffer != nullptr)
-      delete vertexBuffer;
-    delete indexBuffer;
   }
 
   Body::Body(const Body& other)
     : Body(other.position, other.density, other.mass, other.resitution, other.area, other.isStatic, other.bodyType, other.radius, other.width, other.height)
   {
-    // TODO copy also all the changed data that is not set by the default constructor
+    linearVelocity = other.linearVelocity;
+    rotation = other.rotation;
+    rotationalVelocity = other.rotationalVelocity;
+    force = other.force;
 
     invMass = other.invMass;
 
@@ -67,29 +62,31 @@ namespace MindlessEngine
     vertices = new Vector[numVertices];
     for (int i = 0; i < numVertices; i++)
       vertices[i] = other.vertices[i];
+
     transformedVertices = new Vector[numVertices];
+    for (int i = 0; i < numVertices; i++)
+      transformedVertices[i] = other.transformedVertices[i];
 
     int numTriangles = numVertices - 2;
     triangles = trianglesFromVertices(vertices, numVertices);
-    indexBuffer = new IndexBuffer(triangles, numTriangles * 3);
 
-    vertexLayout = other.vertexLayout;
-    vertexArray = new VertexArray();
+    isTransformUpdateRequired = other.isTransformUpdateRequired;
+
+    fillColor = other.fillColor;
+    strokeColor = other.strokeColor;
+    isFilled = other.isFilled;
+    isStroked = other.isStroked;
   }
 
   Body::Body(Body&& other)
     : position(other.position), linearVelocity(other.linearVelocity), rotation(other.rotation), rotationalVelocity(other.rotationalVelocity), 
       force(other.force), density(other.density), mass(other.mass), invMass(other.invMass), resitution(other.resitution), area(other.area), isStatic(other.isStatic), 
-      numVertices(other.numVertices), vertices(other.vertices), triangles(other.triangles), transformedVertices(other.transformedVertices), isTransformUpdateRequired(other.isTransformUpdateRequired), 
-      vertexLayout(other.vertexLayout), vertexArray(other.vertexArray), vertexBuffer(other.vertexBuffer), indexBuffer(other.indexBuffer), 
-      bodyType(other.bodyType), radius(other.radius), width(other.width), height(other.height), color(other.color)
+      numVertices(other.numVertices), vertices(other.vertices), triangles(other.triangles), transformedVertices(other.transformedVertices), isTransformUpdateRequired(other.isTransformUpdateRequired),
+      bodyType(other.bodyType), radius(other.radius), width(other.width), height(other.height), fillColor(other.fillColor), strokeColor(other.strokeColor), isFilled(other.isFilled), isStroked(other.isStroked)
   {
     other.vertices = nullptr;
     other.triangles = nullptr;
     other.transformedVertices = nullptr;
-    other.vertexArray = nullptr;
-    other.vertexBuffer = nullptr;
-    other.indexBuffer = nullptr;
   }
 
   Body& Body::operator=(Body&& other)
@@ -99,8 +96,6 @@ namespace MindlessEngine
       delete[] vertices;
       delete[] triangles;
       delete[] transformedVertices;
-      delete vertexArray;
-      delete indexBuffer;
 
       position = other.position;
       linearVelocity = other.linearVelocity;
@@ -118,22 +113,18 @@ namespace MindlessEngine
       triangles = other.triangles;
       transformedVertices = other.transformedVertices;
       isTransformUpdateRequired = other.isTransformUpdateRequired;
-      vertexLayout = other.vertexLayout;
-      vertexArray = other.vertexArray;
-      vertexBuffer = other.vertexBuffer;
-      indexBuffer = other.indexBuffer;
       bodyType = other.bodyType;
       radius = other.radius;
       width = other.width;
       height = other.height;
-      color = other.color;
+      fillColor = other.fillColor;
+      strokeColor = other.strokeColor;
+      isFilled = other.isFilled;
+      isStroked = other.isStroked;
 
       other.vertices = nullptr;
       other.triangles = nullptr;
       other.transformedVertices = nullptr;
-      other.vertexArray = nullptr;
-      other.vertexBuffer = nullptr;
-      other.indexBuffer = nullptr;
     }
 
     return *this;
@@ -150,21 +141,8 @@ namespace MindlessEngine
     {
       Transform tf(position, rotation);
 
-      float* unpackedVertices = new float[numVertices * 2];
       for (int i = 0; i < numVertices; i++)
-      {
         transformedVertices[i] = transform(vertices[i], tf);
-        unpackedVertices[i * 2]     = transformedVertices[i].x;
-        unpackedVertices[i * 2 + 1] = transformedVertices[i].y;
-      }
-
-      if (vertexBuffer != nullptr)
-        delete vertexBuffer;
-      
-      vertexBuffer = new VertexBuffer(unpackedVertices, numVertices * 2 * sizeof(float));
-      vertexArray->addBuffer(*vertexBuffer, vertexLayout);
-
-      delete[] unpackedVertices;
 
       isTransformUpdateRequired = false;
     }
@@ -177,15 +155,26 @@ namespace MindlessEngine
     return triangles;
   }
 
-  VertexArray* Body::getVertexArray()
+  void Body::fill(const Color& color)
   {
-    getTransformedVertices();
-    return vertexArray;
+    fillColor = color;
+    isFilled = true;
   }
 
-  IndexBuffer* Body::getIndexBuffer() const
+  void Body::noFill()
   {
-    return indexBuffer;
+    isFilled = false;
+  }
+  
+  void Body::stroke(const Color& color)
+  {
+    strokeColor = color;
+    isStroked = true;
+  }
+
+  void Body::noStroke()
+  {
+    isStroked = false;
   }
 
   void Body::update(float deltaTime, const Vector& gravity) 

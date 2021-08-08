@@ -6,34 +6,30 @@
 
 using namespace MindlessEngine;
 
-// #define RENDER_BODIES_WITH_STROKE
-
 class Mindless : public Game
 {
 private:
-  std::unique_ptr<Shader> basicShader;
+  std::unique_ptr<Shader> batchShader;
 
 public:
   Mindless()
-   : Game(), basicShader(nullptr)
+   : Game(), batchShader(nullptr)
   {
     window.setTitle("Mindless");
     window.setScale(15.0f);
     window.setBackground(Colors::darkGray());
 
-#ifdef RENDER_BODIES_WITH_STROKE
-    World::numCircleVerticies = 12;
-#endif
-
-    basicShader = std::make_unique<Shader>("../MindlessEngine/shaders/basic.vert", "../MindlessEngine/shaders/basic.frag");
+    batchShader = std::make_unique<Shader>("../MindlessEngine/shaders/batch.vert", "../MindlessEngine/shaders/batch.frag");
     
     float left, top, right, bottom;
     window.getCameraConstrains(&left, &top, &right, &bottom);
 
     float padding = (right - left) * 0.10f;
 
-    world.addBody(createBoxBody(right - left - padding * 2.0f, 3.0f, { 0.0f, -10.0f }, 1.0f, 0.5f, true));
-    world.getBody(0).color = Colors::darkGreen();
+    Body platform = createBoxBody(right - left - padding * 2.0f, 3.0f, { 0.0f, -10.0f }, 1.0f, 0.5f, true);
+    platform.fill(Colors::darkGreen());
+    platform.stroke(Colors::white());
+    world.addBody(platform);
   }
 
   void update(float elapsedTime) override
@@ -45,8 +41,10 @@ public:
     {
       float radius = randomFloat(0.75f, 1.25f);
 
-      world.addBody(createCircleBody(radius, mouseWorldPosition, 2.0f, 0.6f, false));
-      world.getBody(world.getBodyCount() - 1).color = Colors::random();
+      Body body = createCircleBody(radius, mouseWorldPosition, 2.0f, 0.6f, false);
+      body.fill(Colors::random());
+      body.stroke(Colors::white());
+      world.addBody(body);
     }
 
     if (Mouse::isPressed(Buttons::RIGHT))
@@ -54,8 +52,10 @@ public:
       float width = randomFloat(1.0f, 2.0f);
       float height = randomFloat(1.0f, 2.0f);
 
-      world.addBody(createBoxBody(width, height, mouseWorldPosition, 2.0f, 0.6f, false));
-      world.getBody(world.getBodyCount() - 1).color = Colors::random();
+      Body body = createBoxBody(width, height, mouseWorldPosition, 2.0f, 0.6f, false);
+      body.fill(Colors::random());
+      body.stroke(Colors::white());
+      world.addBody(body);
     }
 
 #if true
@@ -102,27 +102,11 @@ public:
   {
     window.clear();
 
-    basicShader->bind();
-    basicShader->setUniformMat4f("uMVP", window.getProjectionMatrix());
+    batchShader->bind();
+    batchShader->setUniformMat4f("uMVP", window.getProjectionMatrix());
     
-    Color strokeColor = Colors::white();
     for (int i = 0; i < world.getBodyCount(); i++)
-    {
-      Body& body = world.getBody(i);
-
-#ifdef RENDER_BODIES_WITH_STROKE
-      basicShader->setUniform4f("uColor", strokeColor.r, strokeColor.g, strokeColor.b, strokeColor.a);
-      Vector* vertices = body.getTransformedVertices();
-      int numVertices = body.getNumVertices();
-      for (int j = 0; j < numVertices; j++)
-      {
-        window.drawLine(vertices[j], vertices[(j + 1) % numVertices]);
-      }
-#endif
-
-      basicShader->setUniform4f("uColor", body.color.r, body.color.g, body.color.b, body.color.a);
-      window.draw(body);
-    }
+      window.draw(world.getBody(i));
   }
 };
 

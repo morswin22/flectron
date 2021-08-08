@@ -1,7 +1,7 @@
 project(MindlessEngine)
 
-configure_file(include/MindlessEngine/shaders/basic.vert shaders/basic.vert COPYONLY)
-configure_file(include/MindlessEngine/shaders/basic.frag shaders/basic.frag COPYONLY)
+configure_file(include/MindlessEngine/shaders/batch.vert shaders/batch.vert COPYONLY)
+configure_file(include/MindlessEngine/shaders/batch.frag shaders/batch.frag COPYONLY)
 
 set(MindlessEngineSource
   src/random.cpp

@@ -19,8 +19,7 @@ namespace MindlessEngine
     cameraPosition(glm::vec3(width * 0.5f, height * 0.5f, 0.0f)), 
     cameraScale(glm::vec3(1.0f, 1.0f, 1.0f)),
     projection(glm::ortho(0.0f, (float)width, 0.0f, (float)height, -1.0f, 1.0f)), 
-    view(glm::scale(glm::translate(glm::mat4(1.0f), cameraPosition), cameraScale)),
-    lineVertexArray(nullptr), lineVertexLayout(), lineIndexBuffer(nullptr), strokeWeight(1.0f)
+    view(glm::scale(glm::translate(glm::mat4(1.0f), cameraPosition), cameraScale))
   {
     if (!glfwInit())
       return;
@@ -51,19 +50,13 @@ namespace MindlessEngine
 
     glfwSetKeyCallback(window, keyboardCallback);
     glfwSetMouseButtonCallback(window, mouseCallback);
-    
-    lineVertexArray = std::make_unique<VertexArray>();
-    lineVertexLayout.pushFloat(2);
 
-    unsigned int lineIndices[]{
-      0, 1, 2,
-      2, 3, 0
-    };
-    lineIndexBuffer = std::make_unique<IndexBuffer>(lineIndices, 6);
+    Renderer::init();
   }
 
   Window::~Window()
   {
+    Renderer::shutdown();
     glfwDestroyWindow(window);
     glfwTerminate();
   }
@@ -175,27 +168,26 @@ namespace MindlessEngine
     return desiredFrameRate;
   }
 
-  void Window::draw(const VertexArray& va, const IndexBuffer& ib)
-  {
-    va.bind();
-    ib.bind();
-    glDrawElements(GL_TRIANGLES, ib.numIndices, GL_UNSIGNED_INT, 0);
-  }
-
   void Window::draw(Body& body)
   {
-    body.getVertexArray()->bind();
-    body.getIndexBuffer()->bind();
-    glDrawElements(GL_TRIANGLES, (body.getNumVertices() - 2) * 3, GL_UNSIGNED_INT, 0);
+    if (body.isStroked)
+    {
+      Vector* vertices = body.getTransformedVertices();
+      int numVertices = body.getNumVertices();
+      for (int j = 0; j < numVertices; j++)
+        draw(vertices[j], vertices[(j + 1) % numVertices], 1.0f, body.strokeColor);
+    }
+    if (body.isFilled)
+      Renderer::draw(body.getTransformedVertices(), body.getNumVertices(), body.getTriangles(), body.fillColor);
   }
 
-  void Window::drawLine(const Vector& a, const Vector& b)
+  void Window::draw(const Vector& a, const Vector& b, float weight, const Color& color)
   {
     Vector line = b - a;
 
     Vector invCameraScale( 1.0f / cameraScale.x, 1.0f / cameraScale.y );
-    Vector axis = normalize(line) * strokeWeight;
-    Vector normal = normalize({ -axis.y, axis.x  }) * strokeWeight;
+    Vector axis = normalize(line) * weight;
+    Vector normal = normalize({ -axis.y, axis.x  }) * weight;
 
     axis.x *= invCameraScale.x;
     axis.y *= invCameraScale.y;
@@ -203,25 +195,19 @@ namespace MindlessEngine
     normal.x *= invCameraScale.x;
     normal.y *= invCameraScale.y;
 
-    Vector p0 = a + normal - axis;
-    Vector p1 = a - normal - axis;
-
-    Vector p2 = b - normal + axis;
-    Vector p3 = b + normal + axis;
-
-    float positions[]{
-      p0.x, p0.y,
-      p1.x, p1.y,
-      p2.x, p2.y,
-      p3.x, p3.y
+    Vector vertices[4]{
+      a + normal - axis,
+      a - normal - axis,
+      b - normal + axis,
+      b + normal + axis
     };
 
-    VertexBuffer vb(positions, 8 * sizeof(float));
-    lineVertexArray->addBuffer(vb, lineVertexLayout);
+    uint32_t triangles[6]{
+      0, 1, 2,
+      2, 3, 0
+    };
 
-    lineVertexArray->bind();
-    lineIndexBuffer->bind();
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    Renderer::draw(vertices, 4, triangles, color);
   }
 
 };

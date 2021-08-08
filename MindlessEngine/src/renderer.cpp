@@ -9,115 +9,6 @@
 namespace MindlessEngine
 {
 
-  VertexBuffer::VertexBuffer(const void* data, unsigned int size)
-  {
-    glGenBuffers(1, &rendererID);
-    glBindBuffer(GL_ARRAY_BUFFER, rendererID);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-  }
-
-  VertexBuffer::~VertexBuffer()
-  {
-    glDeleteBuffers(1, &rendererID);
-  }
-
-  void VertexBuffer::bind() const
-  {
-    glBindBuffer(GL_ARRAY_BUFFER, rendererID);
-  }
-
-  void VertexBuffer::unbind() const
-  {
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-  }
-
-  unsigned int VertexBufferElement::getSizeOfType(unsigned int type)
-  {
-    switch (type)
-    {
-      case GL_FLOAT:         return 4;
-      case GL_UNSIGNED_INT:  return 4;
-      case GL_UNSIGNED_BYTE: return 1;
-    }
-    return 0;
-  }
-
-  VertexBufferLayout::VertexBufferLayout() : elements(), stride(0) {}
-
-  void VertexBufferLayout::pushFloat(unsigned int count)
-  {
-    elements.push_back({ GL_FLOAT, count, GL_FALSE });
-    stride += VertexBufferElement::getSizeOfType(GL_FLOAT) * count;
-  }
-
-  void VertexBufferLayout::pushUnsignedInt(unsigned int count)
-  {
-    elements.push_back({ GL_UNSIGNED_INT, count, GL_FALSE });
-    stride += VertexBufferElement::getSizeOfType(GL_UNSIGNED_INT) * count;
-  }
-
-  void VertexBufferLayout::pushUnsignedChar(unsigned int count)
-  {
-    elements.push_back({ GL_UNSIGNED_BYTE, count, GL_FALSE });
-    stride += VertexBufferElement::getSizeOfType(GL_UNSIGNED_BYTE) * count;
-  }
-
-  VertexArray::VertexArray()
-  {
-    glGenVertexArrays(1, &rendererID);
-  }
-
-  VertexArray::~VertexArray()
-  {
-    glDeleteVertexArrays(1, &rendererID);
-  }
-
-  void VertexArray::addBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout)
-  {
-    bind();
-    vb.bind();
-    unsigned int offset = 0;
-    for (unsigned int i = 0; i < layout.elements.size(); i++)
-    {
-      const VertexBufferElement& element = layout.elements[i];
-      glEnableVertexAttribArray(i);
-      glVertexAttribPointer(i, element.count, element.type, element.normalized, layout.stride, (const void*) offset);
-      offset += element.count * VertexBufferElement::getSizeOfType(element.type);
-    }
-  }
-
-  void VertexArray::bind() const
-  {
-    glBindVertexArray(rendererID);
-  }
-
-  void VertexArray::unbind() const
-  {
-    glBindVertexArray(0);
-  }
-
-  IndexBuffer::IndexBuffer(unsigned int* indices, unsigned int numIndices) : numIndices(numIndices)
-  {
-    glGenBuffers(1, &rendererID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererID);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-  }
-
-  IndexBuffer::~IndexBuffer()
-  {
-    glDeleteBuffers(1, &rendererID);
-  }
-
-  void IndexBuffer::bind() const
-  {
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererID);
-  }
-
-  void IndexBuffer::unbind() const
-  {
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  }
-
   Shader::Shader(const std::string& filepathVertex, const std::string& filepathFragment)
     : filepathVertex(filepathVertex), filepathFragment(filepathFragment)
   {
@@ -229,6 +120,123 @@ namespace MindlessEngine
     glDeleteShader(fs);
 
     return program;
+  }
+
+  static const std::size_t MaxTriangleCount = 10000;
+  static const std::size_t MaxVertexCount = MaxTriangleCount * 3;
+  static const std::size_t MaxIndexCount = MaxTriangleCount * 3;
+
+  struct Vertex
+  {
+    glm::vec2 position;
+    glm::vec4 color;
+  };
+
+  struct RendererData
+  {
+    GLuint va = 0;
+    GLuint vb = 0;
+    GLuint ib = 0;
+
+    Vertex* buffer = nullptr;
+    Vertex* bufferPointer = nullptr;
+
+    uint32_t* indices = nullptr;
+    uint32_t* indicesPointer = nullptr;
+
+    uint32_t indexCount = 0;
+    uint32_t offset = 0;
+  };
+
+  static RendererData rendererData;
+
+  void Renderer::init()
+  {
+    rendererData.buffer = new Vertex[MaxVertexCount];
+
+    glCreateVertexArrays(1, &rendererData.va);
+    glBindVertexArray(rendererData.va);
+
+    glCreateBuffers(1, &rendererData.vb);
+    glBindBuffer(GL_ARRAY_BUFFER, rendererData.vb);
+    glBufferData(GL_ARRAY_BUFFER, MaxVertexCount * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
+
+    glEnableVertexArrayAttrib(rendererData.va, 0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, position));
+
+    glEnableVertexArrayAttrib(rendererData.va, 1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, color));
+
+    rendererData.indices = new uint32_t[MaxIndexCount];
+
+    glGenBuffers(1, &rendererData.ib);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererData.ib);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, MaxIndexCount * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
+  }
+
+  void Renderer::shutdown()
+  {
+    glDeleteVertexArrays(1, &rendererData.va);
+    glDeleteBuffers(1, &rendererData.vb);
+    glDeleteBuffers(1, &rendererData.ib);
+
+    delete[] rendererData.buffer;
+    delete[] rendererData.indices;
+  }
+
+  void Renderer::beginBatch()
+  {
+    rendererData.bufferPointer = rendererData.buffer;
+    rendererData.indicesPointer = rendererData.indices;
+  }
+
+  void Renderer::endBatch()
+  {
+    GLsizeiptr quadSize = (uint8_t*)rendererData.bufferPointer - (uint8_t*)rendererData.buffer;
+    glBindBuffer(GL_ARRAY_BUFFER, rendererData.vb);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, quadSize, rendererData.buffer);
+
+    GLsizeiptr indexSize = (uint8_t*)rendererData.indicesPointer - (uint8_t*)rendererData.indices;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererData.ib);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indexSize, rendererData.indices);
+  }
+
+  void Renderer::flush()
+  {
+    glBindVertexArray(rendererData.va);
+    glBindBuffer(GL_ARRAY_BUFFER, rendererData.vb);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererData.ib);
+    glDrawElements(GL_TRIANGLES, rendererData.indexCount, GL_UNSIGNED_INT, nullptr);
+
+    rendererData.indexCount = 0;
+    rendererData.offset = 0;
+  }
+
+  void Renderer::draw(const Vector* vertices, int numVertices, const uint32_t* triangles, const Color& color)
+  {
+    int numTriangles = (numVertices - 2) * 3;
+
+    if (rendererData.indexCount + numTriangles >= MaxIndexCount)
+    {
+      endBatch();
+      flush();
+      beginBatch();
+    }
+
+    for (int i = 0; i < numVertices; i++)
+    {
+      rendererData.bufferPointer->position = { vertices[i].x, vertices[i].y };
+      rendererData.bufferPointer->color = { color.r, color.g, color.b, color.a };
+      rendererData.bufferPointer++;
+    }
+
+    for (int i = 0; i < numTriangles; i++)
+    {
+      rendererData.indices[rendererData.indexCount++] = triangles[i] + rendererData.offset;
+      rendererData.indicesPointer++;
+    }
+    rendererData.offset += numVertices;
+  
   }
 
 };

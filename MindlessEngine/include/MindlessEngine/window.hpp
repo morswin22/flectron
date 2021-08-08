@@ -36,14 +36,6 @@ namespace MindlessEngine
     glm::mat4 projection;
     glm::mat4 view;
 
-  private:
-    std::unique_ptr<VertexArray> lineVertexArray;
-    VertexBufferLayout lineVertexLayout;
-    std::unique_ptr<IndexBuffer> lineIndexBuffer;
-
-  public:
-    float strokeWeight;
-
   public:
     Window(int width, int height, const std::string& title);
     ~Window();
@@ -77,11 +69,9 @@ namespace MindlessEngine
 
     void setDesiredFrameRate(float desiredFrameRate);
     float getDesiredFrameRate() const;
-    
-    void draw(const VertexArray& va, const IndexBuffer& ib);
-    void draw(Body& body);
 
-    void drawLine(const Vector& a, const Vector& b);
+    void draw(Body& body);
+    void draw(const Vector& a, const Vector& b, float weight, const Color& color);
   };
 
 };
