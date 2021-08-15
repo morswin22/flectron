@@ -1,6 +1,6 @@
 project(Mindless)
 
-configure_file(assets/platform.png assets/platform.png COPYONLY)
+configure_file(assets/atlas.png assets/atlas.png COPYONLY)
 configure_file(shaders/batch.vert shaders/batch.vert COPYONLY)
 configure_file(shaders/batch.frag shaders/batch.frag COPYONLY)
 

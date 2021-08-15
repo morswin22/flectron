@@ -60,8 +60,11 @@ namespace MindlessEngine
 
     Color fillColor;
     Color strokeColor;
+    GLuint textureIndex;
+    glm::vec4 texturePositions;
     bool isFilled;
     bool isStroked;
+    bool isTextured;
 
   private:
     Body(const Vector& position, float density, float mass, float resitution, float area, bool isStatic, BodyType bodyType, float radius, float width, float height);
@@ -80,6 +83,10 @@ namespace MindlessEngine
 
     void stroke(const Color& color);
     void noStroke();
+
+    void texture(const Texture& texture);
+    void texture(const TextureAtlas& textureAtlas, float x, float y, float width, float height);
+    void noTexture();
 
     void update(float deltaTime, const Vector& gravity);
 

@@ -14,7 +14,9 @@ namespace MindlessEngine
     : position(position), linearVelocity(), rotation(0.0f), rotationalVelocity(0.0f), force(), 
       density(density), mass(mass), invMass(0.0f), resitution(resitution), area(area), isStatic(isStatic), 
       numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true),
-      bodyType(bodyType), radius(radius), width(width), height(height), fillColor(Colors::lightPurple()), strokeColor(Colors::white()), isFilled(true), isStroked(false)
+      bodyType(bodyType), radius(radius), width(width), height(height), 
+      fillColor(Colors::lightPurple()), strokeColor(Colors::white()), textureIndex(0), texturePositions(0.0f, 0.0f, 0.0f, 0.0f),
+      isFilled(true), isStroked(false), isTextured(false)
   {
     if (!isStatic)
     {
@@ -74,15 +76,20 @@ namespace MindlessEngine
 
     fillColor = other.fillColor;
     strokeColor = other.strokeColor;
+    textureIndex = other.textureIndex;
+    texturePositions = other.texturePositions;
     isFilled = other.isFilled;
     isStroked = other.isStroked;
+    isTextured = other.isTextured;
   }
 
   Body::Body(Body&& other)
     : position(other.position), linearVelocity(other.linearVelocity), rotation(other.rotation), rotationalVelocity(other.rotationalVelocity), 
       force(other.force), density(other.density), mass(other.mass), invMass(other.invMass), resitution(other.resitution), area(other.area), isStatic(other.isStatic), 
       numVertices(other.numVertices), vertices(other.vertices), triangles(other.triangles), transformedVertices(other.transformedVertices), isTransformUpdateRequired(other.isTransformUpdateRequired),
-      bodyType(other.bodyType), radius(other.radius), width(other.width), height(other.height), fillColor(other.fillColor), strokeColor(other.strokeColor), isFilled(other.isFilled), isStroked(other.isStroked)
+      bodyType(other.bodyType), radius(other.radius), width(other.width), height(other.height), 
+      fillColor(other.fillColor), strokeColor(other.strokeColor), textureIndex(other.textureIndex), texturePositions(other.texturePositions),
+      isFilled(other.isFilled), isStroked(other.isStroked), isTextured(other.isTextured)
   {
     other.vertices = nullptr;
     other.triangles = nullptr;
@@ -119,8 +126,11 @@ namespace MindlessEngine
       height = other.height;
       fillColor = other.fillColor;
       strokeColor = other.strokeColor;
+      textureIndex = other.textureIndex;
+      texturePositions = other.texturePositions;
       isFilled = other.isFilled;
       isStroked = other.isStroked;
+      isTextured = other.isTextured;
 
       other.vertices = nullptr;
       other.triangles = nullptr;
@@ -159,6 +169,7 @@ namespace MindlessEngine
   {
     fillColor = color;
     isFilled = true;
+    isTextured = false;
   }
 
   void Body::noFill()
@@ -175,6 +186,30 @@ namespace MindlessEngine
   void Body::noStroke()
   {
     isStroked = false;
+  }
+
+  void Body::texture(const Texture& texture)
+  {
+    if (numVertices != 4)
+      throw std::runtime_error("Can only texture a quad");
+    textureIndex = texture.get();
+    texturePositions = { 0.0f, 0.0f, 1.0f, 1.0f };
+    isTextured = true;
+    isFilled = false;
+  }
+
+  void Body::texture(const TextureAtlas& textureAtlas, float x, float y, float width, float height)
+  {
+    if (numVertices != 4)
+      throw std::runtime_error("Can only texture a quad");
+    textureIndex = textureAtlas.get(x, y, width, height, texturePositions);
+    isTextured = true;
+    isFilled = false;
+  }
+
+  void Body::noTexture()
+  {
+    isTextured = false;
   }
 
   void Body::update(float deltaTime, const Vector& gravity) 

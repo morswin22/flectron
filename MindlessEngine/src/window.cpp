@@ -178,7 +178,14 @@ namespace MindlessEngine
         draw(vertices[j], vertices[(j + 1) % numVertices], 1.0f, body.strokeColor);
     }
     if (body.isFilled)
+    {
       Renderer::draw(body.getTransformedVertices(), body.getNumVertices(), body.getTriangles(), body.fillColor);
+    }
+    else if (body.isTextured)
+    {
+      Vector* vertices = body.getTransformedVertices();
+      Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], body.textureIndex, body.texturePositions);
+    }
   }
 
   void Window::draw(const Vector& a, const Vector& b, float weight, const Color& color)

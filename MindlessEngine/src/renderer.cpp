@@ -133,6 +133,36 @@ namespace MindlessEngine
     return program;
   }
 
+  Texture::Texture(const std::string& filepath, bool nearest)
+    : rendererID(loadTexture(filepath, nearest)), filepath(filepath)
+  {}
+
+  Texture::~Texture()
+  {
+    glDeleteTextures(1, &rendererID);
+  }
+
+  GLuint Texture::get() const
+  {
+    return rendererID;
+  }
+
+  TextureAtlas::TextureAtlas(const std::string& filepath, int columns, int rows, bool nearest)
+    : Texture(filepath, nearest)
+  {
+    xOffset = 1.0f / (float)columns;
+    yOffset = 1.0f / (float)rows;
+  }
+
+  GLuint TextureAtlas::get(float column, float row, float width, float height, glm::vec4& texturePosition) const
+  {
+    texturePosition.x = xOffset * column;
+    texturePosition.y = yOffset * row;
+    texturePosition.p = xOffset * width;
+    texturePosition.q = yOffset * height;
+    return rendererID;
+  }
+
   static const std::size_t MaxTriangleCount = 10000;
   static const std::size_t MaxVertexCount = MaxTriangleCount * 3;
   static const std::size_t MaxIndexCount = MaxTriangleCount * 3;
@@ -364,7 +394,82 @@ namespace MindlessEngine
     rendererData.offset += 4;
   }
 
-  GLuint loadTexture(const std::string& filepath)
+  void Renderer::draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, const glm::vec4& texturePosition)
+  {
+    if (rendererData.indexCount + 6 >= MaxIndexCount || rendererData.textureSlotIndex >= MaxTextureSlots)
+    {
+      endBatch();
+      flush();
+      beginBatch();
+    }
+
+    constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    const float tilingFactor = 1.0f;
+
+    float textureIndex = 0.0f;
+    for (uint32_t i = 1; i < rendererData.textureSlotIndex; i++)
+    {
+      if (rendererData.textureSlots[i] == textureID)
+      {
+        textureIndex = (float)i;
+        break;
+      }
+    }
+
+    if (textureIndex == 0.0f)
+    {
+      textureIndex = (float)rendererData.textureSlotIndex;
+      rendererData.textureSlots[rendererData.textureSlotIndex] = textureID;
+      rendererData.textureSlotIndex++;
+    }
+
+    rendererData.bufferPointer->position = { a.x, a.y };
+    rendererData.bufferPointer->color = color;
+    rendererData.bufferPointer->textureCoord = { texturePosition.x, texturePosition.y };
+    rendererData.bufferPointer->textureIndex = textureIndex;
+    rendererData.bufferPointer->tilingFactor = tilingFactor;
+    rendererData.bufferPointer++;
+
+    rendererData.bufferPointer->position = { b.x, b.y };
+    rendererData.bufferPointer->color = color;
+    rendererData.bufferPointer->textureCoord = { texturePosition.x + texturePosition.p, texturePosition.y };
+    rendererData.bufferPointer->textureIndex = textureIndex;
+    rendererData.bufferPointer->tilingFactor = tilingFactor;
+    rendererData.bufferPointer++;
+
+    rendererData.bufferPointer->position = { c.x, c.y };
+    rendererData.bufferPointer->color = color;
+    rendererData.bufferPointer->textureCoord = { texturePosition.x + texturePosition.p, texturePosition.y + texturePosition.q };
+    rendererData.bufferPointer->textureIndex = textureIndex;
+    rendererData.bufferPointer->tilingFactor = tilingFactor;
+    rendererData.bufferPointer++;
+
+    rendererData.bufferPointer->position = { d.x, d.y };
+    rendererData.bufferPointer->color = color;
+    rendererData.bufferPointer->textureCoord = { texturePosition.x, texturePosition.y + texturePosition.q };
+    rendererData.bufferPointer->textureIndex = textureIndex;
+    rendererData.bufferPointer->tilingFactor = tilingFactor;
+    rendererData.bufferPointer++;
+
+    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 0;
+    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 1;
+    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 2;
+    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 2;
+    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 3;
+    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 0;
+    rendererData.indicesPointer += 6;
+
+    rendererData.offset += 4;
+  }
+
+  void Renderer::draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, TextureAtlas* textureAtlas, float x, float y, float w, float h)
+  {
+    glm::vec4 texturePosition;
+    GLuint textureID = textureAtlas->get(x, y, w, h, texturePosition);
+    draw(a, b, c, d, textureID, texturePosition);
+  }
+
+  GLuint loadTexture(const std::string& filepath, bool nearest)
   {
     int w, h, bits;
     // stbi_set_flip_vertically_on_load(true);
@@ -372,8 +477,8 @@ namespace MindlessEngine
     GLuint textureID;
     glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, nearest ? GL_NEAREST : GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, nearest ? GL_NEAREST : GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);

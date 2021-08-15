@@ -13,11 +13,11 @@ class Mindless : public Game
 {
 private:
   std::unique_ptr<Shader> batchShader;
-  GLuint platformTexture;
+  std::unique_ptr<TextureAtlas> textureAtlas;
 
 public:
   Mindless()
-   : Game(), batchShader(nullptr)
+   : Game(), batchShader(nullptr), textureAtlas(nullptr)
   {
     window.setTitle("Mindless");
     window.setScale(15.0f);
@@ -32,7 +32,7 @@ public:
     batchShader->bind();
     batchShader->setUniform1iv("uTextures", samplers, window.maxTextureSlots);
     
-    platformTexture = loadTexture("assets/platform.png");
+    textureAtlas = std::make_unique<TextureAtlas>("assets/atlas.png", 9, 2, true);
 
     float left, top, right, bottom;
     window.getCameraConstrains(&left, &top, &right, &bottom);
@@ -40,8 +40,7 @@ public:
     float padding = (right - left) * 0.10f;
 
     Body platform = createBoxBody(right - left - padding * 2.0f, 3.0f, { 0.0f, -10.0f }, 1.0f, 0.5f, true);
-    platform.fill(Colors::darkGreen());
-    platform.stroke(Colors::white());
+    platform.texture(*textureAtlas.get(), 0.0f, 0.0f, 9.0f, 1.0f);
     world.addBody(platform);
   }
 
@@ -64,8 +63,7 @@ public:
       float height = randomFloat(1.0f, 2.0f);
 
       Body body = createBoxBody(width, height, mouseWorldPosition, 2.0f, 0.6f, false);
-      body.fill(Colors::random());
-      body.stroke(Colors::white());
+      body.texture(*textureAtlas.get(), (float)randomInt(0, 5), 1.0f, 1.0f, 1.0f);
       world.addBody(body);
     }
 
@@ -119,12 +117,8 @@ public:
 
     batchShader->bind();
     batchShader->setUniformMat4f("uMVP", window.getProjectionMatrix());
-    
-    Body& platform = world.getBody(0);
-    Vector* vertices = platform.getTransformedVertices();
-    Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], platformTexture, 1.0f);
 
-    for (int i = 1; i < world.getBodyCount(); i++)
+    for (int i = 0; i < world.getBodyCount(); i++)
       window.draw(world.getBody(i));
   }
 };
