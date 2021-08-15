@@ -33,10 +33,13 @@ namespace MindlessEngine
     void bind() const;
     void unbind() const;
 
+    GLuint getRendererID() const;
+
     void setUniform1i(const std::string& name, int value);
     void setUniform1f(const std::string& name, float value);
     void setUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
     void setUniformMat4f(const std::string& name, const glm::mat4& matrix);
+    void setUniform1iv(const std::string& name, int* array, int size);
   };
 
   class Vector;
@@ -46,7 +49,7 @@ namespace MindlessEngine
   class Renderer
   {
   public:
-    static void init();
+    static void init(int& maxTextureSlotsOut);
     static void shutdown();
 
     static void beginBatch();
@@ -54,6 +57,9 @@ namespace MindlessEngine
     static void flush();
 
     static void draw(const Vector* vertices, int numVertices, const uint32_t* triangles, const Color& color);
+    static void draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, float tilingFactor);
   };
+
+  GLuint loadTexture(const std::string& filepath);
 
 };

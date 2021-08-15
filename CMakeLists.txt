@@ -8,6 +8,7 @@ find_package(OpenGL REQUIRED)
 add_subdirectory(lib/glfw)
 add_subdirectory(lib/glew)
 add_subdirectory(lib/glm)
+add_subdirectory(lib/stb_image)
 
 add_subdirectory(MindlessEngine)
 add_subdirectory(Mindless)

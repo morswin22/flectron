@@ -1,15 +1,19 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <sstream>
 
 #include <MindlessEngine/MindlessEngine.hpp>
 
 using namespace MindlessEngine;
 
+#define SHOW_DEBUG_INFO
+
 class Mindless : public Game
 {
 private:
   std::unique_ptr<Shader> batchShader;
+  GLuint platformTexture;
 
 public:
   Mindless()
@@ -19,8 +23,17 @@ public:
     window.setScale(15.0f);
     window.setBackground(Colors::darkGray());
 
-    batchShader = std::make_unique<Shader>("../MindlessEngine/shaders/batch.vert", "../MindlessEngine/shaders/batch.frag");
+    batchShader = std::make_unique<Shader>("shaders/batch.vert", "shaders/batch.frag");
+
+    int samplers[window.maxTextureSlots];
+    for (int i = 0; i < window.maxTextureSlots; i++)
+      samplers[i] = i;
+
+    batchShader->bind();
+    batchShader->setUniform1iv("uTextures", samplers, window.maxTextureSlots);
     
+    platformTexture = loadTexture("assets/platform.png");
+
     float left, top, right, bottom;
     window.getCameraConstrains(&left, &top, &right, &bottom);
 
@@ -34,8 +47,6 @@ public:
 
   void update(float elapsedTime) override
   {
-    std::cout << "Elapsed time: " << elapsedTime * 1000.0f << "ms" << std::endl;
-
     // TODO change for Mouse::isClicked()
     if (Mouse::isPressed(Buttons::LEFT))
     {
@@ -95,7 +106,11 @@ public:
     world.update(elapsedTime);
     removeOffscreen();
 
-    std::cout << "Number of bodies: " << world.getBodyCount() << "\n";
+#ifdef SHOW_DEBUG_INFO
+    std::ostringstream title;
+    title << "Mindless (Elapsed time: " << (int)(elapsedTime * 1000.0f) << "ms, Number of bodies: " << world.getBodyCount() << ")";
+    window.setTitle(title.str());
+#endif
   }
 
   void render() override
@@ -105,7 +120,11 @@ public:
     batchShader->bind();
     batchShader->setUniformMat4f("uMVP", window.getProjectionMatrix());
     
-    for (int i = 0; i < world.getBodyCount(); i++)
+    Body& platform = world.getBody(0);
+    Vector* vertices = platform.getTransformedVertices();
+    Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], platformTexture, 1.0f);
+
+    for (int i = 1; i < world.getBodyCount(); i++)
       window.draw(world.getBody(i));
   }
 };

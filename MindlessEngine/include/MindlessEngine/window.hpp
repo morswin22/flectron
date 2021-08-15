@@ -19,6 +19,7 @@ namespace MindlessEngine
   public:
     int width;
     int height;
+    int maxTextureSlots;
 
   private:
     std::string title;

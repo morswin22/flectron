@@ -1,8 +1,5 @@
 project(MindlessEngine)
 
-configure_file(include/MindlessEngine/shaders/batch.vert shaders/batch.vert COPYONLY)
-configure_file(include/MindlessEngine/shaders/batch.frag shaders/batch.frag COPYONLY)
-
 set(MindlessEngineSource
   src/random.cpp
   src/color.cpp
@@ -37,10 +34,12 @@ target_include_directories(MindlessEngine
   PUBLIC include
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/glew/include  
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/stb_image
 )
 
 target_link_libraries(MindlessEngine 
   glfw
   libglew_static
   glm
+  stb_image
 )

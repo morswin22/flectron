@@ -7,3 +7,6 @@
 [submodule "lib/glm"]
 	path = lib/glm
 	url = https://github.com/g-truc/glm
+[submodule "lib/stb_image"]
+	path = lib/stb_image
+	url = https://github.com/morswin22/stb_image

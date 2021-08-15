@@ -51,7 +51,7 @@ namespace MindlessEngine
     glfwSetKeyCallback(window, keyboardCallback);
     glfwSetMouseButtonCallback(window, mouseCallback);
 
-    Renderer::init();
+    Renderer::init(maxTextureSlots);
   }
 
   Window::~Window()
