@@ -7,17 +7,16 @@
 
 using namespace MindlessEngine;
 
-#define SHOW_DEBUG_INFO
-
 class Mindless : public Game
 {
 private:
   std::unique_ptr<Shader> batchShader;
   std::unique_ptr<TextureAtlas> textureAtlas;
+  std::unique_ptr<FontAtlas> fontAtlas;
 
 public:
   Mindless()
-   : Game(), batchShader(nullptr), textureAtlas(nullptr)
+   : Game(), batchShader(nullptr), textureAtlas(nullptr), fontAtlas(nullptr)
   {
     window.setTitle("Mindless");
     window.setBackground(Colors::darkGray());
@@ -33,6 +32,7 @@ public:
     batchShader->setUniform1iv("uTextures", samplers, window.maxTextureSlots);
     
     textureAtlas = std::make_unique<TextureAtlas>("assets/atlas.png", 9, 2, true);
+    fontAtlas = std::make_unique<FontAtlas>("assets/font.png", 13, 7, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()[]{}-=+/\\|?.,<>~:; ");
 
     glm::vec4 constraints = window.camera.getConstraints();
     float padding = (constraints.t - constraints.s) * 0.10f;
@@ -41,7 +41,7 @@ public:
     world.addBody(platform);
   }
 
-  void update(float elapsedTime) override
+  void update() override
   {
     // TODO change for Mouse::isClicked()
     if (Mouse::isPressed(Buttons::LEFT))
@@ -76,12 +76,6 @@ public:
 
     world.update(elapsedTime);
     removeOffscreen();
-
-#ifdef SHOW_DEBUG_INFO
-    std::ostringstream title;
-    title << "Mindless (Elapsed time: " << (int)(elapsedTime * 1000.0f) << "ms, Number of bodies: " << world.getBodyCount() << ")";
-    window.setTitle(title.str());
-#endif
   }
 
   void render() override
@@ -93,10 +87,19 @@ public:
 
     for (int i = 0; i < world.getBodyCount(); i++)
       window.draw(world.getBody(i));
+
+    std::ostringstream text;
+    text << "Elapsed time: " << (int)(elapsedTime * 1000.0f) << "ms\n";
+    text << "Number of bodies: " << world.getBodyCount();
+
+    if (Keyboard::isPressed(Keys::H))
+      text << "\n\nPress Q/E to rotate\nPress LEFT/RIGHT to add circles/boxes";
+
+    const float scale = window.camera.getScale();
+    const glm::vec4& constraints = window.camera.getConstraints();
+    window.draw(*fontAtlas.get(), { constraints.s, constraints.q }, text.str(), 175.0f * scale, Colors::white());
     
     // Handle camera events
-    const float scale = window.camera.getScale();
-
     float dx = 0.0f;
     float dy = 0.0f;
 

@@ -63,7 +63,9 @@ namespace MindlessEngine
 
   class TextureAtlas : public Texture
   {
-  private:
+  protected:
+    int columns;
+    int rows;
     float xOffset;
     float yOffset;
 
@@ -77,6 +79,25 @@ namespace MindlessEngine
     TextureAtlas& operator=(TextureAtlas&&) = delete;
 
     GLuint get(float column, float row, float width, float height, glm::vec4& texturePosition) const;
+  };
+
+  class FontAtlas : public TextureAtlas
+  {
+  private:
+    std::string alphabet;
+    std::unordered_map<char, int> indexMap;
+
+  public:
+    FontAtlas(const std::string& filepath, int columns, int rows, const std::string& alphabet);
+
+    FontAtlas(const FontAtlas&) = delete;
+    FontAtlas& operator=(const FontAtlas&) = delete;
+
+    FontAtlas(FontAtlas&&) = delete;
+    FontAtlas& operator=(FontAtlas&&) = delete;
+
+    GLuint get(const std::string& text, glm::vec4* texturePositions);
+    glm::vec2 getOffsets() const;
   };
 
   class Vector;
@@ -94,9 +115,9 @@ namespace MindlessEngine
     static void flush();
 
     static void draw(const Vector* vertices, int numVertices, const uint32_t* triangles, const Color& color);
-    static void draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, float tilingFactor);
-    static void draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, const glm::vec4& texturePosition);
-    static void draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, TextureAtlas* textureAtlas, float x, float y, float w, float h);
+    static void draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, float tilingFactor, const Color& tint);
+    static void draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, const glm::vec4& texturePosition, const Color& tint);
+    static void draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, TextureAtlas* textureAtlas, float x, float y, float w, float h, const Color& tint);
   };
 
   GLuint loadTexture(const std::string& filepath, bool nearest);

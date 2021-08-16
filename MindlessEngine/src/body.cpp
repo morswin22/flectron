@@ -15,7 +15,7 @@ namespace MindlessEngine
       density(density), mass(mass), invMass(0.0f), resitution(resitution), area(area), isStatic(isStatic), 
       numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true),
       bodyType(bodyType), radius(radius), width(width), height(height), 
-      fillColor(Colors::lightPurple()), strokeColor(Colors::white()), textureIndex(0), texturePositions(0.0f, 0.0f, 0.0f, 0.0f),
+      fillColor(Colors::white()), strokeColor(Colors::white()), textureIndex(0), texturePositions(0.0f, 0.0f, 0.0f, 0.0f),
       isFilled(true), isStroked(false), isTextured(false)
   {
     if (!isStatic)
@@ -169,7 +169,6 @@ namespace MindlessEngine
   {
     fillColor = color;
     isFilled = true;
-    isTextured = false;
   }
 
   void Body::noFill()
@@ -195,7 +194,6 @@ namespace MindlessEngine
     textureIndex = texture.get();
     texturePositions = { 0.0f, 0.0f, 1.0f, 1.0f };
     isTextured = true;
-    isFilled = false;
   }
 
   void Body::texture(const TextureAtlas& textureAtlas, float x, float y, float width, float height)
@@ -204,7 +202,6 @@ namespace MindlessEngine
       throw std::runtime_error("Can only texture a quad");
     textureIndex = textureAtlas.get(x, y, width, height, texturePositions);
     isTextured = true;
-    isFilled = false;
   }
 
   void Body::noTexture()

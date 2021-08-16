@@ -149,7 +149,7 @@ namespace MindlessEngine
   }
 
   TextureAtlas::TextureAtlas(const std::string& filepath, int columns, int rows, bool nearest)
-    : Texture(filepath, nearest)
+    : Texture(filepath, nearest), columns(columns), rows(rows)
   {
     xOffset = 1.0f / (float)columns;
     yOffset = 1.0f / (float)rows;
@@ -162,6 +162,34 @@ namespace MindlessEngine
     texturePosition.p = xOffset * width;
     texturePosition.q = yOffset * height;
     return rendererID;
+  }
+
+  FontAtlas::FontAtlas(const std::string& filepath, int columns, int rows, const std::string& alphabet)
+    : TextureAtlas(filepath, columns, rows, true), alphabet(alphabet)
+  {
+    for (int i = 0; i < alphabet.size(); i++)
+      indexMap[(char)alphabet[i]] = i;
+  }
+
+  GLuint FontAtlas::get(const std::string& text, glm::vec4* texturePositions)
+  {
+    for (int i = 0; i < text.size(); i++)
+    {
+      int index = indexMap[(char)text[i]];
+      int x = index % columns;
+      int y = index / columns;
+
+      texturePositions[i].x = xOffset * (float)x;
+      texturePositions[i].y = yOffset * (float)y;
+      texturePositions[i].p = xOffset;
+      texturePositions[i].q = yOffset;
+    }
+    return rendererID;
+  }
+
+  glm::vec2 FontAtlas::getOffsets() const
+  {
+    return { xOffset, yOffset };
   }
 
   static const std::size_t MaxTriangleCount = 10000;
@@ -327,7 +355,7 @@ namespace MindlessEngine
   
   }
 
-  void Renderer::draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, float tilingFactor)
+  void Renderer::draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, float tilingFactor, const Color& tint)
   {
     if (rendererData.indexCount + 6 >= MaxIndexCount || rendererData.textureSlotIndex >= MaxTextureSlots)
     {
@@ -336,8 +364,7 @@ namespace MindlessEngine
       beginBatch();
     }
 
-    // could be used for tinting
-    constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    const glm::vec4 color( tint.r, tint.g, tint.b, tint.a );
 
     float textureIndex = 0.0f;
     for (uint32_t i = 1; i < rendererData.textureSlotIndex; i++)
@@ -395,7 +422,7 @@ namespace MindlessEngine
     rendererData.offset += 4;
   }
 
-  void Renderer::draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, const glm::vec4& texturePosition)
+  void Renderer::draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, const glm::vec4& texturePosition, const Color& tint)
   {
     if (rendererData.indexCount + 6 >= MaxIndexCount || rendererData.textureSlotIndex >= MaxTextureSlots)
     {
@@ -404,7 +431,7 @@ namespace MindlessEngine
       beginBatch();
     }
 
-    constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    const glm::vec4 color = { tint.r, tint.g, tint.b, tint.a };
     const float tilingFactor = 1.0f;
 
     float textureIndex = 0.0f;
@@ -463,11 +490,11 @@ namespace MindlessEngine
     rendererData.offset += 4;
   }
 
-  void Renderer::draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, TextureAtlas* textureAtlas, float x, float y, float w, float h)
+  void Renderer::draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, TextureAtlas* textureAtlas, float x, float y, float w, float h, const Color& tint)
   {
     glm::vec4 texturePosition;
     GLuint textureID = textureAtlas->get(x, y, w, h, texturePosition);
-    draw(a, b, c, d, textureID, texturePosition);
+    draw(a, b, c, d, textureID, texturePosition, tint);
   }
 
   GLuint loadTexture(const std::string& filepath, bool nearest)

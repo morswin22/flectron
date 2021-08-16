@@ -13,11 +13,12 @@ namespace MindlessEngine
     Vector mousePosition;
     Vector mouseWorldPosition;
     World world;
+    float elapsedTime;
 
   public:
     Game();
 
-    virtual void update(float elapsedTime) = 0;
+    virtual void update() = 0;
     virtual void render() = 0;
 
     void run();

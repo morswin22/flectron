@@ -21,7 +21,8 @@ namespace MindlessEngine
       mouseWorldPosition.x = (mousePosition.x - window.width * 0.5f) * scale + cameraPosition.x;
       mouseWorldPosition.y = (window.height * 0.5f - mousePosition.y) * scale + cameraPosition.y;
 
-      update(window.getElapsedTime());
+      elapsedTime = window.getElapsedTime();
+      update();
 
       Renderer::beginBatch();
       render();

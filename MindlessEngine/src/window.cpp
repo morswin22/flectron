@@ -3,6 +3,7 @@
 #include <MindlessEngine/input.hpp>
 #include <MindlessEngine/math.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <sstream>
 
 namespace MindlessEngine
 {
@@ -237,14 +238,14 @@ namespace MindlessEngine
       for (int j = 0; j < numVertices; j++)
         draw(vertices[j], vertices[(j + 1) % numVertices], 1.0f, body.strokeColor);
     }
-    if (body.isFilled)
-    {
-      Renderer::draw(body.getTransformedVertices(), body.getNumVertices(), body.getTriangles(), body.fillColor);
-    }
-    else if (body.isTextured)
+    if (body.isTextured)
     {
       Vector* vertices = body.getTransformedVertices();
-      Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], body.textureIndex, body.texturePositions);
+      Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], body.textureIndex, body.texturePositions, body.fillColor);
+    }
+    else if (body.isFilled)
+    {
+      Renderer::draw(body.getTransformedVertices(), body.getNumVertices(), body.getTriangles(), body.fillColor);
     }
   }
 
@@ -269,6 +270,39 @@ namespace MindlessEngine
     };
 
     Renderer::draw(vertices, 4, triangles, color);
+  }
+
+  void Window::draw(FontAtlas& atlas, const Vector& position, const std::string& text, float scale, const Color& color)
+  {
+    std::stringstream ss(text);
+    std::string line;
+
+    if (text.size() == 0.0f)
+      return;
+
+    float lineOffset = 0.0f;
+
+    while(std::getline(ss, line, '\n'))
+    {
+      glm::vec4 texturePositions[line.size()];
+      GLuint texture = atlas.get(line, texturePositions);
+      glm::vec2 offsets = atlas.getOffsets() * scale;
+
+      for (float i = 0; i < line.size(); i++)
+      {
+        Renderer::draw(
+          {position.x + i * offsets.x, position.y - lineOffset}, 
+          {position.x + (i + 1.0f) * offsets.x, position.y - lineOffset}, 
+          {position.x + (i + 1.0f) * offsets.x, position.y - offsets.y - lineOffset}, 
+          {position.x + i * offsets.x, position.y - offsets.y - lineOffset}, 
+          texture, 
+          texturePositions[(int)i],
+          color
+        );
+      }
+
+      lineOffset += offsets.y;
+    }
   }
 
 };
