@@ -6,7 +6,7 @@ layout(location = 2) in vec2 textureCoord;
 layout(location = 3) in float textureIndex;
 layout(location = 4) in float tilingFactor;
 
-uniform mat4 uMVP;
+uniform mat4 uViewProjection;
 
 out vec4 vColor;
 out vec2 vTextureCoord;
@@ -19,5 +19,5 @@ void main()
   vTextureCoord = textureCoord;
   vTextureIndex = textureIndex;
   vTilingFactor = tilingFactor;
-  gl_Position = uMVP * vec4(position, 0.0, 1.0);
+  gl_Position = uViewProjection * vec4(position, 0.0, 1.0);
 }

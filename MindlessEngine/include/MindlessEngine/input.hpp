@@ -37,14 +37,23 @@ namespace MindlessEngine
   {
   private:
     static bool buttons[9];
+    static float scrollX;
+    static float scrollY;
 
   public:
     static bool isPressed(int button);
 
+    static float getScrollX();
+    static float getScrollY();
+
+    static void resetScroll();
+
     friend void mouseCallback(GLFWwindow* window, int button, int action, int mods);
+    friend void scrollCallback(GLFWwindow* window, double x, double y);
   };
 
   void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
   void mouseCallback(GLFWwindow* window, int button, int action, int mods);
+  void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 };

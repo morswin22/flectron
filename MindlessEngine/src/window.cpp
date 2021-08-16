@@ -7,6 +7,94 @@
 namespace MindlessEngine
 {
 
+  Camera::Camera(float left, float right, float bottom, float top)
+    : projectionMatrix(glm::ortho(left, right, bottom, top, -1.0f, 1.0f)), viewMatrix(1.0f), position(0.0f, 0.0f, 0.0f), rotation(0.0f),
+      constraints(left, right, bottom, top), scale(1.0f)
+  {
+    viewProjectionMatrix = projectionMatrix * viewMatrix;
+  }
+
+  void Camera::recalculateViewMatrix()
+  {
+    glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
+    transform = glm::rotate(transform, rotation, glm::vec3(0.0, 0.0, 1.0f));
+
+    viewMatrix = glm::inverse(transform);
+    viewProjectionMatrix = projectionMatrix * viewMatrix;
+  }
+
+  const glm::vec3& Camera::getPosition() const
+  {
+    return position;
+  }
+
+  float Camera::getRotation() const
+  {
+    return rotation;
+  }
+
+  void Camera::setProjection(float left, float right, float bottom, float top)
+  {
+    projectionMatrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+    viewProjectionMatrix = projectionMatrix * viewMatrix;
+    constraints = { left, right, bottom, top };
+  }
+
+  void Camera::setPosition(const glm::vec3& position)
+  {
+    this->position = position;
+    recalculateViewMatrix();
+  }
+
+  void Camera::setRotation(float rotation)
+  {
+    this->rotation = rotation;
+    recalculateViewMatrix();
+  }
+
+  void Camera::setScale(float scale)
+  {
+    this->scale = scale;
+    setProjection(constraints.s * scale, constraints.t * scale, constraints.p * scale, constraints.q * scale);
+  }
+
+  void Camera::moveTo(const Vector& position)
+  {
+    this->position = { position.x, position.y, 0.0f };
+    recalculateViewMatrix();
+  }
+
+  void Camera::move(const Vector& amount)
+  {
+    position += glm::vec3(amount.x, amount.y, 0.0f);
+    recalculateViewMatrix();
+  }
+
+  const glm::mat4& Camera::getProjectionMatrix() const
+  {
+    return projectionMatrix;
+  }
+
+  const glm::mat4& Camera::getViewMatrix() const
+  {
+    return viewMatrix;
+  }
+
+  const glm::mat4& Camera::getViewProjectionMatrix() const
+  {
+    return viewProjectionMatrix;
+  }
+
+  glm::vec4 Camera::getConstraints() const
+  {
+    return constraints + glm::vec4(position.x, position.x, position.y, position.y);
+  }
+
+  float Camera::getScale() const
+  {
+    return scale;
+  }
+
   void GLAPIENTRY
   GLMessageCallback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam )
   {
@@ -16,10 +104,7 @@ namespace MindlessEngine
   Window::Window(int width, int height, const std::string& title) 
   : window(nullptr), width(width), height(height), title(title), 
     desiredFrameRate(60.0f), desiredInterval(1.0f / desiredFrameRate), lastMeasuredTime(0), 
-    cameraPosition(glm::vec3(width * 0.5f, height * 0.5f, 0.0f)), 
-    cameraScale(glm::vec3(1.0f, 1.0f, 1.0f)),
-    projection(glm::ortho(0.0f, (float)width, 0.0f, (float)height, -1.0f, 1.0f)), 
-    view(glm::scale(glm::translate(glm::mat4(1.0f), cameraPosition), cameraScale))
+    camera(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f)
   {
     if (!glfwInit())
       return;
@@ -50,6 +135,7 @@ namespace MindlessEngine
 
     glfwSetKeyCallback(window, keyboardCallback);
     glfwSetMouseButtonCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);
 
     Renderer::init(maxTextureSlots);
   }
@@ -87,9 +173,9 @@ namespace MindlessEngine
   void Window::getFrameSize()
   {
     glfwGetFramebufferSize(window, &width, &height);
-    // windowRatio = width / (float) height;
     glViewport(0, 0, width, height);
-    projection = glm::ortho(0.0f, (float)width, 0.0f, (float)height, -1.0f, 1.0f);
+    const float scale = camera.getScale();
+    camera.setProjection(-width * 0.5f * scale, width * 0.5f * scale, -height * 0.5f * scale, height * 0.5f * scale);
   }
 
   void Window::clear() const
@@ -117,39 +203,13 @@ namespace MindlessEngine
     return lastMeasuredTime - temp;
   }
 
-  glm::mat4 Window::getProjectionMatrix() const
-  {
-    return projection * view;
-  }
-
-  void Window::getCameraConstrains(float* left, float* top, float* right, float* bottom) const
-  {
-    *left = -cameraPosition.x / cameraScale.x;
-    *top = cameraPosition.y / cameraScale.y;
-    *right = cameraPosition.x / cameraScale.x;
-    *bottom = -cameraPosition.y / cameraScale.y;
-  }
-
-  void Window::setScale(float x, float y)
-  { 
-    cameraScale.x = x;
-    cameraScale.y = y;
-    view = glm::scale(glm::translate(glm::mat4(1.0f), cameraPosition), cameraScale);
-  }
-
-  void Window::setScale(float a)
-  {
-    cameraScale.x = a;
-    cameraScale.y = a;
-    view = glm::scale(glm::translate(glm::mat4(1.0f), cameraPosition), cameraScale);
-  }
-
   void Window::setSize(int width, int height)
   {
     glfwSetWindowSize(window, width, height);
     this->width = width;
     this->height = height;
-    projection = glm::ortho(0.0f, (float)width, 0.0f, (float)height, -1.0f, 1.0f);
+    const float scale = camera.getScale();
+    camera.setProjection(-width * 0.5f * scale, width * 0.5f * scale, -height * 0.5f * scale, height * 0.5f * scale);
   }
 
   void Window::setBackground(const Color& color)
@@ -192,15 +252,9 @@ namespace MindlessEngine
   {
     Vector line = b - a;
 
-    Vector invCameraScale( 1.0f / cameraScale.x, 1.0f / cameraScale.y );
-    Vector axis = normalize(line) * weight;
-    Vector normal = normalize({ -axis.y, axis.x  }) * weight;
-
-    axis.x *= invCameraScale.x;
-    axis.y *= invCameraScale.y;
-
-    normal.x *= invCameraScale.x;
-    normal.y *= invCameraScale.y;
+    const float scale = camera.getScale();
+    Vector axis = normalize(line) * weight * scale;
+    Vector normal = normalize({ -axis.y, axis.x  }) * weight * scale;
 
     Vector vertices[4]{
       a + normal - axis,

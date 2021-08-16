@@ -11,6 +11,43 @@
 namespace MindlessEngine
 {
   
+  class Camera
+  {
+  private:
+    glm::mat4 projectionMatrix;
+    glm::mat4 viewMatrix;
+    glm::mat4 viewProjectionMatrix;
+
+    glm::vec3 position;
+    float rotation;
+  
+    glm::vec4 constraints;
+    float scale;
+
+    void recalculateViewMatrix();
+
+  public:
+    Camera(float left, float right, float bottom, float top);
+
+    const glm::vec3& getPosition() const;
+    float getRotation() const;
+
+    void setProjection(float left, float right, float bottom, float top);
+    void setPosition(const glm::vec3& position);
+    void setRotation(float rotation);
+    void setScale(float scale);
+
+    void moveTo(const Vector& position);
+    void move(const Vector& amount);
+
+    const glm::mat4& getProjectionMatrix() const;
+    const glm::mat4& getViewMatrix() const;
+    const glm::mat4& getViewProjectionMatrix() const;
+
+    glm::vec4 getConstraints() const;
+    float getScale() const;
+  };
+
   class Window
   {
   private:
@@ -30,12 +67,7 @@ namespace MindlessEngine
     float lastMeasuredTime;
 
   public:
-    glm::vec3 cameraPosition;
-    glm::vec3 cameraScale;
-
-  private:
-    glm::mat4 projection;
-    glm::mat4 view;
+    Camera camera;
 
   public:
     Window(int width, int height, const std::string& title);
@@ -58,12 +90,6 @@ namespace MindlessEngine
     void pollEvents() const;
 
     float getElapsedTime();
-    glm::mat4 getProjectionMatrix() const;
-
-    void getCameraConstrains(float* left, float* top, float* right, float* bottom) const;
-
-    void setScale(float x, float y);
-    void setScale(float a);
 
     void setSize(int width, int height);
     void setBackground(const Color& color);

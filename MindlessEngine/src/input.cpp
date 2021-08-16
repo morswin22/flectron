@@ -18,15 +18,39 @@ namespace MindlessEngine
   }
 
   bool Mouse::buttons[9]{ false };
+  float Mouse::scrollX{ 0.0f };
+  float Mouse::scrollY{ 0.0f };
 
   bool Mouse::isPressed(int button)
   {
     return buttons[button];
   }
 
+  float Mouse::getScrollX()
+  {
+    return scrollX;
+  }
+
+  float Mouse::getScrollY()
+  {
+    return scrollY;
+  }
+
+  void Mouse::resetScroll()
+  {
+    scrollX = 0.0f;
+    scrollY = 0.0f;
+  }
+
   void mouseCallback(GLFWwindow* window, int button, int action, int mods)
   {
     Mouse::buttons[button] = action == GLFW_PRESS;
+  }
+
+  void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+  {
+    Mouse::scrollX += (float)xoffset;
+    Mouse::scrollY += (float)yoffset;
   }
 
 };

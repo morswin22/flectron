@@ -1,4 +1,7 @@
 #include <MindlessEngine/game.hpp>
+#include <MindlessEngine/input.hpp>
+
+#include <iostream>
 
 namespace MindlessEngine
 {
@@ -13,8 +16,10 @@ namespace MindlessEngine
       window.getCursorPosition(mousePosition);
       window.getFrameSize();
 
-      mouseWorldPosition.x = (mousePosition.x - window.cameraPosition.x) / window.cameraScale.x;
-      mouseWorldPosition.y = -(mousePosition.y - window.cameraPosition.y) / window.cameraScale.y;
+      const float scale = window.camera.getScale();
+      const glm::vec3& cameraPosition = window.camera.getPosition();
+      mouseWorldPosition.x = (mousePosition.x - window.width * 0.5f) * scale + cameraPosition.x;
+      mouseWorldPosition.y = (window.height * 0.5f - mousePosition.y) * scale + cameraPosition.y;
 
       update(window.getElapsedTime());
 
@@ -22,6 +27,8 @@ namespace MindlessEngine
       render();
       Renderer::endBatch();
       Renderer::flush();
+      
+      Mouse::resetScroll();
 
       window.swapBuffers();
       window.pollEvents();
@@ -30,38 +37,42 @@ namespace MindlessEngine
 
   void Game::wrapScreen()
   {
-    float left, top, right, bottom;
-    window.getCameraConstrains(&left, &top, &right, &bottom);
+    const glm::vec4& contraints = window.camera.getConstraints();
 
     for (int i = 0; i < world.getBodyCount(); i++)
     {
       Body& body = world.getBody(i);
 
-      if (body.position.x < left)
-        body.moveTo({ right, body.position.y });
+      if (body.isStatic)
+        continue;
 
-      if (body.position.x > right)
-        body.moveTo({ left, body.position.y });
+      if (body.position.x < contraints.s)
+        body.moveTo({ contraints.t, body.position.y });
 
-      if (body.position.y < bottom)
-        body.moveTo({ body.position.x, top });
+      if (body.position.x > contraints.t)
+        body.moveTo({ contraints.s, body.position.y });
 
-      if (body.position.y > top)
-        body.moveTo({ body.position.x, bottom });
+      if (body.position.y < contraints.p)
+        body.moveTo({ body.position.x, contraints.q });
+
+      if (body.position.y > contraints.q)
+        body.moveTo({ body.position.x, contraints.p });
     }
   }
 
   void Game::removeOffscreen()
   {
-    float left, top, right, bottom;
-    window.getCameraConstrains(&left, &top, &right, &bottom);
+    const glm::vec4& contraints = window.camera.getConstraints();
 
     for (int i = world.getBodyCount() - 1; i >= 0; i--)
     {
       Body& body = world.getBody(i);
 
-      if (body.position.x < left || body.position.x > right ||
-          body.position.y < bottom || body.position.y > top)
+      if (body.isStatic)
+        continue;
+
+      if (body.position.x < contraints.s || body.position.x > contraints.t ||
+          body.position.y < contraints.p || body.position.y > contraints.q)
       {
         world.removeBody(i);
       }

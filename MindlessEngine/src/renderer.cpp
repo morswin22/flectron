@@ -6,6 +6,7 @@
 
 #include <MindlessEngine/body.hpp>
 #include <stb_image.h>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace MindlessEngine
 {
@@ -56,7 +57,7 @@ namespace MindlessEngine
 
   void Shader::setUniformMat4f(const std::string& name, const glm::mat4& matrix)
   {
-    glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, &matrix[0][0]);
+    glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix));
   }
 
   void Shader::setUniform1iv(const std::string& name, int* array, int size)
