@@ -118,7 +118,7 @@ public:
     const float scrollY = Mouse::getScrollY();
     if (scrollY != 0.0f)
     {
-      const float amount = (scrollY > 0.0f) ? 0.75f : 1.5f;
+      const float amount = (scrollY > 0.0f) ? 0.8f : 1.25f;
       window.camera.setScale(scale * amount);
     }
   }

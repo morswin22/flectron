@@ -3,6 +3,7 @@
 #include <MindlessEngine/vector.hpp>
 #include <MindlessEngine/renderer.hpp>
 #include <MindlessEngine/color.hpp>
+#include <MindlessEngine/aabb.hpp>
 #include <vector>
 
 namespace MindlessEngine 
@@ -45,6 +46,9 @@ namespace MindlessEngine
     unsigned int* triangles;
     Vector* transformedVertices;
     bool isTransformUpdateRequired;
+
+    AABB aabb;
+    bool isAABBUpdateRequired;
 
   public:
     int getNumVertices() const;
@@ -96,6 +100,8 @@ namespace MindlessEngine
     void moveTo(const Vector& position);
 
     void addForce(const Vector& amount);
+
+    AABB getAABB();
 
     friend Body createCircleBody(float radius, const Vector& position, float density, float resitution, bool isStatic);
     friend Body createBoxBody(float width, float height, const Vector& position, float density, float resitution, bool isStatic);

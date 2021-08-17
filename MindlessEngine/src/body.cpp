@@ -13,7 +13,7 @@ namespace MindlessEngine
   Body::Body(const Vector& position, float density, float mass, float resitution, float area, bool isStatic, BodyType bodyType, float radius, float width, float height)
     : position(position), linearVelocity(), rotation(0.0f), rotationalVelocity(0.0f), force(), 
       density(density), mass(mass), invMass(0.0f), resitution(resitution), area(area), isStatic(isStatic), 
-      numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true),
+      numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true), aabb(0.0f, 0.0f, 0.0f, 0.0f), isAABBUpdateRequired(true),
       bodyType(bodyType), radius(radius), width(width), height(height), 
       fillColor(Colors::white()), strokeColor(Colors::white()), textureIndex(0), texturePositions(0.0f, 0.0f, 0.0f, 0.0f),
       isFilled(true), isStroked(false), isTextured(false)
@@ -74,6 +74,9 @@ namespace MindlessEngine
 
     isTransformUpdateRequired = other.isTransformUpdateRequired;
 
+    aabb = other.aabb;
+    isAABBUpdateRequired = other.isAABBUpdateRequired;
+
     fillColor = other.fillColor;
     strokeColor = other.strokeColor;
     textureIndex = other.textureIndex;
@@ -86,7 +89,7 @@ namespace MindlessEngine
   Body::Body(Body&& other)
     : position(other.position), linearVelocity(other.linearVelocity), rotation(other.rotation), rotationalVelocity(other.rotationalVelocity), 
       force(other.force), density(other.density), mass(other.mass), invMass(other.invMass), resitution(other.resitution), area(other.area), isStatic(other.isStatic), 
-      numVertices(other.numVertices), vertices(other.vertices), triangles(other.triangles), transformedVertices(other.transformedVertices), isTransformUpdateRequired(other.isTransformUpdateRequired),
+      numVertices(other.numVertices), vertices(other.vertices), triangles(other.triangles), transformedVertices(other.transformedVertices), isTransformUpdateRequired(other.isTransformUpdateRequired), aabb(other.aabb), isAABBUpdateRequired(other.isAABBUpdateRequired),
       bodyType(other.bodyType), radius(other.radius), width(other.width), height(other.height), 
       fillColor(other.fillColor), strokeColor(other.strokeColor), textureIndex(other.textureIndex), texturePositions(other.texturePositions),
       isFilled(other.isFilled), isStroked(other.isStroked), isTextured(other.isTextured)
@@ -120,6 +123,8 @@ namespace MindlessEngine
       triangles = other.triangles;
       transformedVertices = other.transformedVertices;
       isTransformUpdateRequired = other.isTransformUpdateRequired;
+      aabb = other.aabb;
+      isAABBUpdateRequired = other.isAABBUpdateRequired;
       bodyType = other.bodyType;
       radius = other.radius;
       width = other.width;
@@ -221,7 +226,10 @@ namespace MindlessEngine
 
     // TODO look into this later
     if (length(linearVelocity) > 0.0f)
+    {
       isTransformUpdateRequired = true;
+      isAABBUpdateRequired = true;
+    }
 
     position = position + linearVelocity * deltaTime;
     rotation += rotationalVelocity * deltaTime;
@@ -234,23 +242,65 @@ namespace MindlessEngine
   {
     rotation += amount;
     isTransformUpdateRequired = true;
+    isAABBUpdateRequired = true;
   }
 
   void Body::move(const Vector& amount)
   {
     position = position + amount;
     isTransformUpdateRequired = true;
+    isAABBUpdateRequired = true;
   }
 
   void Body::moveTo(const Vector& position)
   {
     this->position = position;
     isTransformUpdateRequired = true;
+    isAABBUpdateRequired = true;
   }
 
   void Body::addForce(const Vector& amount)
   {
     force = force + amount;
+  }
+
+  AABB Body::getAABB()
+  {
+    if (!isAABBUpdateRequired)
+      return aabb;
+
+    if (bodyType == BodyType::Box)
+    {
+      aabb.min.x = FLT_MAX;
+      aabb.min.y = FLT_MAX;
+      aabb.max.x = -FLT_MAX;
+      aabb.max.y = -FLT_MAX;
+
+      Vector* vertices = getTransformedVertices();
+      for (int i = 0; i < numVertices; i++)
+      {
+        if (vertices[i].x < aabb.min.x) 
+          aabb.min.x = vertices[i].x;
+        if (vertices[i].y < aabb.min.y)
+          aabb.min.y = vertices[i].y;
+        if (vertices[i].x > aabb.max.x)
+          aabb.max.x = vertices[i].x;
+        if (vertices[i].y > aabb.max.y)
+          aabb.max.y = vertices[i].y;
+      }
+    }
+    else if (bodyType == BodyType::Circle)
+    {
+      aabb.min.x = position.x - radius;
+      aabb.min.y = position.y - radius;
+      aabb.max.x = position.x + radius;
+      aabb.max.y = position.y + radius;
+    }
+    else
+      throw std::runtime_error("Unsupported body type");
+
+    isAABBUpdateRequired = false;
+    return aabb;
   }
 
   Body createCircleBody(float radius, const Vector& position, float density, float resitution, bool isStatic)

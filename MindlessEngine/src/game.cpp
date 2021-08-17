@@ -47,16 +47,18 @@ namespace MindlessEngine
       if (body.isStatic)
         continue;
 
-      if (body.position.x < contraints.s)
+      const AABB& box = body.getAABB();
+
+      if (box.max.x < contraints.s)
         body.moveTo({ contraints.t, body.position.y });
 
-      if (body.position.x > contraints.t)
+      if (box.min.x > contraints.t)
         body.moveTo({ contraints.s, body.position.y });
 
-      if (body.position.y < contraints.p)
+      if (box.max.y < contraints.p)
         body.moveTo({ body.position.x, contraints.q });
 
-      if (body.position.y > contraints.q)
+      if (box.min.y > contraints.q)
         body.moveTo({ body.position.x, contraints.p });
     }
   }
@@ -72,8 +74,10 @@ namespace MindlessEngine
       if (body.isStatic)
         continue;
 
-      if (body.position.x < contraints.s || body.position.x > contraints.t ||
-          body.position.y < contraints.p || body.position.y > contraints.q)
+      const AABB& box = body.getAABB();
+
+      if (box.max.x < contraints.s || box.min.x > contraints.t ||
+          box.max.y < contraints.p || box.min.y > contraints.q)
       {
         world.removeBody(i);
       }

@@ -6,6 +6,7 @@ set(MindlessEngineSource
   src/input.cpp
   src/vector.cpp
   src/math.cpp
+  src/aabb.cpp
   src/body.cpp
   src/transform.cpp
   src/collisions.cpp
@@ -18,6 +19,7 @@ set(MindlessEngineSource
   include/MindlessEngine/input.hpp
   include/MindlessEngine/vector.hpp
   include/MindlessEngine/math.hpp
+  include/MindlessEngine/aabb.hpp
   include/MindlessEngine/body.hpp
   include/MindlessEngine/transform.hpp
   include/MindlessEngine/collisions.hpp
