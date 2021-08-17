@@ -14,14 +14,20 @@ private:
   Ref<TextureAtlas> textureAtlas;
   Ref<FontAtlas> fontAtlas;
   Ref<Body> platform;
+  Ref<LightScene> lightScene;
+  Ref<TimeScene> timeScene;
+  Color nightColor;
 
 public:
   Mindless()
-  : Game(), 
+  : Game(),
     batchShader(createRef<Shader>("shaders/batch.vert", "shaders/batch.frag")), 
     textureAtlas(createRef<TextureAtlas>("assets/atlas.png", 9, 2, true)), 
     fontAtlas(createRef<FontAtlas>("assets/font.png", 13, 7, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()[]{}-=+/\\|?.,<>~:; ")),
-    platform(nullptr)
+    platform(nullptr),
+    lightScene(createRef<LightScene>("shaders/light.comp", window.width, window.height)),
+    timeScene(createRef<TimeScene>(8.0f/24.0f, 5.0f/24.0f, 18.0f/24.0f, 3.0f/24.0f, 0.03f, 0.0f, 0.95f)),
+    nightColor(0.14f, 0.22f, 0.25f, 1.0f)
   {
     window.setTitle("Mindless");
     window.setBackground(Colors::darkGray());
@@ -71,10 +77,16 @@ public:
 
     world.update(elapsedTime);
     removeOffscreen();
+
+    timeScene->update(elapsedTime);
   }
 
   void render() override
   {
+    lightScene->addLight({ window.width * 0.5f, window.height * 0.5f }, sinf(timeScene->getTime() * 100.0f) * 10.0f + 95.0f);
+    lightScene->addLight({ mousePosition.x, mousePosition.y }, 150.0f);
+    lightScene->calculate({ nightColor.r, nightColor.g, nightColor.b, timeScene->getDarkness() });
+
     window.clear();
 
     batchShader->bind();
@@ -83,9 +95,12 @@ public:
     for (int i = 0; i < world.getBodyCount(); i++)
       window.draw(world.getBody(i));
 
+    window.draw(lightScene);
+
     std::ostringstream text;
-    text << "Elapsed time: " << (int)(elapsedTime * 1000.0f) << "ms\n";
-    text << "Number of bodies: " << world.getBodyCount();
+    text << "Elapsed time: " << (int)(elapsedTime * 1000.0f) << "ms";
+    text << "\nNumber of bodies: " << world.getBodyCount();
+    text << "\n" << timeScene->getDay() << "d " << floorf(timeScene->getTime() * 24.0f) << "h (" << floorf(timeScene->getDarkness() * 100.0f) / 100.f << ")";
 
     if (Keyboard::isPressed(Keys::H))
       text << "\n\nPress Q/E to rotate\nPress LEFT/RIGHT to add circles/boxes";

@@ -305,4 +305,18 @@ namespace MindlessEngine
     }
   }
 
+  void Window::draw(const Ref<LightScene>& scene)
+  {
+    const glm::vec4 constraints = camera.getConstraints();
+    Renderer::draw(
+      { constraints.s, constraints.q }, 
+      { constraints.t, constraints.q }, 
+      { constraints.t, constraints.p }, 
+      { constraints.s, constraints.p }, 
+      scene->getBuffer(),
+      1.0f,
+      Colors::white()
+    );
+  }
+
 };

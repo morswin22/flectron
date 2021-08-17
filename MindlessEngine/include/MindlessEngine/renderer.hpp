@@ -12,12 +12,10 @@
 namespace MindlessEngine
 {
 
-  class Shader
+  class BaseShader
   {
-  private:
+  protected:
     GLuint rendererID;
-    std::string filepathVertex;
-    std::string filepathFragment;
     std::unordered_map<std::string, int> locationCache;
 
     int getUniformLocation(const std::string& name);
@@ -27,8 +25,7 @@ namespace MindlessEngine
     unsigned int createShader(const std::string& vertexShader, const std::string& fragmentShader);
 
   public:
-    Shader(const std::string& filepathVertex, const std::string& filepathFragment);
-    ~Shader();
+    ~BaseShader();
 
     void bind() const;
     void unbind() const;
@@ -40,6 +37,29 @@ namespace MindlessEngine
     void setUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
     void setUniformMat4f(const std::string& name, const glm::mat4& matrix);
     void setUniform1iv(const std::string& name, int* array, int size);
+    void setUniform3fv(const std::string& name, float* array, int size);
+  };
+
+  class Shader : public BaseShader
+  {
+  private:
+    std::string filepathVertex;
+    std::string filepathFragment;
+
+  public:
+    Shader(const std::string& filepathVertex, const std::string& filepathFragment);
+  };
+
+  class ComputeShader : public BaseShader
+  {
+  private:
+    std::string filepath;
+
+  public:
+    ComputeShader(const std::string& filepath);
+
+    void dispatch(int x, int y, int z) const;
+    void barrier() const;
   };
 
   class Texture

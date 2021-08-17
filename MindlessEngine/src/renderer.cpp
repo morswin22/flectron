@@ -11,61 +11,57 @@
 namespace MindlessEngine
 {
 
-  Shader::Shader(const std::string& filepathVertex, const std::string& filepathFragment)
-    : filepathVertex(filepathVertex), filepathFragment(filepathFragment)
-  {
-    std::string vertexShader = getSource(filepathVertex);
-    std::string fragmentShader = getSource(filepathFragment);
-
-    rendererID = createShader(vertexShader, fragmentShader);
-  }
-
-  Shader::~Shader()
+  BaseShader::~BaseShader()
   {
     glDeleteProgram(rendererID);
   }
 
-  void Shader::bind() const
+  void BaseShader::bind() const
   {
     glUseProgram(rendererID);
   }
 
-  void Shader::unbind() const
+  void BaseShader::unbind() const
   {
     glUseProgram(0);
   }
 
-  GLuint Shader::getRendererID() const
+  GLuint BaseShader::getRendererID() const
   {
     return rendererID;
   }
 
-  void Shader::setUniform1i(const std::string& name, int value)
+  void BaseShader::setUniform1i(const std::string& name, int value)
   {
     glUniform1i(getUniformLocation(name), value);
   }
 
-  void Shader::setUniform1f(const std::string& name, float value)
+  void BaseShader::setUniform1f(const std::string& name, float value)
   {
     glUniform1f(getUniformLocation(name), value);
   }
 
-  void Shader::setUniform4f(const std::string& name, float v0, float v1, float v2, float v3)
+  void BaseShader::setUniform4f(const std::string& name, float v0, float v1, float v2, float v3)
   {
     glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
   }
 
-  void Shader::setUniformMat4f(const std::string& name, const glm::mat4& matrix)
+  void BaseShader::setUniformMat4f(const std::string& name, const glm::mat4& matrix)
   {
     glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix));
   }
 
-  void Shader::setUniform1iv(const std::string& name, int* array, int size)
+  void BaseShader::setUniform1iv(const std::string& name, int* array, int size)
   {
     glUniform1iv(getUniformLocation(name), size, array);
   }
 
-  int Shader::getUniformLocation(const std::string& name)
+  void BaseShader::setUniform3fv(const std::string& name, float* array, int size)
+  {
+    glUniform3fv(getUniformLocation(name), size, array);
+  }
+
+  int BaseShader::getUniformLocation(const std::string& name)
   {
     if (locationCache.find(name) != locationCache.end())
       return locationCache[name];
@@ -78,7 +74,7 @@ namespace MindlessEngine
     return location;
   }
 
-  std::string Shader::getSource(const std::string& filepath) const
+  std::string BaseShader::getSource(const std::string& filepath) const
   {
     std::ifstream file(filepath);
 
@@ -93,7 +89,7 @@ namespace MindlessEngine
     return source;
   }
 
-  unsigned int Shader::compileShader(unsigned int type, const std::string& source)
+  unsigned int BaseShader::compileShader(unsigned int type, const std::string& source)
   {
     unsigned int id = glCreateShader(type);
     const char* src = source.c_str();
@@ -117,21 +113,66 @@ namespace MindlessEngine
     return id;
   }
 
-  unsigned int Shader::createShader(const std::string& vertexShader, const std::string& fragmentShader)
+  Shader::Shader(const std::string& filepathVertex, const std::string& filepathFragment)
+    : filepathVertex(filepathVertex), filepathFragment(filepathFragment)
   {
-    unsigned int program = glCreateProgram();
+    std::string vertexShader = getSource(filepathVertex);
+    std::string fragmentShader = getSource(filepathFragment);
+
+    rendererID = glCreateProgram();
     unsigned int vs = compileShader(GL_VERTEX_SHADER, vertexShader);
     unsigned int fs = compileShader(GL_FRAGMENT_SHADER, fragmentShader);
 
-    glAttachShader(program, vs);
-    glAttachShader(program, fs);
-    glLinkProgram(program);
-    glValidateProgram(program);
+    glAttachShader(rendererID, vs);
+    glAttachShader(rendererID, fs);
+    glLinkProgram(rendererID);
+    glValidateProgram(rendererID);
 
     glDeleteShader(vs);
     glDeleteShader(fs);
+  }
 
-    return program;
+  ComputeShader::ComputeShader(const std::string& filepath)
+    : filepath(filepath)
+  {
+    std::string source = getSource(filepath);
+
+    rendererID = glCreateProgram();
+    unsigned int cs = compileShader(GL_COMPUTE_SHADER, source);
+
+    glAttachShader(rendererID, cs);
+    glLinkProgram(rendererID);
+    glValidateProgram(rendererID);
+
+    glDeleteShader(cs);
+
+    // int work_grp_cnt[3];
+    // glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &work_grp_cnt[0]);
+    // glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &work_grp_cnt[1]);
+    // glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &work_grp_cnt[2]);
+    // printf("max global (total) work group counts x:%i y:%i z:%i\n",
+    //   work_grp_cnt[0], work_grp_cnt[1], work_grp_cnt[2]);
+
+    // int work_grp_size[3];
+    // glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &work_grp_size[0]);
+    // glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &work_grp_size[1]);
+    // glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &work_grp_size[2]);
+    // printf("max local (in one shader) work group sizes x:%i y:%i z:%i\n",
+    //   work_grp_size[0], work_grp_size[1], work_grp_size[2]);
+
+    // int work_grp_inv;
+    // glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &work_grp_inv);
+    // printf("max local work group invocations %i\n", work_grp_inv);
+  }
+
+  void ComputeShader::dispatch(int x, int y, int z) const
+  {
+    glDispatchCompute((GLuint)x, (GLuint)y, (GLuint)z);
+  }
+
+  void ComputeShader::barrier() const
+  {
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
   }
 
   Texture::Texture(const std::string& filepath, bool nearest)

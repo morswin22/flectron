@@ -12,6 +12,7 @@ set(MindlessEngineSource
   src/transform.cpp
   src/collisions.cpp
   src/renderer.cpp
+  src/scene.cpp
   src/world.cpp
   src/window.cpp
   src/game.cpp
@@ -26,6 +27,7 @@ set(MindlessEngineSource
   include/MindlessEngine/transform.hpp
   include/MindlessEngine/collisions.hpp
   include/MindlessEngine/renderer.hpp
+  include/MindlessEngine/scene.hpp
   include/MindlessEngine/world.hpp
   include/MindlessEngine/window.hpp
   include/MindlessEngine/game.hpp
