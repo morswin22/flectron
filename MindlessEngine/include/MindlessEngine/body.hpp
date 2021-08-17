@@ -1,5 +1,6 @@
 #pragma once
 
+#include <MindlessEngine/memory.hpp>
 #include <MindlessEngine/vector.hpp>
 #include <MindlessEngine/renderer.hpp>
 #include <MindlessEngine/color.hpp>
@@ -70,17 +71,15 @@ namespace MindlessEngine
     bool isStroked;
     bool isTextured;
 
-  private:
-    Body(const Vector& position, float density, float mass, float resitution, float area, bool isStatic, BodyType bodyType, float radius, float width, float height);
-
   public:
+    Body(const Vector& position, float density, float mass, float resitution, float area, bool isStatic, BodyType bodyType, float radius, float width, float height);
     ~Body();
 
-    Body(const Body& body);
+    Body(const Body& body) = delete;
     Body& operator=(const Body& body) = delete;
 
-    Body(Body&& body);
-    Body& operator=(Body&& body);
+    Body(Body&& body) = delete;
+    Body& operator=(Body&& body) = delete;
 
     void fill(const Color& color);
     void noFill();
@@ -88,8 +87,8 @@ namespace MindlessEngine
     void stroke(const Color& color);
     void noStroke();
 
-    void texture(const Texture& texture);
-    void texture(const TextureAtlas& textureAtlas, float x, float y, float width, float height);
+    void texture(const Ref<Texture>& texture);
+    void texture(const Ref<TextureAtlas>& textureAtlas, float x, float y, float width, float height);
     void noTexture();
 
     void update(float deltaTime, const Vector& gravity);
@@ -102,13 +101,10 @@ namespace MindlessEngine
     void addForce(const Vector& amount);
 
     AABB getAABB();
-
-    friend Body createCircleBody(float radius, const Vector& position, float density, float resitution, bool isStatic);
-    friend Body createBoxBody(float width, float height, const Vector& position, float density, float resitution, bool isStatic);
   };
 
-  Body createCircleBody(float radius, const Vector& position, float density, float resitution, bool isStatic);
-  Body createBoxBody(float width, float height, const Vector& position, float density, float resitution, bool isStatic);
+  Ref<Body> createCircleBody(float radius, const Vector& position, float density, float resitution, bool isStatic);
+  Ref<Body> createBoxBody(float width, float height, const Vector& position, float density, float resitution, bool isStatic);
 
   Vector* createBoxVertices(float width, float height);
   Vector* createCircleVertices(float radius);

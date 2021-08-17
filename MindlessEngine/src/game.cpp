@@ -42,24 +42,24 @@ namespace MindlessEngine
 
     for (int i = 0; i < world.getBodyCount(); i++)
     {
-      Body& body = world.getBody(i);
+      Ref<Body>& body = world.getBody(i);
 
-      if (body.isStatic)
+      if (body->isStatic)
         continue;
 
-      const AABB& box = body.getAABB();
+      const AABB& box = body->getAABB();
 
       if (box.max.x < contraints.s)
-        body.moveTo({ contraints.t, body.position.y });
+        body->moveTo({ contraints.t, body->position.y });
 
       if (box.min.x > contraints.t)
-        body.moveTo({ contraints.s, body.position.y });
+        body->moveTo({ contraints.s, body->position.y });
 
       if (box.max.y < contraints.p)
-        body.moveTo({ body.position.x, contraints.q });
+        body->moveTo({ body->position.x, contraints.q });
 
       if (box.min.y > contraints.q)
-        body.moveTo({ body.position.x, contraints.p });
+        body->moveTo({ body->position.x, contraints.p });
     }
   }
 
@@ -69,12 +69,12 @@ namespace MindlessEngine
 
     for (int i = world.getBodyCount() - 1; i >= 0; i--)
     {
-      Body& body = world.getBody(i);
+      Ref<Body>& body = world.getBody(i);
 
-      if (body.isStatic)
+      if (body->isStatic)
         continue;
 
-      const AABB& box = body.getAABB();
+      const AABB& box = body->getAABB();
 
       if (box.max.x < contraints.s || box.min.x > contraints.t ||
           box.max.y < contraints.p || box.min.y > contraints.q)

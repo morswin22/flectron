@@ -10,19 +10,22 @@ using namespace MindlessEngine;
 class Mindless : public Game
 {
 private:
-  std::unique_ptr<Shader> batchShader;
-  std::unique_ptr<TextureAtlas> textureAtlas;
-  std::unique_ptr<FontAtlas> fontAtlas;
+  Ref<Shader> batchShader;
+  Ref<TextureAtlas> textureAtlas;
+  Ref<FontAtlas> fontAtlas;
+  Ref<Body> platform;
 
 public:
   Mindless()
-   : Game(), batchShader(nullptr), textureAtlas(nullptr), fontAtlas(nullptr)
+  : Game(), 
+    batchShader(createRef<Shader>("shaders/batch.vert", "shaders/batch.frag")), 
+    textureAtlas(createRef<TextureAtlas>("assets/atlas.png", 9, 2, true)), 
+    fontAtlas(createRef<FontAtlas>("assets/font.png", 13, 7, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()[]{}-=+/\\|?.,<>~:; ")),
+    platform(nullptr)
   {
     window.setTitle("Mindless");
     window.setBackground(Colors::darkGray());
     window.camera.setScale(0.06f);
-
-    batchShader = std::make_unique<Shader>("shaders/batch.vert", "shaders/batch.frag");
 
     int samplers[window.maxTextureSlots];
     for (int i = 0; i < window.maxTextureSlots; i++)
@@ -30,14 +33,11 @@ public:
 
     batchShader->bind();
     batchShader->setUniform1iv("uTextures", samplers, window.maxTextureSlots);
-    
-    textureAtlas = std::make_unique<TextureAtlas>("assets/atlas.png", 9, 2, true);
-    fontAtlas = std::make_unique<FontAtlas>("assets/font.png", 13, 7, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()[]{}-=+/\\|?.,<>~:; ");
 
     glm::vec4 constraints = window.camera.getConstraints();
     float padding = (constraints.t - constraints.s) * 0.10f;
-    Body platform = createBoxBody(constraints.t - constraints.s - padding * 2.0f, 3.0f, { 0.0f, -10.0f }, 1.0f, 0.5f, true);
-    platform.texture(*textureAtlas.get(), 0.0f, 0.0f, 9.0f, 1.0f);
+    platform = createBoxBody(constraints.t - constraints.s - padding * 2.0f, 3.0f, { 0.0f, -10.0f }, 1.0f, 0.5f, true);
+    platform->texture(textureAtlas, 0.0f, 0.0f, 9.0f, 1.0f);
     world.addBody(platform);
   }
 
@@ -48,9 +48,9 @@ public:
     {
       float radius = randomFloat(0.75f, 1.25f);
 
-      Body body = createCircleBody(radius, mouseWorldPosition, 2.0f, 0.6f, false);
-      body.fill(Colors::random());
-      body.stroke(Colors::white());
+      Ref<Body> body = createCircleBody(radius, mouseWorldPosition, 2.0f, 0.6f, false);
+      body->fill(Colors::random());
+      body->stroke(Colors::white());
       world.addBody(body);
     }
 
@@ -59,20 +59,15 @@ public:
       float width = randomFloat(1.0f, 2.0f);
       float height = randomFloat(1.0f, 2.0f);
 
-      Body body = createBoxBody(width, height, mouseWorldPosition, 2.0f, 0.6f, false);
-      body.texture(*textureAtlas.get(), (float)randomInt(0, 5), 1.0f, 1.0f, 1.0f);
+      Ref<Body> body = createBoxBody(width, height, mouseWorldPosition, 2.0f, 0.6f, false);
+      body->texture(textureAtlas, (float)randomInt(0, 5), 1.0f, 1.0f, 1.0f);
       world.addBody(body);
     }
 
-    if (world.getBodyCount() > 0)
-    {
-      Body& myBody = world.getBody(0);
-
-      if (Keyboard::isPressed(Keys::Q))
-        myBody.rotate(elapsedTime * (float)M_PI * 0.5f);
-      if (Keyboard::isPressed(Keys::E))
-        myBody.rotate(-elapsedTime * (float)M_PI * 0.5f);
-    }
+    if (Keyboard::isPressed(Keys::Q))
+      platform->rotate(elapsedTime * (float)M_PI * 0.5f);
+    if (Keyboard::isPressed(Keys::E))
+      platform->rotate(-elapsedTime * (float)M_PI * 0.5f);
 
     world.update(elapsedTime);
     removeOffscreen();
@@ -97,7 +92,7 @@ public:
 
     const float scale = window.camera.getScale();
     const glm::vec4& constraints = window.camera.getConstraints();
-    window.draw(*fontAtlas.get(), { constraints.s, constraints.q }, text.str(), 175.0f * scale, Colors::white());
+    window.draw(fontAtlas, { constraints.s, constraints.q }, text.str(), 175.0f * scale, Colors::white());
     
     // Handle camera events
     float dx = 0.0f;

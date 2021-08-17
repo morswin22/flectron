@@ -229,23 +229,23 @@ namespace MindlessEngine
     return desiredFrameRate;
   }
 
-  void Window::draw(Body& body)
+  void Window::draw(Ref<Body>& body)
   {
-    if (body.isStroked)
+    if (body->isStroked)
     {
-      Vector* vertices = body.getTransformedVertices();
-      int numVertices = body.getNumVertices();
+      Vector* vertices = body->getTransformedVertices();
+      int numVertices = body->getNumVertices();
       for (int j = 0; j < numVertices; j++)
-        draw(vertices[j], vertices[(j + 1) % numVertices], 1.0f, body.strokeColor);
+        draw(vertices[j], vertices[(j + 1) % numVertices], 1.0f, body->strokeColor);
     }
-    if (body.isTextured)
+    if (body->isTextured)
     {
-      Vector* vertices = body.getTransformedVertices();
-      Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], body.textureIndex, body.texturePositions, body.fillColor);
+      Vector* vertices = body->getTransformedVertices();
+      Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], body->textureIndex, body->texturePositions, body->fillColor);
     }
-    else if (body.isFilled)
+    else if (body->isFilled)
     {
-      Renderer::draw(body.getTransformedVertices(), body.getNumVertices(), body.getTriangles(), body.fillColor);
+      Renderer::draw(body->getTransformedVertices(), body->getNumVertices(), body->getTriangles(), body->fillColor);
     }
   }
 
@@ -272,7 +272,7 @@ namespace MindlessEngine
     Renderer::draw(vertices, 4, triangles, color);
   }
 
-  void Window::draw(FontAtlas& atlas, const Vector& position, const std::string& text, float scale, const Color& color)
+  void Window::draw(Ref<FontAtlas>& atlas, const Vector& position, const std::string& text, float scale, const Color& color)
   {
     std::stringstream ss(text);
     std::string line;
@@ -285,8 +285,8 @@ namespace MindlessEngine
     while(std::getline(ss, line, '\n'))
     {
       glm::vec4 texturePositions[line.size()];
-      GLuint texture = atlas.get(line, texturePositions);
-      glm::vec2 offsets = atlas.getOffsets() * scale;
+      GLuint texture = atlas->get(line, texturePositions);
+      glm::vec2 offsets = atlas->getOffsets() * scale;
 
       for (float i = 0; i < line.size(); i++)
       {

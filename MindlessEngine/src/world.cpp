@@ -16,7 +16,7 @@ namespace MindlessEngine
 
   World::World() : bodyList(), gravity(0.0f, -9.81f) {}
   
-  void World::addBody(const Body& body)
+  void World::addBody(const Ref<Body>& body)
   {
     bodyList.push_back(body);
   }
@@ -32,7 +32,7 @@ namespace MindlessEngine
     return true;
   }
 
-  Body& World::getBody(int index)
+  Ref<Body>& World::getBody(int index)
   {
     if (index < 0 || index >= bodyList.size())
       throw std::runtime_error("Index out of bounds");
@@ -55,25 +55,27 @@ namespace MindlessEngine
 
     // Movement
     for (auto it = bodyList.begin(); it != bodyList.end(); ++it)
-      it->update(deltaTime, gravity);
+      (*it)->update(deltaTime, gravity);
 
     // Collision step
     Vector normal;
     float depth;
-    auto bodyA = bodyList.begin();
+    auto bodyAPtr = bodyList.begin();
     for (int i = 0; i < bodyList.size() - 1; i++)
     {
-      auto bodyB = bodyList.begin();
-      std::advance(bodyB, i + 1);
+      Ref<Body>& bodyA = *bodyAPtr;
+      auto bodyBPtr = bodyList.begin();
+      std::advance(bodyBPtr, i + 1);
       for (int j = i + 1; j < bodyList.size(); j++)
       {
+        Ref<Body>& bodyB = *bodyBPtr;
         if (bodyA->isStatic && bodyB->isStatic)
         {
-          std::advance(bodyB, 1);
+          std::advance(bodyBPtr, 1);
           continue;
         }
 
-        if (collide(*bodyA, *bodyB, normal, depth))
+        if (collide(bodyA, bodyB, normal, depth))
         {
           if (bodyA->isStatic)
           {
@@ -89,63 +91,63 @@ namespace MindlessEngine
             bodyB->move(normal * depth * 0.5f);
           }
 
-          resolveCollision(*bodyA, *bodyB, normal, depth);
+          resolveCollision(bodyA, bodyB, normal, depth);
         }
 
-        std::advance(bodyB, 1);
+        std::advance(bodyBPtr, 1);
       }
-      std::advance(bodyA, 1);
+      std::advance(bodyAPtr, 1);
     }
   }
 
-  bool World::collide(Body& bodyA, Body& bodyB, Vector& normal, float& depth)
+  bool World::collide(Ref<Body>& bodyA, Ref<Body>& bodyB, Vector& normal, float& depth)
   {
-    if (bodyA.bodyType == BodyType::Box)
+    if (bodyA->bodyType == BodyType::Box)
     {
-      if (bodyB.bodyType == BodyType::Box)
+      if (bodyB->bodyType == BodyType::Box)
       {
-        return intersectPolygons(bodyA.position, bodyA.getTransformedVertices(), bodyA.getNumVertices(), bodyB.position, bodyB.getTransformedVertices(), bodyB.getNumVertices(), normal, depth);
+        return intersectPolygons(bodyA->position, bodyA->getTransformedVertices(), bodyA->getNumVertices(), bodyB->position, bodyB->getTransformedVertices(), bodyB->getNumVertices(), normal, depth);
       }
-      else if (bodyB.bodyType == BodyType::Circle)
+      else if (bodyB->bodyType == BodyType::Circle)
       {
-        bool result = intersectCirclePolygon(bodyB.position, bodyB.radius, bodyA.position, bodyA.getTransformedVertices(), bodyA.getNumVertices(), normal, depth);
+        bool result = intersectCirclePolygon(bodyB->position, bodyB->radius, bodyA->position, bodyA->getTransformedVertices(), bodyA->getNumVertices(), normal, depth);
         if (result)
           normal = -normal;
         return result;
       }
     }
-    else if (bodyA.bodyType == BodyType::Circle)
+    else if (bodyA->bodyType == BodyType::Circle)
     {
-      if (bodyB.bodyType == BodyType::Box)
+      if (bodyB->bodyType == BodyType::Box)
       {
-        return intersectCirclePolygon(bodyA.position, bodyA.radius, bodyB.position, bodyB.getTransformedVertices(), bodyB.getNumVertices(), normal, depth);
+        return intersectCirclePolygon(bodyA->position, bodyA->radius, bodyB->position, bodyB->getTransformedVertices(), bodyB->getNumVertices(), normal, depth);
       }
-      else if (bodyB.bodyType == BodyType::Circle)
+      else if (bodyB->bodyType == BodyType::Circle)
       {
-        return intersectCircles(bodyA.position, bodyA.radius, bodyB.position, bodyB.radius, normal, depth);
+        return intersectCircles(bodyA->position, bodyA->radius, bodyB->position, bodyB->radius, normal, depth);
       }
     }
     return false;
   }
 
-  void World::resolveCollision(Body& bodyA, Body& bodyB, const Vector& normal, float depth)
+  void World::resolveCollision(Ref<Body>& bodyA, Ref<Body>& bodyB, const Vector& normal, float depth)
   {
-    Vector relativeVelocity = bodyB.linearVelocity - bodyA.linearVelocity;
+    Vector relativeVelocity = bodyB->linearVelocity - bodyA->linearVelocity;
 
     if (dot(relativeVelocity, normal) > 0.0f)
       return;
 
-    float e = std::min(bodyA.resitution, bodyB.resitution);
+    float e = std::min(bodyA->resitution, bodyB->resitution);
 
     float j = -(1.0f + e) * dot(relativeVelocity, normal);
 
-    float invMassSum = bodyA.invMass + bodyB.invMass;
-    j /= bodyA.invMass + bodyB.invMass;
+    float invMassSum = bodyA->invMass + bodyB->invMass;
+    j /= bodyA->invMass + bodyB->invMass;
 
     Vector impulse = j * normal;
 
-    bodyA.linearVelocity = bodyA.linearVelocity - (impulse * bodyA.invMass);
-    bodyB.linearVelocity = bodyB.linearVelocity + (impulse * bodyB.invMass);
+    bodyA->linearVelocity = bodyA->linearVelocity - (impulse * bodyA->invMass);
+    bodyB->linearVelocity = bodyB->linearVelocity + (impulse * bodyB->invMass);
   }
   
 };

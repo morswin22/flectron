@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <MindlessEngine/memory.hpp>
 #include <MindlessEngine/body.hpp>
 
 namespace MindlessEngine 
@@ -18,21 +19,21 @@ namespace MindlessEngine
     static int numCircleVerticies;
 
   private:
-    std::list<Body> bodyList;
+    std::list<Ref<Body>> bodyList;
     Vector gravity;
 
   public:
     World();
 
-    void addBody(const Body& body);
+    void addBody(const Ref<Body>& body);
     bool removeBody(int index);
-    Body& getBody(int index);
+    Ref<Body>& getBody(int index);
     int getBodyCount() const;
 
     void update(float deltaTime);
 
-    bool collide(Body& bodyA, Body& bodyB, Vector& normal, float& depth);
-    void resolveCollision(Body& bodyA, Body& bodyB, const Vector& normal, float depth);
+    bool collide(Ref<Body>& bodyA, Ref<Body>& bodyB, Vector& normal, float& depth);
+    void resolveCollision(Ref<Body>& bodyA, Ref<Body>& bodyB, const Vector& normal, float depth);
 
   };
 

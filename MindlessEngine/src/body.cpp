@@ -50,101 +50,6 @@ namespace MindlessEngine
     delete[] transformedVertices;
   }
 
-  Body::Body(const Body& other)
-    : Body(other.position, other.density, other.mass, other.resitution, other.area, other.isStatic, other.bodyType, other.radius, other.width, other.height)
-  {
-    linearVelocity = other.linearVelocity;
-    rotation = other.rotation;
-    rotationalVelocity = other.rotationalVelocity;
-    force = other.force;
-
-    invMass = other.invMass;
-
-    numVertices = other.numVertices;
-    vertices = new Vector[numVertices];
-    for (int i = 0; i < numVertices; i++)
-      vertices[i] = other.vertices[i];
-
-    transformedVertices = new Vector[numVertices];
-    for (int i = 0; i < numVertices; i++)
-      transformedVertices[i] = other.transformedVertices[i];
-
-    int numTriangles = numVertices - 2;
-    triangles = trianglesFromVertices(vertices, numVertices);
-
-    isTransformUpdateRequired = other.isTransformUpdateRequired;
-
-    aabb = other.aabb;
-    isAABBUpdateRequired = other.isAABBUpdateRequired;
-
-    fillColor = other.fillColor;
-    strokeColor = other.strokeColor;
-    textureIndex = other.textureIndex;
-    texturePositions = other.texturePositions;
-    isFilled = other.isFilled;
-    isStroked = other.isStroked;
-    isTextured = other.isTextured;
-  }
-
-  Body::Body(Body&& other)
-    : position(other.position), linearVelocity(other.linearVelocity), rotation(other.rotation), rotationalVelocity(other.rotationalVelocity), 
-      force(other.force), density(other.density), mass(other.mass), invMass(other.invMass), resitution(other.resitution), area(other.area), isStatic(other.isStatic), 
-      numVertices(other.numVertices), vertices(other.vertices), triangles(other.triangles), transformedVertices(other.transformedVertices), isTransformUpdateRequired(other.isTransformUpdateRequired), aabb(other.aabb), isAABBUpdateRequired(other.isAABBUpdateRequired),
-      bodyType(other.bodyType), radius(other.radius), width(other.width), height(other.height), 
-      fillColor(other.fillColor), strokeColor(other.strokeColor), textureIndex(other.textureIndex), texturePositions(other.texturePositions),
-      isFilled(other.isFilled), isStroked(other.isStroked), isTextured(other.isTextured)
-  {
-    other.vertices = nullptr;
-    other.triangles = nullptr;
-    other.transformedVertices = nullptr;
-  }
-
-  Body& Body::operator=(Body&& other)
-  {
-    if (this != &other)
-    {
-      delete[] vertices;
-      delete[] triangles;
-      delete[] transformedVertices;
-
-      position = other.position;
-      linearVelocity = other.linearVelocity;
-      rotation = other.rotation;
-      rotationalVelocity = other.rotationalVelocity;
-      force = other.force;
-      density = other.density;
-      mass = other.mass;
-      invMass = other.invMass;
-      resitution = other.resitution;
-      area = other.area;
-      isStatic = other.isStatic;
-      numVertices = other.numVertices;
-      vertices = other.vertices;
-      triangles = other.triangles;
-      transformedVertices = other.transformedVertices;
-      isTransformUpdateRequired = other.isTransformUpdateRequired;
-      aabb = other.aabb;
-      isAABBUpdateRequired = other.isAABBUpdateRequired;
-      bodyType = other.bodyType;
-      radius = other.radius;
-      width = other.width;
-      height = other.height;
-      fillColor = other.fillColor;
-      strokeColor = other.strokeColor;
-      textureIndex = other.textureIndex;
-      texturePositions = other.texturePositions;
-      isFilled = other.isFilled;
-      isStroked = other.isStroked;
-      isTextured = other.isTextured;
-
-      other.vertices = nullptr;
-      other.triangles = nullptr;
-      other.transformedVertices = nullptr;
-    }
-
-    return *this;
-  }
-
   int Body::getNumVertices() const
   {
     return numVertices;
@@ -192,20 +97,20 @@ namespace MindlessEngine
     isStroked = false;
   }
 
-  void Body::texture(const Texture& texture)
+  void Body::texture(const Ref<Texture>& texture)
   {
     if (numVertices != 4)
       throw std::runtime_error("Can only texture a quad");
-    textureIndex = texture.get();
+    textureIndex = texture->get();
     texturePositions = { 0.0f, 0.0f, 1.0f, 1.0f };
     isTextured = true;
   }
 
-  void Body::texture(const TextureAtlas& textureAtlas, float x, float y, float width, float height)
+  void Body::texture(const Ref<TextureAtlas>& textureAtlas, float x, float y, float width, float height)
   {
     if (numVertices != 4)
       throw std::runtime_error("Can only texture a quad");
-    textureIndex = textureAtlas.get(x, y, width, height, texturePositions);
+    textureIndex = textureAtlas->get(x, y, width, height, texturePositions);
     isTextured = true;
   }
 
@@ -303,7 +208,7 @@ namespace MindlessEngine
     return aabb;
   }
 
-  Body createCircleBody(float radius, const Vector& position, float density, float resitution, bool isStatic)
+  Ref<Body> createCircleBody(float radius, const Vector& position, float density, float resitution, bool isStatic)
   {
     float area = radius * radius * (float)M_PI;
 
@@ -323,10 +228,10 @@ namespace MindlessEngine
 
     float mass = area * density;
 
-    return { position, density, mass, resitution, area, isStatic, BodyType::Circle, radius, 0.0f, 0.0f };
+    return createRef<Body>(position, density, mass, resitution, area, isStatic, BodyType::Circle, radius, 0.0f, 0.0f);
   }
 
-  Body createBoxBody(float width, float height, const Vector& position, float density, float resitution, bool isStatic)
+  Ref<Body> createBoxBody(float width, float height, const Vector& position, float density, float resitution, bool isStatic)
   {
     float area = width * height;
 
@@ -346,7 +251,7 @@ namespace MindlessEngine
 
     float mass = area * density;
 
-    return { position, density, mass, resitution, area, isStatic, BodyType::Box, 0.0f, width, height };
+    return createRef<Body>(position, density, mass, resitution, area, isStatic, BodyType::Box, 0.0f, width, height);
   }
 
   Vector* createBoxVertices(float width, float height)
