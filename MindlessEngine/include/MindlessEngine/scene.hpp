@@ -4,6 +4,7 @@
 #include <MindlessEngine/memory.hpp>
 #include <MindlessEngine/vector.hpp>
 #include <MindlessEngine/color.hpp>
+#include <MindlessEngine/body.hpp>
 
 namespace MindlessEngine
 {
@@ -13,8 +14,12 @@ namespace MindlessEngine
   private:
     GLuint buffer;
     Ref<ComputeShader> shader;
-    float lights[128 * 3];
+    float lightsData[128 * 3];
+    // float lightsColors[128 * 4];
+
     int currentLight;
+    int currentData;
+    // int currentColor;
 
   public:
     int width, height;
@@ -27,9 +32,10 @@ namespace MindlessEngine
 
     void reset();
 
-    void calculate(const Color& baseColor, const glm::vec3& cameraPosition, float cameraScale);
+    void compute(const Color& baseColor, const glm::vec3& cameraPosition, float cameraScale);
 
     void addLight(const Vector& position, float radius);
+    void addLight(const Ref<Body>& body);
   };
 
   class TimeScene

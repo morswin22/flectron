@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <MindlessEngine/memory.hpp>
 
 namespace MindlessEngine
 {
@@ -39,6 +40,7 @@ namespace MindlessEngine
     void setUniformMat4f(const std::string& name, const glm::mat4& matrix);
     void setUniform1iv(const std::string& name, int* array, int size);
     void setUniform3fv(const std::string& name, float* array, int size);
+    void setUniform4fv(const std::string& name, float* array, int size);
   };
 
   class Shader : public BaseShader
@@ -131,12 +133,11 @@ namespace MindlessEngine
   class Renderer
   {
   public:
-    static void init(int& maxTextureSlotsOut);
+    static void init(Ref<Shader>& shader);
     static void shutdown();
 
     static void beginBatch();
     static void endBatch();
-    static void flush();
 
     static void draw(const Vector* vertices, int numVertices, const uint32_t* triangles, const Color& color);
     static void draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, float tilingFactor, const Color& tint);

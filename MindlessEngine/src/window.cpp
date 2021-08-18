@@ -8,6 +8,15 @@
 namespace MindlessEngine
 {
 
+  Constraints::Constraints(float left, float right, float top, float bottom)
+    : left(left), right(right), top(top), bottom(bottom)
+  {}
+
+  Constraints operator+(const Constraints& constraints, const glm::vec3& offset)
+  {
+    return { constraints.left + offset.x, constraints.right + offset.x, constraints.top + offset.y, constraints.bottom + offset.y };
+  }
+
   Camera::Camera(float left, float right, float bottom, float top)
     : projectionMatrix(glm::ortho(left, right, bottom, top, -1.0f, 1.0f)), viewMatrix(1.0f), position(0.0f, 0.0f, 0.0f), rotation(0.0f),
       constraints(left, right, bottom, top), scale(1.0f)
@@ -56,7 +65,7 @@ namespace MindlessEngine
   void Camera::setScale(float scale)
   {
     this->scale = scale;
-    setProjection(constraints.s * scale, constraints.t * scale, constraints.p * scale, constraints.q * scale);
+    setProjection(constraints.left * scale, constraints.right * scale, constraints.top * scale, constraints.bottom * scale);
   }
 
   void Camera::moveTo(const Vector& position)
@@ -86,14 +95,42 @@ namespace MindlessEngine
     return viewProjectionMatrix;
   }
 
-  glm::vec4 Camera::getConstraints() const
+  Constraints Camera::getConstraints() const
   {
-    return constraints + glm::vec4(position.x, position.x, position.y, position.y);
+    return constraints + position;
   }
 
   float Camera::getScale() const
   {
     return scale;
+  }
+
+  void Camera::handleWASD()
+  {
+    float dx = 0.0f;
+    float dy = 0.0f;
+
+    if (Keyboard::isPressed(Keys::W))
+      dy++;
+    if (Keyboard::isPressed(Keys::S))
+      dy--;
+    if (Keyboard::isPressed(Keys::A))
+      dx--;
+    if (Keyboard::isPressed(Keys::D))
+      dx++;
+
+    if (dx != 0.0f || dy != 0.0f)
+      move(normalize({ dx, dy }) * scale * 8.0f);
+  }
+
+  void Camera::handleScroll()
+  {
+    const float scrollY = Mouse::getScrollY();
+    if (scrollY != 0.0f)
+    {
+      const float amount = (scrollY > 0.0f) ? 0.8f : 1.25f;
+      setScale(scale * amount);
+    }
   }
 
   void GLAPIENTRY
@@ -102,15 +139,16 @@ namespace MindlessEngine
     if ( type == GL_DEBUG_TYPE_ERROR ) fprintf( stderr, "GL CALLBACK: type = 0x%x, severity = 0x%x, message = %s\n", type, severity, message );
   }
   
-  Window::Window(int width, int height, const std::string& title) 
-  : window(nullptr), width(width), height(height), title(title), 
+  Window::Window(int width, int height, const std::string& title, const std::string& shaderVertPath, const std::string& shaderFragPath) 
+  : window(nullptr), width(width), height(height), title(title),
+    shader(nullptr),
     desiredFrameRate(60.0f), desiredInterval(1.0f / desiredFrameRate), lastMeasuredTime(0), 
     camera(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f)
   {
     if (!glfwInit())
       return;
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
@@ -138,7 +176,8 @@ namespace MindlessEngine
     glfwSetMouseButtonCallback(window, mouseCallback);
     glfwSetScrollCallback(window, scrollCallback);
 
-    Renderer::init(maxTextureSlots);
+    shader = createRef<Shader>(shaderVertPath, shaderFragPath);
+    Renderer::init(shader);
   }
 
   Window::~Window()
@@ -307,12 +346,12 @@ namespace MindlessEngine
 
   void Window::draw(const Ref<LightScene>& scene)
   {
-    const glm::vec4 constraints = camera.getConstraints();
+    const Constraints& cc = camera.getConstraints();
     Renderer::draw(
-      { constraints.s, constraints.q }, 
-      { constraints.t, constraints.q }, 
-      { constraints.t, constraints.p }, 
-      { constraints.s, constraints.p }, 
+      { cc.left,  cc.bottom }, 
+      { cc.right, cc.bottom }, 
+      { cc.right, cc.top }, 
+      { cc.left,  cc.top }, 
       scene->getBuffer(),
       1.0f,
       Colors::white()

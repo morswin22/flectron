@@ -6,7 +6,9 @@ namespace MindlessEngine
 {
 
   LightScene::LightScene(std::string path, int width, int height)
-    : shader(createRef<ComputeShader>(path)), currentLight(0), width(width), height(height)
+    : shader(createRef<ComputeShader>(path)), 
+      currentLight(0), currentData(0),// currentColor(0),
+      width(width), height(height)
   {
     glGenTextures(1, &buffer);
     glBindTexture(GL_TEXTURE_2D, buffer);
@@ -31,17 +33,20 @@ namespace MindlessEngine
   void LightScene::reset()
   {
     currentLight = 0;
+    currentData = 0;
+    // currentColor = 0;
   }
 
-  void LightScene::calculate(const Color& baseColor, const glm::vec3& cameraPosition, float cameraScale)
+  void LightScene::compute(const Color& baseColor, const glm::vec3& cameraPosition, float cameraScale)
   {
     shader->bind();
     shader->setUniform2f("uCameraPosition", cameraPosition.x, cameraPosition.y);
     shader->setUniform1f("uCameraScale", cameraScale);
     shader->setUniform4f("uBaseColor", baseColor.r, baseColor.g, baseColor.b, baseColor.a);
 
-    shader->setUniform3fv("uLightData", lights, currentLight / 3);
-    shader->setUniform1i("uLightCount", currentLight / 3);
+    // shader->setUniform4fv("uLightColor", lightsColors, currentLight);
+    shader->setUniform3fv("uLightData", lightsData, currentLight);
+    shader->setUniform1i("uLightCount", currentLight);
 
     shader->dispatch(width, height, 1);
 
@@ -52,12 +57,31 @@ namespace MindlessEngine
 
   void LightScene::addLight(const Vector& position, float radius)
   {
+    if (currentLight >= 128)
+      throw std::runtime_error("Too many lights");
+
+    lightsData[currentData++] = position.x;
+    lightsData[currentData++] = position.y;
+    lightsData[currentData++] = radius;
+
+    // lightsColors[currentColor++] = color.r;
+    // lightsColors[currentColor++] = color.g;
+    // lightsColors[currentColor++] = color.b;
+    // lightsColors[currentColor++] = color.a;
+
+    currentLight += 1;
+  }
+
+  void LightScene::addLight(const Ref<Body>& body)
+  {
     if (currentLight + 3 >= 128 * 3)
       throw std::runtime_error("Too many lights");
 
-    lights[currentLight++] = position.x;
-    lights[currentLight++] = position.y;
-    lights[currentLight++] = radius;
+    lightsData[currentData++] = body->position.x;
+    lightsData[currentData++] = body->position.y;
+    lightsData[currentData++] = body->lightRadius;
+    
+    currentLight += 1;
   }
 
   TimeScene::TimeScene(float startTime, float nightToDay, float dayToNight, float transitionTime, float scale, float minDarkness, float maxDarkness)

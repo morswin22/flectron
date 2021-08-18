@@ -11,6 +11,18 @@
 
 namespace MindlessEngine
 {
+
+  struct Constraints
+  {
+    float left;
+    float right;
+    float top;
+    float bottom;
+
+    Constraints(float left, float right, float top, float bottom);
+  };
+
+  Constraints operator+(const Constraints& constraints, const glm::vec3& offset);
   
   class Camera
   {
@@ -22,7 +34,7 @@ namespace MindlessEngine
     glm::vec3 position;
     float rotation;
   
-    glm::vec4 constraints;
+    Constraints constraints;
     float scale;
 
     void recalculateViewMatrix();
@@ -45,8 +57,11 @@ namespace MindlessEngine
     const glm::mat4& getViewMatrix() const;
     const glm::mat4& getViewProjectionMatrix() const;
 
-    glm::vec4 getConstraints() const;
+    Constraints getConstraints() const;
     float getScale() const;
+
+    void handleWASD();
+    void handleScroll();
   };
 
   class Window
@@ -57,10 +72,12 @@ namespace MindlessEngine
   public:
     int width;
     int height;
-    int maxTextureSlots;
 
   private:
     std::string title;
+
+  public:
+    Ref<Shader> shader;
 
   private:
     float desiredFrameRate;
@@ -71,7 +88,7 @@ namespace MindlessEngine
     Camera camera;
 
   public:
-    Window(int width, int height, const std::string& title);
+    Window(int width, int height, const std::string& title, const std::string& shaderVertPath, const std::string& shaderFragPath);
     ~Window();
 
     Window(const Window&) = delete;

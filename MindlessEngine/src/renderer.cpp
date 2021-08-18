@@ -66,6 +66,11 @@ namespace MindlessEngine
     glUniform3fv(getUniformLocation(name), size, array);
   }
 
+  void BaseShader::setUniform4fv(const std::string& name, float* array, int size)
+  {
+    glUniform4fv(getUniformLocation(name), size, array);
+  }
+
   int BaseShader::getUniformLocation(const std::string& name)
   {
     if (locationCache.find(name) != locationCache.end())
@@ -261,11 +266,13 @@ namespace MindlessEngine
 
     uint32_t* textureSlots = nullptr;
     uint32_t textureSlotIndex = 1;
+
+    Ref<Shader> shader = nullptr;
   };
 
   static RendererData rendererData;
 
-  void Renderer::init(int& maxTextureSlotsOut)
+  void Renderer::init(Ref<Shader>& shader)
   {
     rendererData.buffer = new Vertex[MaxVertexCount];
 
@@ -298,7 +305,6 @@ namespace MindlessEngine
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, MaxIndexCount * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
 
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &MaxTextureSlots);
-    maxTextureSlotsOut = (int)MaxTextureSlots;
     rendererData.textureSlots = new uint32_t[MaxTextureSlots];
 
     glCreateTextures(GL_TEXTURE_2D, 1, &rendererData.whiteTexture);
@@ -313,6 +319,15 @@ namespace MindlessEngine
     rendererData.textureSlots[0] = rendererData.whiteTexture;
     for (std::size_t i = 1; i < MaxTextureSlots; i++)
       rendererData.textureSlots[i] = 0;
+
+    int samplers[MaxTextureSlots];
+    for (int i = 0; i < MaxTextureSlots; i++)
+      samplers[i] = i;
+
+    shader->bind();
+    shader->setUniform1iv("uTextures", samplers, MaxTextureSlots);
+    
+    rendererData.shader = shader;
   }
 
   void Renderer::shutdown()
@@ -331,10 +346,15 @@ namespace MindlessEngine
   {
     rendererData.bufferPointer = rendererData.buffer;
     rendererData.indicesPointer = rendererData.indices;
+    rendererData.indexCount = 0;
+    rendererData.offset = 0;
+    rendererData.textureSlotIndex = 1;
   }
 
   void Renderer::endBatch()
   {
+    rendererData.shader->bind();
+
     GLsizeiptr quadSize = (uint8_t*)rendererData.bufferPointer - (uint8_t*)rendererData.buffer;
     glBindBuffer(GL_ARRAY_BUFFER, rendererData.vb);
     glBufferSubData(GL_ARRAY_BUFFER, 0, quadSize, rendererData.buffer);
@@ -342,19 +362,12 @@ namespace MindlessEngine
     GLsizeiptr indexSize = (uint8_t*)rendererData.indicesPointer - (uint8_t*)rendererData.indices;
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererData.ib);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indexSize, rendererData.indices);
-  }
 
-  void Renderer::flush()
-  {
     for (uint32_t i = 0; i < rendererData.textureSlotIndex; i++)
       glBindTextureUnit(i, rendererData.textureSlots[i]);
 
     glBindVertexArray(rendererData.va);
     glDrawElements(GL_TRIANGLES, rendererData.indexCount, GL_UNSIGNED_INT, nullptr);
-
-    rendererData.indexCount = 0;
-    rendererData.offset = 0;
-    rendererData.textureSlotIndex = 1;
   }
 
   void Renderer::draw(const Vector* vertices, int numVertices, const uint32_t* triangles, const Color& color)
@@ -364,7 +377,6 @@ namespace MindlessEngine
     if (rendererData.indexCount + numTriangles >= MaxIndexCount)
     {
       endBatch();
-      flush();
       beginBatch();
     }
 
@@ -396,7 +408,6 @@ namespace MindlessEngine
     if (rendererData.indexCount + 6 >= MaxIndexCount || rendererData.textureSlotIndex >= MaxTextureSlots)
     {
       endBatch();
-      flush();
       beginBatch();
     }
 
@@ -463,7 +474,6 @@ namespace MindlessEngine
     if (rendererData.indexCount + 6 >= MaxIndexCount || rendererData.textureSlotIndex >= MaxTextureSlots)
     {
       endBatch();
-      flush();
       beginBatch();
     }
 

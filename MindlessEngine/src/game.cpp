@@ -6,7 +6,12 @@
 namespace MindlessEngine
 {
   
-  Game::Game() : window(640, 480, "Mindless Game"), mousePosition(), mouseWorldPosition(), world() {}
+  Game::Game(int width, int height, const std::string& title, const std::string& shaderVertPath, const std::string& shaderFragPath) 
+    : window(width, height, title, shaderVertPath, shaderFragPath),
+      mousePosition(), mouseWorldPosition(), 
+      world(),
+      elapsedTime(0.0f)
+  {}
 
   void Game::run()
   {
@@ -24,10 +29,11 @@ namespace MindlessEngine
       elapsedTime = window.getElapsedTime();
       update();
 
+      window.shader->bind();
+      window.shader->setUniformMat4f("uViewProjection", window.camera.getViewProjectionMatrix());
       Renderer::beginBatch();
       render();
       Renderer::endBatch();
-      Renderer::flush();
       
       Mouse::resetScroll();
 
@@ -38,7 +44,7 @@ namespace MindlessEngine
 
   void Game::wrapScreen()
   {
-    const glm::vec4& contraints = window.camera.getConstraints();
+    const Constraints& cc = window.camera.getConstraints();
 
     for (int i = 0; i < world.getBodyCount(); i++)
     {
@@ -49,23 +55,23 @@ namespace MindlessEngine
 
       const AABB& box = body->getAABB();
 
-      if (box.max.x < contraints.s)
-        body->moveTo({ contraints.t, body->position.y });
+      if (box.max.x < cc.left)
+        body->moveTo({ cc.right, body->position.y });
 
-      if (box.min.x > contraints.t)
-        body->moveTo({ contraints.s, body->position.y });
+      if (box.min.x > cc.right)
+        body->moveTo({ cc.left, body->position.y });
 
-      if (box.max.y < contraints.p)
-        body->moveTo({ body->position.x, contraints.q });
+      if (box.max.y < cc.top)
+        body->moveTo({ body->position.x, cc.bottom });
 
-      if (box.min.y > contraints.q)
-        body->moveTo({ body->position.x, contraints.p });
+      if (box.min.y > cc.bottom)
+        body->moveTo({ body->position.x, cc.top });
     }
   }
 
   void Game::removeOffscreen()
   {
-    const glm::vec4& contraints = window.camera.getConstraints();
+    const Constraints& cc = window.camera.getConstraints();
 
     for (int i = world.getBodyCount() - 1; i >= 0; i--)
     {
@@ -76,8 +82,8 @@ namespace MindlessEngine
 
       const AABB& box = body->getAABB();
 
-      if (box.max.x < contraints.s || box.min.x > contraints.t ||
-          box.max.y < contraints.p || box.min.y > contraints.q)
+      if (box.max.x < cc.left || box.min.x > cc.right ||
+          box.max.y < cc.top  || box.min.y > cc.bottom)
       {
         world.removeBody(i);
       }

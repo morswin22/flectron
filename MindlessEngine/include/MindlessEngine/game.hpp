@@ -16,7 +16,7 @@ namespace MindlessEngine
     float elapsedTime;
 
   public:
-    Game();
+    Game(int width, int height, const std::string& title, const std::string& shaderVertPath, const std::string& shaderFragPath);
 
     virtual void update() = 0;
     virtual void render() = 0;
