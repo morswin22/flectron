@@ -34,6 +34,7 @@ namespace MindlessEngine
 
     void setUniform1i(const std::string& name, int value);
     void setUniform1f(const std::string& name, float value);
+    void setUniform2f(const std::string& name, float v1, float v2);
     void setUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
     void setUniformMat4f(const std::string& name, const glm::mat4& matrix);
     void setUniform1iv(const std::string& name, int* array, int size);
@@ -54,6 +55,9 @@ namespace MindlessEngine
   {
   private:
     std::string filepath;
+    int maxWorkGroupCount[3];
+    int maxWorkGroupSize[3];
+    int maxWorkGroupInvocations;
 
   public:
     ComputeShader(const std::string& filepath);

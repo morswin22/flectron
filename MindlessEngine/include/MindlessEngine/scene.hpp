@@ -27,7 +27,7 @@ namespace MindlessEngine
 
     void reset();
 
-    void calculate(const Color& baseColor);
+    void calculate(const Color& baseColor, const glm::vec3& cameraPosition, float cameraScale);
 
     void addLight(const Vector& position, float radius);
   };

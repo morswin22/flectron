@@ -67,9 +67,11 @@ namespace MindlessEngine
     Color strokeColor;
     GLuint textureIndex;
     glm::vec4 texturePositions;
+    float lightRadius;
     bool isFilled;
     bool isStroked;
     bool isTextured;
+    bool isLit;
 
   public:
     Body(const Vector& position, float density, float mass, float resitution, float area, bool isStatic, BodyType bodyType, float radius, float width, float height);
@@ -90,6 +92,9 @@ namespace MindlessEngine
     void texture(const Ref<Texture>& texture);
     void texture(const Ref<TextureAtlas>& textureAtlas, float x, float y, float width, float height);
     void noTexture();
+
+    void light(float radius);
+    void noLight();
 
     void update(float deltaTime, const Vector& gravity);
 

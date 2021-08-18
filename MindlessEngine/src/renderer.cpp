@@ -40,6 +40,11 @@ namespace MindlessEngine
   {
     glUniform1f(getUniformLocation(name), value);
   }
+  
+  void BaseShader::setUniform2f(const std::string& name, float v1, float v2)
+  {
+    glUniform2f(getUniformLocation(name), v1, v2);
+  }
 
   void BaseShader::setUniform4f(const std::string& name, float v0, float v1, float v2, float v3)
   {
@@ -146,23 +151,13 @@ namespace MindlessEngine
 
     glDeleteShader(cs);
 
-    // int work_grp_cnt[3];
-    // glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &work_grp_cnt[0]);
-    // glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &work_grp_cnt[1]);
-    // glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &work_grp_cnt[2]);
-    // printf("max global (total) work group counts x:%i y:%i z:%i\n",
-    //   work_grp_cnt[0], work_grp_cnt[1], work_grp_cnt[2]);
-
-    // int work_grp_size[3];
-    // glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &work_grp_size[0]);
-    // glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &work_grp_size[1]);
-    // glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &work_grp_size[2]);
-    // printf("max local (in one shader) work group sizes x:%i y:%i z:%i\n",
-    //   work_grp_size[0], work_grp_size[1], work_grp_size[2]);
-
-    // int work_grp_inv;
-    // glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &work_grp_inv);
-    // printf("max local work group invocations %i\n", work_grp_inv);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkGroupCount[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkGroupCount[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkGroupCount[2]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &maxWorkGroupSize[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &maxWorkGroupSize[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &maxWorkGroupSize[2]);
+    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &maxWorkGroupInvocations);
   }
 
   void ComputeShader::dispatch(int x, int y, int z) const

@@ -33,9 +33,11 @@ namespace MindlessEngine
     currentLight = 0;
   }
 
-  void LightScene::calculate(const Color& baseColor)
+  void LightScene::calculate(const Color& baseColor, const glm::vec3& cameraPosition, float cameraScale)
   {
     shader->bind();
+    shader->setUniform2f("uCameraPosition", cameraPosition.x, cameraPosition.y);
+    shader->setUniform1f("uCameraScale", cameraScale);
     shader->setUniform4f("uBaseColor", baseColor.r, baseColor.g, baseColor.b, baseColor.a);
 
     shader->setUniform3fv("uLightData", lights, currentLight / 3);

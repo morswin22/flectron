@@ -40,7 +40,7 @@ public:
     batchShader->bind();
     batchShader->setUniform1iv("uTextures", samplers, window.maxTextureSlots);
 
-    glm::vec4 constraints = window.camera.getConstraints();
+    const glm::vec4& constraints = window.camera.getConstraints();
     float padding = (constraints.t - constraints.s) * 0.10f;
     platform = createBoxBody(constraints.t - constraints.s - padding * 2.0f, 3.0f, { 0.0f, -10.0f }, 1.0f, 0.5f, true);
     platform->texture(textureAtlas, 0.0f, 0.0f, 9.0f, 1.0f);
@@ -57,6 +57,10 @@ public:
       Ref<Body> body = createCircleBody(radius, mouseWorldPosition, 2.0f, 0.6f, false);
       body->fill(Colors::random());
       body->stroke(Colors::white());
+
+      if (randomFloat(0.0f, 1.0f) < 0.1f)
+        body->light(radius * 3.0f);
+
       world.addBody(body);
     }
 
@@ -67,6 +71,10 @@ public:
 
       Ref<Body> body = createBoxBody(width, height, mouseWorldPosition, 2.0f, 0.6f, false);
       body->texture(textureAtlas, (float)randomInt(0, 5), 1.0f, 1.0f, 1.0f);
+
+      if (randomFloat(0.0f, 1.0f) < 0.1f)
+        body->light(std::max(width, height) * 3.0f);
+
       world.addBody(body);
     }
 
@@ -83,9 +91,21 @@ public:
 
   void render() override
   {
-    lightScene->addLight({ window.width * 0.5f, window.height * 0.5f }, sinf(timeScene->getTime() * 100.0f) * 10.0f + 95.0f);
-    lightScene->addLight({ mousePosition.x, mousePosition.y }, 150.0f);
-    lightScene->calculate({ nightColor.r, nightColor.g, nightColor.b, timeScene->getDarkness() });
+    for (int i = 0; i < world.getBodyCount(); i++)
+    {
+      Ref<Body> body = world.getBody(i);
+      if (body->isLit)
+        lightScene->addLight(body->position, body->lightRadius);
+    }
+
+    if (Keyboard::isPressed(Keys::L))
+      lightScene->addLight(mouseWorldPosition, 9.0f);
+
+    lightScene->calculate(
+      { nightColor.r, nightColor.g, nightColor.b, timeScene->getDarkness() },
+      window.camera.getPosition(),
+      window.camera.getScale()
+    );
 
     window.clear();
 
