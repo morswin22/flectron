@@ -68,6 +68,7 @@ namespace MindlessEngine
     GLuint textureIndex;
     glm::vec4 texturePositions;
     float lightRadius;
+    Color lightColor;
     bool isFilled;
     bool isStroked;
     bool isTextured;
@@ -93,7 +94,7 @@ namespace MindlessEngine
     void texture(const Ref<TextureAtlas>& textureAtlas, float x, float y, float width, float height);
     void noTexture();
 
-    void light(float radius);
+    void light(float radius, const Color& color);
     void noLight();
 
     void update(float deltaTime, const Vector& gravity);

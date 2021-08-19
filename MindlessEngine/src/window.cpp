@@ -177,7 +177,7 @@ namespace MindlessEngine
     glfwSetScrollCallback(window, scrollCallback);
 
     shader = createRef<Shader>(shaderVertPath, shaderFragPath);
-    Renderer::init(shader);
+    Renderer::init(shader, width, height, rendererBuffer);
   }
 
   Window::~Window()
@@ -196,6 +196,11 @@ namespace MindlessEngine
   std::string Window::getTitle() const
   {
     return title;
+  }
+
+  GLuint Window::getRendererBuffer() const
+  {
+    return rendererBuffer;
   }
 
   bool Window::shouldClose() const
@@ -303,7 +308,7 @@ namespace MindlessEngine
       b + normal + axis
     };
 
-    uint32_t triangles[6]{
+    constexpr uint32_t triangles[6]{
       0, 1, 2,
       2, 3, 0
     };

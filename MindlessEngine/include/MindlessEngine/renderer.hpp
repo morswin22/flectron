@@ -133,11 +133,14 @@ namespace MindlessEngine
   class Renderer
   {
   public:
-    static void init(Ref<Shader>& shader);
+    static void init(Ref<Shader>& shader, int width, int height, GLuint& buffer);
     static void shutdown();
 
     static void beginBatch();
     static void endBatch();
+
+    static void onscreen();
+    static void offscreen();
 
     static void draw(const Vector* vertices, int numVertices, const uint32_t* triangles, const Color& color);
     static void draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, float tilingFactor, const Color& tint);
@@ -146,5 +149,6 @@ namespace MindlessEngine
   };
 
   GLuint loadTexture(const std::string& filepath, bool nearest);
+  GLuint createFrameBuffer(int width, int height, GLuint& buffer);
 
 };

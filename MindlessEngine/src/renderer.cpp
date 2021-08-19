@@ -268,11 +268,12 @@ namespace MindlessEngine
     uint32_t textureSlotIndex = 1;
 
     Ref<Shader> shader = nullptr;
+    GLuint frameBuffer = 0;
   };
 
   static RendererData rendererData;
 
-  void Renderer::init(Ref<Shader>& shader)
+  void Renderer::init(Ref<Shader>& shader, int width, int height, GLuint& buffer)
   {
     rendererData.buffer = new Vertex[MaxVertexCount];
 
@@ -328,6 +329,8 @@ namespace MindlessEngine
     shader->setUniform1iv("uTextures", samplers, MaxTextureSlots);
     
     rendererData.shader = shader;
+
+    rendererData.frameBuffer = createFrameBuffer(width, height, buffer);
   }
 
   void Renderer::shutdown()
@@ -336,6 +339,8 @@ namespace MindlessEngine
     glDeleteBuffers(1, &rendererData.vb);
     glDeleteBuffers(1, &rendererData.ib);
     glDeleteTextures(1, &rendererData.whiteTexture);
+    if (rendererData.frameBuffer != 0)
+      glDeleteFramebuffers(1, &rendererData.frameBuffer);
 
     delete[] rendererData.buffer;
     delete[] rendererData.indices;
@@ -368,6 +373,16 @@ namespace MindlessEngine
 
     glBindVertexArray(rendererData.va);
     glDrawElements(GL_TRIANGLES, rendererData.indexCount, GL_UNSIGNED_INT, nullptr);
+  }
+
+  void Renderer::onscreen()
+  {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  }
+
+  void Renderer::offscreen()
+  {
+    glBindFramebuffer(GL_FRAMEBUFFER, rendererData.frameBuffer);
   }
 
   void Renderer::draw(const Vector* vertices, int numVertices, const uint32_t* triangles, const Color& color)
@@ -558,6 +573,25 @@ namespace MindlessEngine
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     stbi_image_free(pixels);
     return textureID;
+  }
+
+  GLuint createFrameBuffer(int width, int height, GLuint& buffer)
+  {
+    GLuint fbo;
+    glCreateFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    glGenTextures(1, &buffer);
+    glBindTexture(GL_TEXTURE_2D, buffer);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, buffer, 0);  
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    return fbo;
   }
 
 };

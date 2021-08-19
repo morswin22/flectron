@@ -7,7 +7,7 @@ uniform vec2 uCameraPosition;
 uniform float uCameraScale;
 uniform vec4 uBaseColor;
 
-// uniform vec4 uLightColor[128];
+uniform vec4 uLightColor[128];
 uniform vec3 uLightData[128];
 uniform int uLightCount;
 
@@ -20,15 +20,33 @@ void main() {
     (size.y * 0.5 - float(gl_GlobalInvocationID.y)) * uCameraScale + uCameraPosition.y
   );
 
-  for (int i = 0; i < uLightCount; i++) {
+  float weights = 0;
+  float maxWeight = 0.0;
+  vec4 combinedColor = vec4(0.0, 0.0, 0.0, 0.0);
+  for (int i = 0; i < uLightCount; i++) 
+  {
     float dist = distance(uLightData[i].xy, coords);
     if (dist < uLightData[i].z)
     {
       float x = dist / uLightData[i].z;
-      // color = mix(color, uLightColor, 1.0 - x);
-      color = color * vec4(1.0, 1.0, 1.0, x*x*x);
+      float weight = 1.0 - x*x*x;
+      combinedColor += uLightColor[i] * weight;
+      weights += weight;
+      if (weight > maxWeight)
+      {
+        maxWeight = weight;
+      }
     }
   }
 
-  imageStore(uImageOutput, ivec2(gl_GlobalInvocationID.xy), color);
+  if (weights > 0)
+  {
+    // TODO fix the slightly visible darkness when lights overlap
+    // the maxWeight currently is the max distance from the pixel to the edge of light
+    // and it should take into account that when lights overlap, that distance should be
+    // calculated as the max distance from the pixel to the closest edge of the combined lights
+    color = mix(vec4(uBaseColor.rgb, 1.0), combinedColor / weights, maxWeight);
+  }
+
+  imageStore(uImageOutput, ivec2(gl_GlobalInvocationID.xy), vec4(color.rgb, uBaseColor.a));
 }

@@ -15,7 +15,7 @@ namespace MindlessEngine
       density(density), mass(mass), invMass(0.0f), resitution(resitution), area(area), isStatic(isStatic), 
       numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true), aabb(0.0f, 0.0f, 0.0f, 0.0f), isAABBUpdateRequired(true),
       bodyType(bodyType), radius(radius), width(width), height(height), 
-      fillColor(Colors::white()), strokeColor(Colors::white()), textureIndex(0), texturePositions(0.0f, 0.0f, 0.0f, 0.0f), lightRadius(0.0f),
+      fillColor(Colors::white()), strokeColor(Colors::white()), textureIndex(0), texturePositions(0.0f, 0.0f, 0.0f, 0.0f), lightRadius(0.0f), lightColor(Colors::white()),
       isFilled(true), isStroked(false), isTextured(false), isLit(false)
   {
     if (!isStatic)
@@ -119,8 +119,9 @@ namespace MindlessEngine
     isTextured = false;
   }
 
-  void Body::light(float radius)
+  void Body::light(float radius, const Color& color)
   {
+    lightColor = color;
     lightRadius = radius;
     isLit = true;
   }

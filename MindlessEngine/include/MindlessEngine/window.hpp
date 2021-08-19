@@ -78,6 +78,7 @@ namespace MindlessEngine
 
   public:
     Ref<Shader> shader;
+    GLuint rendererBuffer;
 
   private:
     float desiredFrameRate;
@@ -99,6 +100,8 @@ namespace MindlessEngine
 
     void setTitle(const std::string& title);
     std::string getTitle() const;
+
+    GLuint getRendererBuffer() const;
 
     bool shouldClose() const;
     void getCursorPosition(Vector& v) const;

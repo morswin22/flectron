@@ -14,27 +14,32 @@ namespace MindlessEngine
   private:
     GLuint buffer;
     Ref<ComputeShader> shader;
+    Ref<Shader> combineShader;
     float lightsData[128 * 3];
-    // float lightsColors[128 * 4];
+    float lightsColors[128 * 4];
 
     int currentLight;
     int currentData;
-    // int currentColor;
+    int currentColor;
+
+    GLuint vao;
+    GLuint vbo;
+    GLuint ibo;
 
   public:
     int width, height;
 
   public:
-    LightScene(std::string path, int width, int height);
+    LightScene(std::string path, std::string vertexPath, std::string fragmentPath, int width, int height);
     ~LightScene();
 
     GLuint getBuffer() const;
 
     void reset();
 
-    void compute(const Color& baseColor, const glm::vec3& cameraPosition, float cameraScale);
+    void render(const Color& baseColor, float darkness, const glm::vec3& cameraPosition, float cameraScale, GLuint rendererBuffer);
 
-    void addLight(const Vector& position, float radius);
+    void addLight(const Vector& position, float radius, const Color& color);
     void addLight(const Ref<Body>& body);
   };
 

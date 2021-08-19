@@ -23,9 +23,9 @@ public:
     textureAtlas(createRef<TextureAtlas>("assets/atlas.png", 9, 2, true)), 
     fontAtlas(createRef<FontAtlas>("assets/font.png", 13, 7, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()[]{}-=+/\\|?.,<>~:; ")),
     platform(nullptr),
-    lightScene(createRef<LightScene>("shaders/light.comp", window.width, window.height)),
-    timeScene(createRef<TimeScene>(8.0f/24.0f, 5.0f/24.0f, 18.0f/24.0f, 3.0f/24.0f, 0.03f, 0.0f, 0.95f)),
-    nightColor(0.14f, 0.22f, 0.25f, 1.0f)
+    lightScene(createRef<LightScene>("shaders/light.comp", "shaders/light.vert", "shaders/light.frag", window.width, window.height)),
+    timeScene(createRef<TimeScene>(8.0f/24.0f, 5.0f/24.0f, 18.0f/24.0f, 3.0f/24.0f, 1.0f/24.0f, 0.0f, 1.0f)),
+    nightColor(0.0f, 0.39f, 0.53, 1.0f)
   {
     window.setBackground(Colors::darkGray());
     window.camera.setScale(0.06f);
@@ -49,7 +49,7 @@ public:
       body->stroke(Colors::white());
 
       if (randomFloat(0.0f, 1.0f) < 0.1f)
-        body->light(radius * 3.0f);
+        body->light(radius * 3.0f, Colors::random());
 
       world.addBody(body);
     }
@@ -63,7 +63,7 @@ public:
       body->texture(textureAtlas, (float)randomInt(0, 5), 1.0f, 1.0f, 1.0f);
 
       if (randomFloat(0.0f, 1.0f) < 0.1f)
-        body->light(std::max(width, height) * 3.0f);
+        body->light(std::max(width, height) * 3.0f, Colors::random());
 
       world.addBody(body);
     }
@@ -81,6 +81,7 @@ public:
 
   void render() override
   {
+    Renderer::offscreen();
     window.clear();
 
     for (int i = 0; i < world.getBodyCount(); i++)
@@ -92,14 +93,15 @@ public:
     }
 
     if (Keyboard::isPressed(Keys::L))
-      lightScene->addLight(mouseWorldPosition, 9.0f);
+      lightScene->addLight(mouseWorldPosition, 9.0f, Colors::white());
 
-    lightScene->compute(
-      { nightColor.r, nightColor.g, nightColor.b, timeScene->getDarkness() },
+    lightScene->render(
+      nightColor,
+      timeScene->getDarkness(),
       window.camera.getPosition(),
-      window.camera.getScale()
+      window.camera.getScale(),
+      window.getRendererBuffer()
     );
-    window.draw(lightScene);
 
     std::ostringstream text;
     text << "Elapsed time: " << (int)(elapsedTime * 1000.0f) << "ms";
@@ -109,6 +111,7 @@ public:
     if (Keyboard::isPressed(Keys::H))
       text << "\n\nPress Q/E to rotate\nPress LEFT/RIGHT to add circles/boxes";
 
+    Renderer::onscreen();
     const float scale = window.camera.getScale();
     const Constraints& cc = window.camera.getConstraints();
     window.draw(fontAtlas, { cc.left, cc.bottom }, text.str(), 175.0f * scale, Colors::white());
