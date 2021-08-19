@@ -18,6 +18,9 @@ namespace MindlessEngine
 
     static int numCircleVerticies;
 
+    static int minIterations;
+    static int maxIterations;
+
   private:
     std::list<Ref<Body>> bodyList;
     Vector gravity;
@@ -30,7 +33,7 @@ namespace MindlessEngine
     Ref<Body>& getBody(int index);
     int getBodyCount() const;
 
-    void update(float deltaTime);
+    void update(float deltaTime, int iterations);
 
     bool collide(Ref<Body>& bodyA, Ref<Body>& bodyB, Vector& normal, float& depth);
     void resolveCollision(Ref<Body>& bodyA, Ref<Body>& bodyB, const Vector& normal, float depth);

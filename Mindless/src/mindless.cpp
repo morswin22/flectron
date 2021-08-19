@@ -73,7 +73,7 @@ public:
     if (Keyboard::isPressed(Keys::E))
       platform->rotate(-elapsedTime * (float)M_PI * 0.5f);
 
-    world.update(elapsedTime);
+    world.update(elapsedTime, 8);
     removeOffscreen();
 
     timeScene->update(elapsedTime);

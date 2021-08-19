@@ -14,6 +14,9 @@ namespace MindlessEngine
 
   int World::numCircleVerticies = 64;
 
+  int World::minIterations = 1;
+  int World::maxIterations = 128;
+
   World::World() : bodyList(), gravity(0.0f, -9.81f) {}
   
   void World::addBody(const Ref<Body>& body)
@@ -48,55 +51,61 @@ namespace MindlessEngine
     return bodyList.size();
   }
 
-  void World::update(float deltaTime)
+  void World::update(float deltaTime, int iterations)
   {
     if (bodyList.empty())
       return;
 
-    // Movement
-    for (auto it = bodyList.begin(); it != bodyList.end(); ++it)
-      (*it)->update(deltaTime, gravity);
+    iterations = clamp(iterations, minIterations, maxIterations);
+    float timeStep = deltaTime / (float)iterations;
 
-    // Collision step
-    Vector normal;
-    float depth;
-    auto bodyAPtr = bodyList.begin();
-    for (int i = 0; i < bodyList.size() - 1; i++)
+    for (int iteration = 0; iteration < iterations; iteration++)
     {
-      Ref<Body>& bodyA = *bodyAPtr;
-      auto bodyBPtr = bodyList.begin();
-      std::advance(bodyBPtr, i + 1);
-      for (int j = i + 1; j < bodyList.size(); j++)
+      // Movement
+      for (auto it = bodyList.begin(); it != bodyList.end(); ++it)
+        (*it)->update(timeStep, gravity);
+
+      // Collision step
+      Vector normal;
+      float depth;
+      auto bodyAPtr = bodyList.begin();
+      for (int i = 0; i < bodyList.size() - 1; i++)
       {
-        Ref<Body>& bodyB = *bodyBPtr;
-        if (bodyA->isStatic && bodyB->isStatic)
+        Ref<Body>& bodyA = *bodyAPtr;
+        auto bodyBPtr = bodyList.begin();
+        std::advance(bodyBPtr, i + 1);
+        for (int j = i + 1; j < bodyList.size(); j++)
         {
+          Ref<Body>& bodyB = *bodyBPtr;
+          if (bodyA->isStatic && bodyB->isStatic)
+          {
+            std::advance(bodyBPtr, 1);
+            continue;
+          }
+
+          if (collide(bodyA, bodyB, normal, depth))
+          {
+            if (bodyA->isStatic)
+            {
+              bodyB->move(normal * depth);
+            }
+            else if (bodyB->isStatic)
+            {
+              bodyA->move(-normal * depth);
+            }
+            else 
+            {
+              bodyA->move(-normal * depth * 0.5f);
+              bodyB->move(normal * depth * 0.5f);
+            }
+
+            resolveCollision(bodyA, bodyB, normal, depth);
+          }
+
           std::advance(bodyBPtr, 1);
-          continue;
         }
-
-        if (collide(bodyA, bodyB, normal, depth))
-        {
-          if (bodyA->isStatic)
-          {
-            bodyB->move(normal * depth);
-          }
-          else if (bodyB->isStatic)
-          {
-            bodyA->move(-normal * depth);
-          }
-          else 
-          {
-            bodyA->move(-normal * depth * 0.5f);
-            bodyB->move(normal * depth * 0.5f);
-          }
-
-          resolveCollision(bodyA, bodyB, normal, depth);
-        }
-
-        std::advance(bodyBPtr, 1);
+        std::advance(bodyAPtr, 1);
       }
-      std::advance(bodyAPtr, 1);
     }
   }
 

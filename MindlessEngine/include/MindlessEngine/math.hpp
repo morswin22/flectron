@@ -6,6 +6,7 @@ namespace MindlessEngine
 {
 
   float clamp(float value, float min, float max);
+  int clamp(int value, int min, int max);
 
   float length(const Vector& v);
   float lengthSquared(const Vector& v);
