@@ -4,7 +4,6 @@ configure_file(assets/atlas.png assets/atlas.png COPYONLY)
 configure_file(assets/font.png assets/font.png COPYONLY)
 configure_file(shaders/batch.vert shaders/batch.vert COPYONLY)
 configure_file(shaders/batch.frag shaders/batch.frag COPYONLY)
-configure_file(shaders/light.comp shaders/light.comp COPYONLY)
 configure_file(shaders/light.vert shaders/light.vert COPYONLY)
 configure_file(shaders/light.frag shaders/light.frag COPYONLY)
 

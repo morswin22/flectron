@@ -121,7 +121,7 @@ namespace MindlessEngine
     void draw(Ref<Body>& body);
     void draw(const Vector& a, const Vector& b, float weight, const Color& color);
     void draw(Ref<FontAtlas>& atlas, const Vector& position, const std::string& text, float scale, const Color& color);
-    void draw(const Ref<LightScene>& scene);
+    void draw(const Ref<LightScene>& scene, const Color& nightColor, float darkness);
   };
 
 };

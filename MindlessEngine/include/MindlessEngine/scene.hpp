@@ -12,9 +12,7 @@ namespace MindlessEngine
   class LightScene
   {
   private:
-    GLuint buffer;
-    Ref<ComputeShader> shader;
-    Ref<Shader> combineShader;
+    Ref<Shader> shader;
     float lightsData[128 * 3];
     float lightsColors[128 * 4];
 
@@ -27,17 +25,12 @@ namespace MindlessEngine
     GLuint ibo;
 
   public:
-    int width, height;
-
-  public:
-    LightScene(std::string path, std::string vertexPath, std::string fragmentPath, int width, int height);
+    LightScene(const std::string& vertexPath, const std::string& fragmentPath);
     ~LightScene();
-
-    GLuint getBuffer() const;
 
     void reset();
 
-    void render(const Color& baseColor, float darkness, const glm::vec3& cameraPosition, float cameraScale, GLuint rendererBuffer);
+    void render(const Color& baseColor, float darkness, const glm::vec3& cameraPosition, const glm::vec2& windowSize, GLuint rendererBuffer);
 
     void addLight(const Vector& position, float radius, const Color& color);
     void addLight(const Ref<Body>& body);

@@ -349,17 +349,15 @@ namespace MindlessEngine
     }
   }
 
-  void Window::draw(const Ref<LightScene>& scene)
+  void Window::draw(const Ref<LightScene>& scene, const Color& nightColor, float darkness)
   {
-    const Constraints& cc = camera.getConstraints();
-    Renderer::draw(
-      { cc.left,  cc.bottom }, 
-      { cc.right, cc.bottom }, 
-      { cc.right, cc.top }, 
-      { cc.left,  cc.top }, 
-      scene->getBuffer(),
-      1.0f,
-      Colors::white()
+    const float scale = camera.getScale();
+    scene->render(
+      nightColor,
+      darkness,
+      camera.getPosition(),
+      { width * scale, height * scale },
+      rendererBuffer
     );
   }
 
