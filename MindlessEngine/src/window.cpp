@@ -64,8 +64,9 @@ namespace MindlessEngine
 
   void Camera::setScale(float scale)
   {
+    const float scaleFactor = scale / this->scale;
+    setProjection(constraints.left * scaleFactor, constraints.right * scaleFactor, constraints.top * scaleFactor, constraints.bottom * scaleFactor);
     this->scale = scale;
-    setProjection(constraints.left * scale, constraints.right * scale, constraints.top * scale, constraints.bottom * scale);
   }
 
   void Camera::moveTo(const Vector& position)
@@ -217,10 +218,19 @@ namespace MindlessEngine
 
   void Window::getFrameSize()
   {
-    glfwGetFramebufferSize(window, &width, &height);
+    int newWidth, newHeight;
+    glfwGetFramebufferSize(window, &newWidth, &newHeight);
+    if (newWidth == width && newHeight == height)
+      return;
+
+    width = newWidth;
+    height = newHeight;
     glViewport(0, 0, width, height);
     const float scale = camera.getScale();
     camera.setProjection(-width * 0.5f * scale, width * 0.5f * scale, -height * 0.5f * scale, height * 0.5f * scale);
+    glBindTexture(GL_TEXTURE_2D, rendererBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
   }
 
   void Window::clear() const
@@ -251,10 +261,14 @@ namespace MindlessEngine
   void Window::setSize(int width, int height)
   {
     glfwSetWindowSize(window, width, height);
+    glViewport(0, 0, width, height);
     this->width = width;
     this->height = height;
     const float scale = camera.getScale();
     camera.setProjection(-width * 0.5f * scale, width * 0.5f * scale, -height * 0.5f * scale, height * 0.5f * scale);
+    glBindTexture(GL_TEXTURE_2D, rendererBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
   }
 
   void Window::setBackground(const Color& color)
