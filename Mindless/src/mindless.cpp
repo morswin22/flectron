@@ -16,6 +16,7 @@ private:
   Ref<LightScene> lightScene;
   Ref<TimeScene> timeScene;
   Color nightColor;
+  Stopwatch physicsTimer;
 
 public:
   Mindless()
@@ -73,7 +74,9 @@ public:
     if (Keyboard::isPressed(Keys::E))
       platform->rotate(-elapsedTime * (float)M_PI * 0.5f);
 
+    physicsTimer.start();
     world.update(elapsedTime, 8);
+    physicsTimer.stop();
     removeOffscreen();
 
     timeScene->update(elapsedTime);
@@ -105,6 +108,7 @@ public:
 
     std::ostringstream text;
     text << "Elapsed time: " << (int)(elapsedTime * 1000.0f) << "ms";
+    text << " (" << (int)(physicsTimer.getElapsedTime() * 1000.0f) << "ms)";
     text << "\nNumber of bodies: " << world.getBodyCount();
     text << "\n" << timeScene->getDay() << "d " << floorf(timeScene->getTime() * 24.0f) << "h (" << floorf(timeScene->getDarkness() * 100.0f) / 100.f << ")";
 

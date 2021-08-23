@@ -2,6 +2,7 @@ project(MindlessEngine)
 
 set(MindlessEngineSource
   src/memory.cpp
+  src/stopwatch.cpp
   src/random.cpp
   src/color.cpp
   src/input.cpp
@@ -17,6 +18,7 @@ set(MindlessEngineSource
   src/window.cpp
   src/game.cpp
   include/MindlessEngine/memory.hpp
+  include/MindlessEngine/stopwatch.hpp
   include/MindlessEngine/random.hpp
   include/MindlessEngine/color.hpp
   include/MindlessEngine/input.hpp
