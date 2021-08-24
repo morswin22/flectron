@@ -307,6 +307,19 @@ namespace MindlessEngine
     }
   }
 
+  void Window::draw(const AABB& aabb, const Color& color)
+  {
+    Vector a(aabb.min.x, aabb.min.y);
+    Vector b(aabb.max.x, aabb.min.y);
+    Vector c(aabb.max.x, aabb.max.y);
+    Vector d(aabb.min.x, aabb.max.y);
+
+    draw(a, b, 1.0, color);
+    draw(b, c, 1.0, color);
+    draw(c, d, 1.0, color);
+    draw(d, a, 1.0, color);
+  }
+
   void Window::draw(const Vector& a, const Vector& b, float weight, const Color& color)
   {
     Vector line = b - a;
