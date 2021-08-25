@@ -39,6 +39,7 @@ namespace MindlessEngine
     void setUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
     void setUniformMat4f(const std::string& name, const glm::mat4& matrix);
     void setUniform1iv(const std::string& name, int* array, int size);
+    void setUniform2fv(const std::string& name, float* array, int size);
     void setUniform3fv(const std::string& name, float* array, int size);
     void setUniform4fv(const std::string& name, float* array, int size);
   };
@@ -75,7 +76,7 @@ namespace MindlessEngine
     std::string filepath;
   
   public:
-    Texture(const std::string& filepath, bool nearest);
+    Texture(const std::string& filepath, bool nearest, bool repeat);
     ~Texture();
 
     Texture(const Texture&) = delete;
@@ -148,7 +149,7 @@ namespace MindlessEngine
     static void draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, TextureAtlas* textureAtlas, float x, float y, float w, float h, const Color& tint);
   };
 
-  GLuint loadTexture(const std::string& filepath, bool nearest);
+  GLuint loadTexture(const std::string& filepath, bool nearest, bool repeat);
   GLuint createFrameBuffer(int width, int height, GLuint& buffer);
 
 };

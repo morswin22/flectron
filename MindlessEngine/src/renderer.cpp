@@ -61,6 +61,11 @@ namespace MindlessEngine
     glUniform1iv(getUniformLocation(name), size, array);
   }
 
+  void BaseShader::setUniform2fv(const std::string& name, float* array, int size)
+  {
+    glUniform2fv(getUniformLocation(name), size, array);
+  }
+
   void BaseShader::setUniform3fv(const std::string& name, float* array, int size)
   {
     glUniform3fv(getUniformLocation(name), size, array);
@@ -175,8 +180,8 @@ namespace MindlessEngine
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
   }
 
-  Texture::Texture(const std::string& filepath, bool nearest)
-    : rendererID(loadTexture(filepath, nearest)), filepath(filepath)
+  Texture::Texture(const std::string& filepath, bool nearest, bool repeat)
+    : rendererID(loadTexture(filepath, nearest, repeat)), filepath(filepath)
   {}
 
   Texture::~Texture()
@@ -190,7 +195,7 @@ namespace MindlessEngine
   }
 
   TextureAtlas::TextureAtlas(const std::string& filepath, int columns, int rows, bool nearest)
-    : Texture(filepath, nearest), columns(columns), rows(rows)
+    : Texture(filepath, nearest, false), columns(columns), rows(rows)
   {
     xOffset = 1.0f / (float)columns;
     yOffset = 1.0f / (float)rows;
@@ -558,7 +563,7 @@ namespace MindlessEngine
     draw(a, b, c, d, textureID, texturePosition, tint);
   }
 
-  GLuint loadTexture(const std::string& filepath, bool nearest)
+  GLuint loadTexture(const std::string& filepath, bool nearest, bool repeat)
   {
     int w, h, bits;
     // stbi_set_flip_vertically_on_load(true);
@@ -568,8 +573,8 @@ namespace MindlessEngine
     glBindTexture(GL_TEXTURE_2D, textureID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, nearest ? GL_NEAREST : GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, nearest ? GL_NEAREST : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     stbi_image_free(pixels);
     return textureID;

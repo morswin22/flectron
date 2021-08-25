@@ -1,12 +1,16 @@
-project(Mindless)
-
 configure_file(assets/atlas.png assets/atlas.png COPYONLY)
 configure_file(assets/font.png assets/font.png COPYONLY)
 configure_file(shaders/batch.vert shaders/batch.vert COPYONLY)
 configure_file(shaders/batch.frag shaders/batch.frag COPYONLY)
 configure_file(shaders/light.vert shaders/light.vert COPYONLY)
 configure_file(shaders/light.frag shaders/light.frag COPYONLY)
+configure_file(assets/biomes.png assets/biomes.png COPYONLY)
+configure_file(shaders/terrain.comp shaders/terrain.comp COPYONLY)
 
+project(Mindless)
 add_executable(Mindless src/mindless.cpp)
-
 target_link_libraries(Mindless MindlessEngine)
+
+project(Terrain)
+add_executable(Terrain src/terrain.cpp)
+target_link_libraries(Terrain MindlessEngine)
