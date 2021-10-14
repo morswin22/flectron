@@ -13,26 +13,11 @@ set(MindlessEngineSource
   src/transform.cpp
   src/collisions.cpp
   src/renderer.cpp
+  src/wfc.cpp
   src/scene.cpp
   src/world.cpp
   src/window.cpp
   src/game.cpp
-  include/MindlessEngine/memory.hpp
-  include/MindlessEngine/stopwatch.hpp
-  include/MindlessEngine/random.hpp
-  include/MindlessEngine/color.hpp
-  include/MindlessEngine/input.hpp
-  include/MindlessEngine/vector.hpp
-  include/MindlessEngine/math.hpp
-  include/MindlessEngine/aabb.hpp
-  include/MindlessEngine/body.hpp
-  include/MindlessEngine/transform.hpp
-  include/MindlessEngine/collisions.hpp
-  include/MindlessEngine/renderer.hpp
-  include/MindlessEngine/scene.hpp
-  include/MindlessEngine/world.hpp
-  include/MindlessEngine/window.hpp
-  include/MindlessEngine/game.hpp
   include/MindlessEngine/MindlessEngine.hpp
 )
 

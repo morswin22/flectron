@@ -1,0 +1,42 @@
+TILES
+corner	L
+cross	I
+empty	X
+line	I
+t	T
+NEIGHBORS
+corner 1	empty
+corner	cross
+corner	cross 1
+corner	line
+corner 1	line 1
+corner	t 2
+corner	t 3
+corner	t
+corner 1	t 1
+corner 1	corner 3
+corner 1	corner
+corner	corner 1
+corner	corner 2
+cross	cross
+cross	cross 1
+cross 1	cross 1
+cross	line
+cross 1	line
+cross	t
+cross	t 3
+cross 1	t
+cross 1	t 3
+empty	empty
+empty	line 1
+empty	t 1
+line	line
+line 1	line 1
+line	t
+line 1	t 1
+line	t 3
+t 1	t 3
+t	t
+t 2	t
+t 1	t
+t 3	t 1

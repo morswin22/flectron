@@ -11,6 +11,7 @@
 #include <MindlessEngine/world.hpp>
 #include <MindlessEngine/collisions.hpp>
 #include <MindlessEngine/renderer.hpp>
+#include <MindlessEngine/wfc.hpp>
 #include <MindlessEngine/scene.hpp>
 #include <MindlessEngine/window.hpp>
 #include <MindlessEngine/game.hpp>

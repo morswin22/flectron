@@ -1,145 +1,68 @@
 #include <MindlessEngine/MindlessEngine.hpp>
+#include <iostream>
 
 using namespace MindlessEngine;
 
 class Terrain : public Game
 {
 private:
-  Ref<ComputeShader> terrainShader;
-  GLuint terrainBuffer;
-  GLuint biomesMap;
-  Vector offset;
-  float scale;
-  float seed;
-  bool regenerate;
-  float* mapData;
+  Ref<WFC::TileInfo> tileInfo;
+  Ref<WFC::TileModel> generator;
+  Scope<WFC::Output> output;
+  GLuint texture;
+  Stopwatch timer;
 public:
   Terrain()
-  : Game(800, 600, "Terrain test", "shaders/batch.vert", "shaders/batch.frag"),
-    terrainShader(createRef<ComputeShader>("shaders/terrain.comp")),
-    offset(0.0f, 0.0f),
-    scale(32.0f),
-    seed(0.0f),
-    regenerate(true),
-    mapData(nullptr)
+  : Game(500, 500, "Terrain test", "shaders/batch.vert", "shaders/batch.frag"),
+    tileInfo(createRef<WFC::TileInfo>("assets/pipes.txt")),
+    generator(createRef<WFC::TileModel>(tileInfo, "assets/pipes.png", 5, 25, 25, true)),
+    output(generator->createOutput()),
+    texture(generator->getTexture())
   {
-    glGenTextures(1, &terrainBuffer);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, terrainBuffer);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, window.width, window.height, 0, GL_RGBA, GL_FLOAT, nullptr);
-
-    biomesMap = loadTexture("assets/biomes.png", true, false);
-
-    terrainShader->bind();
-    // terrainShader->setUniform1i("uBiomesMap", 1);
-
-    // height, moisture, biome
-    mapData = new float[window.width * window.height * 3];
-  }
-
-  ~Terrain()
-  {
-    glDeleteTextures(1, &terrainBuffer);
-    glDeleteTextures(1, &biomesMap);
-    delete[] mapData;
-  }
-
-  void generate()
-  {
-    if (scale <= 0.0f)
-      scale = 0.0001f;
-
-    const int octaves = 6; // Update also in the shader
-
-    srand(seed);
-    Vector octaveOffsets[octaves];
-    for (int i = 0; i < octaves; i++)
-    {
-      octaveOffsets[i].x = randomFloat(-100000.0f, 100000.0f) + offset.x;
-      octaveOffsets[i].y = randomFloat(-100000.0f, 100000.0f) + offset.y;
-    }
-
-    glBindImageTexture(0, terrainBuffer, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-    // glBindTextureUnit(1, biomesMap);
-    terrainShader->bind();
-    terrainShader->setUniform1f("uScale", scale); // > 0.0f
-    terrainShader->setUniform1i("uOctaves", octaves); // > 0
-    terrainShader->setUniform1f("uPersistence", 0.5f); // [0.0f;1.0f]
-    terrainShader->setUniform1f("uLacunarity", 2.0f); // > 1.0f
-    terrainShader->setUniform2f("uHalfSize", window.width * 0.5f, window.height * 0.5f);
-    terrainShader->setUniform2fv("uOctaveOffsets", (float*)octaveOffsets, octaves);
-    terrainShader->dispatch(window.width, window.height, 1);
-    terrainShader->barrier();
-
-    glReadPixels(0, 0, window.width, window.height, GL_RGB, GL_FLOAT, mapData);
-
-    // mapData now contains all the height, moisture and biome data
-    // and is ready for use
+    timer.start();
+    generator->run(output.get(), 0u, 0u);
+    timer.stop();
+    std::cout << "Time: " << timer.getElapsedTime() << "\n";
   }
 
   void update() override
   {
-    if (Keyboard::isPressed(Keys::C))
-    {
-      seed = randomFloat(-10000.0f, 10000.0f);
-      regenerate = true;
-    }
-
-    if (Keyboard::isPressed(Keys::Z))
-    {
-      scale *= 1.0f / 0.93f;
-      regenerate = true;
-    }
-
-    if (Keyboard::isPressed(Keys::X))
-    {
-      scale *= 0.93f;
-      regenerate = true;
-    }
-
-    float dx = 0.0f;
-    float dy = 0.0f;
-    const float speed = 4.0f;
-
-    if (Keyboard::isPressed(Keys::W))
-      dy -= 0.1f;
-    if (Keyboard::isPressed(Keys::S))
-      dy += 0.1f;
-    if (Keyboard::isPressed(Keys::A))
-      dx -= 0.1f;
-    if (Keyboard::isPressed(Keys::D))
-      dx += 0.1f;
-
-    if (dx != 0.0f || dy != 0.0f)
-    {
-      offset = offset + normalize({ dx, dy }) * speed / scale;
-      regenerate = true;
-    }
-
-    if (regenerate)
-      generate();
-    regenerate = false;
+    // generator->run(output.get(), 0u, 25u);
   }
 
   void render() override
   {
     window.clear();
 
-    const Constraints& cc = window.camera.getConstraints();
+    const auto& tiles = generator->getTiles(output.get());
 
-    Renderer::draw(
-      {cc.left, cc.bottom},
-      {cc.right, cc.bottom},
-      {cc.right, cc.top},
-      {cc.left, cc.top},
-      terrainBuffer,
-      {0.0, 0.0, 1.0, 1.0},
-      Colors::white()
-    );
+    const float w = 500.0f;
+    const float h = 500.0f;
+    const float hw = w / generator->width;
+    const float hh = h / generator->height;
+    for (int y = 0; y < generator->height; ++y)
+    {
+      for (int x = 0; x < generator->width; ++x)
+      {
+        const float u = (float)(x - generator->width*0.5f) / generator->width;
+        const float v = (float)(y - generator->height*0.5f) / generator->height;
+        const float x1 = u * w;
+        const float y1 = v * h;
+
+        const glm::vec4& ab = tiles[x][y]->ab;
+        const glm::vec4& cd = tiles[x][y]->cd; 
+
+        Renderer::draw(
+          {x1 + ab.x * hw, y1 + ab.y * hh},
+          {x1 + ab.z * hw, y1 + ab.w * hh},
+          {x1 + cd.x * hw, y1 + cd.y * hh},
+          {x1 + cd.z * hw, y1 + cd.w * hh},
+          texture,
+          tiles[x][y]->textureCoords,
+          Colors::white()
+        );
+      }
+    }
   }
 };
 
