@@ -8,6 +8,7 @@
 #include <MindlessEngine/vector.hpp>
 #include <MindlessEngine/math.hpp>
 #include <MindlessEngine/body.hpp>
+#include <MindlessEngine/grid.hpp>
 #include <MindlessEngine/world.hpp>
 #include <MindlessEngine/collisions.hpp>
 #include <MindlessEngine/renderer.hpp>

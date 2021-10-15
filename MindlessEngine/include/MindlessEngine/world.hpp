@@ -3,6 +3,7 @@
 #include <list>
 #include <MindlessEngine/memory.hpp>
 #include <MindlessEngine/body.hpp>
+#include <MindlessEngine/grid.hpp>
 
 namespace MindlessEngine 
 {
@@ -23,12 +24,15 @@ namespace MindlessEngine
 
   private:
     std::list<Ref<Body>> bodyList;
+  public:
+    SpatialHashGrid grid;
+  private:
     Vector gravity;
 
   public:
     World();
 
-    void addBody(const Ref<Body>& body);
+    void addBody(Ref<Body>& body);
     bool removeBody(int index);
     Ref<Body>& getBody(int index);
     int getBodyCount() const;

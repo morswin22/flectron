@@ -17,11 +17,12 @@ namespace MindlessEngine
   int World::minIterations = 1;
   int World::maxIterations = 128;
 
-  World::World() : bodyList(), gravity(0.0f, -9.81f) {}
+  World::World() : bodyList(), grid(4), gravity(0.0f, -9.81f) {}
   
-  void World::addBody(const Ref<Body>& body)
+  void World::addBody(Ref<Body>& body)
   {
     bodyList.push_back(body);
+    grid.insert(body);
   }
 
   bool World::removeBody(int index)
@@ -31,6 +32,7 @@ namespace MindlessEngine
 
     auto it = bodyList.begin();
     std::advance(it, index);
+    grid.remove(*it);
     bodyList.erase(it);
     return true;
   }
@@ -62,26 +64,26 @@ namespace MindlessEngine
     for (int iteration = 0; iteration < iterations; iteration++)
     {
       // Movement
-      for (auto it = bodyList.begin(); it != bodyList.end(); ++it)
-        (*it)->update(timeStep, gravity);
+      for (Ref<Body>& body : bodyList)
+      {
+        body->update(timeStep, gravity);
+        grid.insert(body);
+      }
 
       // Collision step
       Vector normal;
       float depth;
-      auto bodyAPtr = bodyList.begin();
-      for (int i = 0; i < bodyList.size() - 1; i++)
+      for (Ref<Body>& bodyA : bodyList)
       {
-        Ref<Body>& bodyA = *bodyAPtr;
-        auto bodyBPtr = bodyList.begin();
-        std::advance(bodyBPtr, i + 1);
-        for (int j = i + 1; j < bodyList.size(); j++)
+        auto nearby = grid.getCells(bodyA->getAABB());
+
+        for (Ref<Body> bodyB : nearby)
         {
-          Ref<Body>& bodyB = *bodyBPtr;
-          if (bodyA->isStatic && bodyB->isStatic)
-          {
-            std::advance(bodyBPtr, 1);
+          if (bodyA == bodyB)
             continue;
-          }
+
+          if (bodyA->isStatic && bodyB->isStatic)
+            continue;
 
           if (collide(bodyA, bodyB, normal, depth))
           {
@@ -100,11 +102,10 @@ namespace MindlessEngine
             }
 
             resolveCollision(bodyA, bodyB, normal, depth);
+            grid.insert(bodyA);
+            grid.insert(bodyB);
           }
-
-          std::advance(bodyBPtr, 1);
         }
-        std::advance(bodyAPtr, 1);
       }
     }
   }

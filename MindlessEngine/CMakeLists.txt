@@ -11,6 +11,7 @@ set(MindlessEngineSource
   src/aabb.cpp
   src/body.cpp
   src/transform.cpp
+  src/grid.cpp
   src/collisions.cpp
   src/renderer.cpp
   src/wfc.cpp

@@ -75,7 +75,7 @@ public:
       platform->rotate(-elapsedTime * (float)M_PI * 0.5f);
 
     physicsTimer.start();
-    world.update(elapsedTime, 8);
+    world.update(elapsedTime, 4);
     physicsTimer.stop();
     removeOffscreen();
 
