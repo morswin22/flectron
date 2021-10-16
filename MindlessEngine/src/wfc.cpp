@@ -124,7 +124,7 @@ namespace MindlessEngine { namespace WFC{
     : TextureAtlas(path, 1, numTiles, true), width(width), height(height), numPatterns(0), periodic(periodic), foundation(kInvalidIndex), 
       weights(), config(config), propagator(nullptr), tiles(nullptr), tileSize(32), tileMap()
   {
-    tileMap[-1] = new Tile({0.0f, 0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 0.0f, 1.0f});
+    tileMap[-1] = new Tile(rendererID, {0.0f, 0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 0.0f, 1.0f});
 
     std::vector<std::array<int, 8>> action;
     std::unordered_map<std::string, size_t> firstOccurrence;
@@ -219,7 +219,7 @@ namespace MindlessEngine { namespace WFC{
         }
 
         const size_t index = patternsSoFar + t;
-        tileMap[index] = new Tile({(float)currentTile/(float)numTiles, 0.0f, 1.0f/(float)numTiles, 1.0f}, {pa.x, pa.y, pb.x, pb.y}, {pc.x, pc.y, pd.x, pd.y});
+        tileMap[index] = new Tile(rendererID, {(float)currentTile/(float)numTiles, 0.0f, 1.0f/(float)numTiles, 1.0f}, {pa.x, pa.y, pb.x, pb.y}, {pc.x, pc.y, pd.x, pd.y});
       }
 
       for (int t = 0; t < cardinality; ++t)
@@ -390,20 +390,20 @@ namespace MindlessEngine { namespace WFC{
     return 0;
   }
 
-  Result TileModel::run(Output* output, size_t seed, size_t limit) const
+  Result TileModel::run(Ref<Output>& output, size_t seed, size_t limit) const
   {
     std::mt19937 gen(seed);
     std::uniform_real_distribution<double> dist(0.0, 1.0);
     RandomDouble randomDouble = [&]() { return dist(gen); };
 
     for (size_t l = 0; l < limit || limit == 0; ++l) {
-      Result result = observe(output, randomDouble);
+      Result result = observe(output.get(), randomDouble);
 
       if (result != Result::kUnfinished) {
         // std::cout << resultToString(result) << " after " << l << " iterations\n";
         return result;
       }
-      while (propagate(output));
+      while (propagate(output.get()));
     }
 
     // std::cout << "Unfinished after " << limit << " iterations\n";
@@ -473,7 +473,7 @@ namespace MindlessEngine { namespace WFC{
     }
   }
 
-  std::vector<std::vector<Tile*>> TileModel::getTiles(Output* output)
+  std::vector<std::vector<Tile*>> TileModel::getTiles(Ref<Output>& output)
   {
     std::vector<std::vector<Tile*>> tiles;
     for (int i = 0; i < width; ++i)

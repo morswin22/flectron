@@ -25,11 +25,12 @@ namespace MindlessEngine { namespace WFC {
   };
 
   struct Tile {
+    GLuint texture;
     glm::vec4 textureCoords;
     glm::vec4 ab;
     glm::vec4 cd;
 
-    Tile(const glm::vec4& textureCoords, const glm::vec4& ab, const glm::vec4& cd) : textureCoords(textureCoords), ab(ab), cd(cd) {}
+    Tile(GLuint texture, const glm::vec4& textureCoords, const glm::vec4& ab, const glm::vec4& cd) : texture(texture), textureCoords(textureCoords), ab(ab), cd(cd) {}
   };
 
   struct Output {
@@ -53,13 +54,13 @@ namespace MindlessEngine { namespace WFC {
 
     bool propagate(Output* output) const;
 
-    Output* createOutput() const { return new Output(width, height, numPatterns); }
+    Ref<Output> createOutput() const { return std::make_shared<Output>(width, height, numPatterns); }
 
-    Result run(Output* output, size_t seed, size_t limit) const;
+    Result run(Ref<Output>& output, size_t seed, size_t limit) const;
     Result observe(Output* output, RandomDouble& randomDouble) const;
     Result findLowestEntropy(const Output* output, RandomDouble& random_double, int& argminx, int& argminy) const;
 
-    std::vector<std::vector<Tile*>> getTiles(Output* output);
+    std::vector<std::vector<Tile*>> getTiles(Ref<Output>& output);
     GLuint getTexture() const { return rendererID; }
 
   public:

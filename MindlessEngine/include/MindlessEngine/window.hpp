@@ -4,6 +4,7 @@
 #include <MindlessEngine/color.hpp>
 #include <MindlessEngine/renderer.hpp>
 #include <MindlessEngine/scene.hpp>
+#include <MindlessEngine/wfc.hpp>
 
 #include <string>
 #include <memory>
@@ -123,6 +124,7 @@ namespace MindlessEngine
     void draw(const Vector& a, const Vector& b, float weight, const Color& color);
     void draw(Ref<FontAtlas>& atlas, const Vector& position, const std::string& text, float scale, const Color& color);
     void draw(const Ref<LightScene>& scene, const Color& nightColor, float darkness);
+    void draw(const Vector& position, float size, const WFC::Tile* tile, const Color& color);
   };
 
 };

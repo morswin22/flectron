@@ -388,4 +388,17 @@ namespace MindlessEngine
     );
   }
 
+  void Window::draw(const Vector& position, float size, const WFC::Tile* tile, const Color& color)
+  {
+    Renderer::draw(
+      {position.x + tile->ab.x * size, position.y + tile->ab.y * size},
+      {position.x + tile->ab.z * size, position.y + tile->ab.w * size},
+      {position.x + tile->cd.x * size, position.y + tile->cd.y * size},
+      {position.x + tile->cd.z * size, position.y + tile->cd.w * size},
+      tile->texture,
+      tile->textureCoords,
+      color
+    );
+  }
+
 };
