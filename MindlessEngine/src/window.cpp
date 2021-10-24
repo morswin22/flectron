@@ -4,6 +4,7 @@
 #include <MindlessEngine/math.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <sstream>
+#include <iostream>
 
 namespace MindlessEngine
 {
@@ -296,7 +297,19 @@ namespace MindlessEngine
       for (int j = 0; j < numVertices; j++)
         draw(vertices[j], vertices[(j + 1) % numVertices], 1.0f, body->strokeColor);
     }
-    if (body->isTextured)
+    if (body->isAnimated)
+    {
+      Animation* animation = body->animationAtlas->getAnimation(body->animationState.currentName);
+      glm::vec4* frame = animation->getNext(body->animationState);
+      const Vector vertices[4]{
+        { body->position.x - body->animationSize.x + body->animationOffset.x, body->position.y + body->animationSize.y + body->animationOffset.y },
+        { body->position.x + body->animationSize.x + body->animationOffset.x, body->position.y + body->animationSize.y + body->animationOffset.y },
+        { body->position.x + body->animationSize.x + body->animationOffset.x, body->position.y - body->animationSize.y + body->animationOffset.y },
+        { body->position.x - body->animationSize.x + body->animationOffset.x, body->position.y - body->animationSize.y + body->animationOffset.y }
+      }; // TODO try to cache this
+      Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], body->textureIndex, *frame, body->fillColor);
+    }
+    else if (body->isTextured)
     {
       Vector* vertices = body->getTransformedVertices();
       Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], body->textureIndex, body->texturePositions, body->fillColor);

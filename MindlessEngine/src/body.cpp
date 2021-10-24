@@ -15,8 +15,8 @@ namespace MindlessEngine
       density(density), mass(mass), invMass(0.0f), resitution(resitution), area(area), isStatic(isStatic), 
       numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true), aabb(0.0f, 0.0f, 0.0f, 0.0f), isAABBUpdateRequired(true),
       bodyType(bodyType), radius(radius), width(width), height(height), 
-      fillColor(Colors::white()), strokeColor(Colors::white()), textureIndex(0), texturePositions(0.0f, 0.0f, 0.0f, 0.0f), lightRadius(0.0f), lightColor(Colors::white()),
-      isFilled(true), isStroked(false), isTextured(false), isLit(false)
+      fillColor(Colors::white()), strokeColor(Colors::white()), textureIndex(0), texturePositions(0.0f, 0.0f, 0.0f, 0.0f), animationAtlas(nullptr), animationOffset(), animationSize(), animationState(""), lightRadius(0.0f), lightColor(Colors::white()),
+      isFilled(true), isStroked(false), isTextured(false), isAnimated(false), isLit(false)
   {
     if (!isStatic)
     {
@@ -117,6 +117,30 @@ namespace MindlessEngine
   void Body::noTexture()
   {
     isTextured = false;
+  }
+
+  void Body::animation(const std::string& name, bool reset)
+  {
+    if (animationAtlas == nullptr)
+      throw std::runtime_error("No animation atlas set");
+    if (animationState.currentName == name && !reset)
+      return;
+    animationState = AnimationState(name);
+  }
+
+  void Body::animation(const Ref<AnimationAtlas>& animation, const Vector& offset, const Vector& size)
+  {
+    animationAtlas = animation;
+    animationOffset = offset;
+    animationSize = size;
+    isAnimated = true;
+    textureIndex = animationAtlas->get(0.0f, 0.0f, 0.0f, 0.0f, texturePositions);
+  }
+
+  void Body::animation(const Ref<AnimationAtlas>& animation, const Vector& offset, const Vector& size, const std::string& name)
+  {
+    this->animation(animation, offset, size);
+    this->animation(name);
   }
 
   void Body::light(float radius, const Color& color)

@@ -67,11 +67,16 @@ namespace MindlessEngine
     Color strokeColor;
     GLuint textureIndex;
     glm::vec4 texturePositions;
+    Ref<AnimationAtlas> animationAtlas;
+    Vector animationOffset;
+    Vector animationSize;
+    AnimationState animationState;
     float lightRadius;
     Color lightColor;
     bool isFilled;
     bool isStroked;
     bool isTextured;
+    bool isAnimated;
     bool isLit;
 
   public:
@@ -93,6 +98,11 @@ namespace MindlessEngine
     void texture(const Ref<Texture>& texture);
     void texture(const Ref<TextureAtlas>& textureAtlas, float x, float y, float width, float height);
     void noTexture();
+
+    void animation(const std::string& name, bool reset = false);
+    void animation(const Ref<AnimationAtlas>& animation, const Vector& offset, const Vector& size);
+    void animation(const Ref<AnimationAtlas>& animation, const Vector& offset, const Vector& size, const std::string& name);
+    void noAnimation();
 
     void light(float radius, const Color& color);
     void noLight();

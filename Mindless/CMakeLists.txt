@@ -6,6 +6,8 @@ configure_file(shaders/light.vert shaders/light.vert COPYONLY)
 configure_file(shaders/light.frag shaders/light.frag COPYONLY)
 configure_file(assets/pipes.png assets/pipes.png COPYONLY)
 configure_file(assets/pipes.txt assets/pipes.txt COPYONLY)
+configure_file(assets/greenGoblin.png assets/greenGoblin.png COPYONLY)
+configure_file(assets/greenGoblin.txt assets/greenGoblin.txt COPYONLY)
 
 project(Mindless)
 add_executable(Mindless src/mindless.cpp)

@@ -17,6 +17,8 @@ private:
   Ref<TimeScene> timeScene;
   Color nightColor;
   Stopwatch physicsTimer;
+  Ref<Body> player;
+  Ref<AnimationAtlas> animationAtlas;
 
 public:
   Mindless()
@@ -26,7 +28,9 @@ public:
     platform(nullptr),
     lightScene(createRef<LightScene>("shaders/light.vert", "shaders/light.frag")),
     timeScene(createRef<TimeScene>(8.0f/24.0f, 5.0f/24.0f, 18.0f/24.0f, 3.0f/24.0f, 1.0f/24.0f, 0.0f, 1.0f)),
-    nightColor(0.0f, 0.39f, 0.53, 1.0f)
+    nightColor(0.0f, 0.39f, 0.53, 1.0f),
+    player(nullptr),
+    animationAtlas(createRef<AnimationAtlas>("assets/greenGoblin.png", 12, 10, true, "assets/greenGoblin.txt"))
   {
     window.setBackground(Colors::darkGray());
     window.camera.setScale(0.06f);
@@ -36,10 +40,17 @@ public:
     platform = createBoxBody(cc.right - cc.left - padding * 2.0f, 3.0f, { 0.0f, -10.0f }, 1.0f, 0.5f, true);
     platform->texture(textureAtlas, 0.0f, 0.0f, 9.0f, 1.0f);
     world.addBody(platform);
+
+    player = createBoxBody(3.0f, 4.4f, { 0.0f, 0.0f }, 1.0f, 0.1f, false);
+    player->animation(animationAtlas, { 0.0f, 0.4f }, { 4.5f, 3.0f }, "idle");
+    world.addBody(player);
   }
 
   void update() override
   {
+    if (Keyboard::isPressed(Keys::T))
+      player->animation("taunt");
+
     // TODO change for Mouse::isClicked()
     if (Mouse::isPressed(Buttons::LEFT))
     {
