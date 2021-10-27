@@ -299,19 +299,13 @@ namespace MindlessEngine
     }
     if (body->isAnimated)
     {
-      Animation* animation = body->animationAtlas->getAnimation(body->animationState.currentName);
-      glm::vec4* frame = animation->getNext(body->animationState);
-      const Vector vertices[4]{
-        { body->position.x - body->animationSize.x + body->animationOffset.x, body->position.y + body->animationSize.y + body->animationOffset.y },
-        { body->position.x + body->animationSize.x + body->animationOffset.x, body->position.y + body->animationSize.y + body->animationOffset.y },
-        { body->position.x + body->animationSize.x + body->animationOffset.x, body->position.y - body->animationSize.y + body->animationOffset.y },
-        { body->position.x - body->animationSize.x + body->animationOffset.x, body->position.y - body->animationSize.y + body->animationOffset.y }
-      }; // TODO try to cache this
+      glm::vec4* frame = body->animationAtlas->getAnimation(body->animationState.currentName)->getNext(body->animationState);
+      Vector* vertices = body->useTextureVertices ? body->getTextureVertices() : body->getTransformedVertices();
       Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], body->textureIndex, *frame, body->fillColor);
     }
     else if (body->isTextured)
     {
-      Vector* vertices = body->getTransformedVertices();
+      Vector* vertices = body->useTextureVertices ? body->getTextureVertices() : body->getTransformedVertices();
       Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], body->textureIndex, body->texturePositions, body->fillColor);
     }
     else if (body->isFilled)

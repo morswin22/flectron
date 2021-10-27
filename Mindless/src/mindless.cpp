@@ -42,7 +42,8 @@ public:
     world.addBody(platform);
 
     player = createBoxBody(3.0f, 4.4f, { 0.0f, 0.0f }, 1.0f, 0.1f, false);
-    player->animation(animationAtlas, { 0.0f, 0.4f }, { 4.5f, 3.0f }, "idle");
+    player->animation(animationAtlas, "idle");
+    player->textureBounds({ 0.0f, 0.4f }, { 4.5f, 3.0f });
     world.addBody(player);
   }
 

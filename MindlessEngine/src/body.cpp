@@ -15,7 +15,7 @@ namespace MindlessEngine
       density(density), mass(mass), invMass(0.0f), resitution(resitution), area(area), isStatic(isStatic), 
       numVertices(0), vertices(nullptr), triangles(nullptr), transformedVertices(nullptr), isTransformUpdateRequired(true), aabb(0.0f, 0.0f, 0.0f, 0.0f), isAABBUpdateRequired(true),
       bodyType(bodyType), radius(radius), width(width), height(height), 
-      fillColor(Colors::white()), strokeColor(Colors::white()), textureIndex(0), texturePositions(0.0f, 0.0f, 0.0f, 0.0f), animationAtlas(nullptr), animationOffset(), animationSize(), animationState(""), lightRadius(0.0f), lightColor(Colors::white()),
+      fillColor(Colors::white()), strokeColor(Colors::white()), textureIndex(0), texturePositions(0.0f, 0.0f, 0.0f, 0.0f), textureOffset(), textureHalfSize(), textureVertices(), isTextureUpdateRequired(true), useTextureVertices(false), animationAtlas(nullptr), animationState(""), lightRadius(0.0f), lightColor(Colors::white()),
       isFilled(true), isStroked(false), isTextured(false), isAnimated(false), isLit(false)
   {
     if (!isStatic)
@@ -128,19 +128,46 @@ namespace MindlessEngine
     animationState = AnimationState(name);
   }
 
-  void Body::animation(const Ref<AnimationAtlas>& animation, const Vector& offset, const Vector& size)
+  void Body::animation(const Ref<AnimationAtlas>& animation)
   {
     animationAtlas = animation;
-    animationOffset = offset;
-    animationSize = size;
     isAnimated = true;
     textureIndex = animationAtlas->get(0.0f, 0.0f, 0.0f, 0.0f, texturePositions);
   }
 
-  void Body::animation(const Ref<AnimationAtlas>& animation, const Vector& offset, const Vector& size, const std::string& name)
+  void Body::animation(const Ref<AnimationAtlas>& animation, const std::string& name)
   {
-    this->animation(animation, offset, size);
+    this->animation(animation);
     this->animation(name);
+  }
+
+  void Body::textureBounds(const Vector& offset, const Vector& size)
+  {
+    textureOffset = offset;
+    textureHalfSize = size;
+    useTextureVertices = true;
+  }
+
+  void Body::noTextureBounds()
+  {
+    useTextureVertices = false;
+  }
+
+  Vector* Body::getTextureVertices()
+  {
+    if (isTextureUpdateRequired)
+    {
+      Transform tf(position, rotation);
+
+      textureVertices[0] = transform({ -textureHalfSize.x + textureOffset.x,  textureHalfSize.y + textureOffset.y }, tf);
+      textureVertices[1] = transform({  textureHalfSize.x + textureOffset.x,  textureHalfSize.y + textureOffset.y }, tf);
+      textureVertices[2] = transform({  textureHalfSize.x + textureOffset.x, -textureHalfSize.y + textureOffset.y }, tf);
+      textureVertices[3] = transform({ -textureHalfSize.x + textureOffset.x, -textureHalfSize.y + textureOffset.y }, tf);
+
+      isTextureUpdateRequired = false;
+    }
+
+    return textureVertices;
   }
 
   void Body::light(float radius, const Color& color)
@@ -170,6 +197,8 @@ namespace MindlessEngine
     {
       isTransformUpdateRequired = true;
       isAABBUpdateRequired = true;
+      isTextureUpdateRequired = true;
+      // TODO use an enum
     }
 
     position = position + linearVelocity * deltaTime;
@@ -184,6 +213,7 @@ namespace MindlessEngine
     rotation += amount;
     isTransformUpdateRequired = true;
     isAABBUpdateRequired = true;
+    isTextureUpdateRequired = true;
   }
 
   void Body::move(const Vector& amount)
@@ -191,6 +221,7 @@ namespace MindlessEngine
     position = position + amount;
     isTransformUpdateRequired = true;
     isAABBUpdateRequired = true;
+    isTextureUpdateRequired = true;
   }
 
   void Body::moveTo(const Vector& position)
@@ -198,6 +229,7 @@ namespace MindlessEngine
     this->position = position;
     isTransformUpdateRequired = true;
     isAABBUpdateRequired = true;
+    isTextureUpdateRequired = true;
   }
 
   void Body::addForce(const Vector& amount)

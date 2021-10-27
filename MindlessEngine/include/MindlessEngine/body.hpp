@@ -67,9 +67,12 @@ namespace MindlessEngine
     Color strokeColor;
     GLuint textureIndex;
     glm::vec4 texturePositions;
+    Vector textureOffset;
+    Vector textureHalfSize;
+    Vector textureVertices[4];
+    bool isTextureUpdateRequired;
+    bool useTextureVertices;
     Ref<AnimationAtlas> animationAtlas;
-    Vector animationOffset;
-    Vector animationSize;
     AnimationState animationState;
     float lightRadius;
     Color lightColor;
@@ -100,9 +103,13 @@ namespace MindlessEngine
     void noTexture();
 
     void animation(const std::string& name, bool reset = false);
-    void animation(const Ref<AnimationAtlas>& animation, const Vector& offset, const Vector& size);
-    void animation(const Ref<AnimationAtlas>& animation, const Vector& offset, const Vector& size, const std::string& name);
+    void animation(const Ref<AnimationAtlas>& animation);
+    void animation(const Ref<AnimationAtlas>& animation, const std::string& name);
     void noAnimation();
+
+    void textureBounds(const Vector& offset, const Vector& size);
+    void noTextureBounds();
+    Vector* getTextureVertices();
 
     void light(float radius, const Color& color);
     void noLight();
