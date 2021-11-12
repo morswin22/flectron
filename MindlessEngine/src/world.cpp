@@ -2,6 +2,7 @@
 
 #include <MindlessEngine/collisions.hpp>
 #include <MindlessEngine/math.hpp>
+#include <MindlessEngine/profile.hpp>
 
 namespace MindlessEngine 
 {
@@ -55,6 +56,8 @@ namespace MindlessEngine
 
   void World::update(float deltaTime, int iterations)
   {
+    ME_PROFILE_EVENT("World::update");
+    ME_PROFILE_TAG("bodyList.size", bodyList.size());
     if (bodyList.empty())
       return;
 

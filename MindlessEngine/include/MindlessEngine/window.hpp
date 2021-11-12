@@ -118,6 +118,7 @@ namespace MindlessEngine
 
     void setDesiredFrameRate(float desiredFrameRate);
     float getDesiredFrameRate() const;
+    void regulateFrameRate();
 
     void draw(Ref<Body>& body);
     void draw(const AABB& aabb, const Color& color);

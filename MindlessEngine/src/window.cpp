@@ -2,6 +2,8 @@
 
 #include <MindlessEngine/input.hpp>
 #include <MindlessEngine/math.hpp>
+#include <MindlessEngine/renderer.hpp>
+#include <MindlessEngine/profile.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <sstream>
 #include <iostream>
@@ -251,9 +253,6 @@ namespace MindlessEngine
 
   float Window::getElapsedTime()
   {
-    while ((float) glfwGetTime() - lastMeasuredTime < desiredInterval && !shouldClose())
-      pollEvents();
-
     float temp = lastMeasuredTime;
     lastMeasuredTime = (float) glfwGetTime();
     return lastMeasuredTime - temp;
@@ -286,6 +285,13 @@ namespace MindlessEngine
   float Window::getDesiredFrameRate() const
   {
     return desiredFrameRate;
+  }
+
+  void Window::regulateFrameRate()
+  {
+    ME_PROFILE_EVENT("Window::regulateFrameRate");
+    while ((float) glfwGetTime() - lastMeasuredTime < desiredInterval && !shouldClose())
+      pollEvents();
   }
 
   void Window::draw(Ref<Body>& body)
@@ -347,7 +353,7 @@ namespace MindlessEngine
       2, 3, 0
     };
 
-    Renderer::draw(vertices, 4, triangles, color);
+   Renderer::draw(vertices, 4, triangles, color);
   }
 
   void Window::draw(Ref<FontAtlas>& atlas, const Vector& position, const std::string& text, float scale, const Color& color)
@@ -362,7 +368,7 @@ namespace MindlessEngine
 
     while(std::getline(ss, line, '\n'))
     {
-      glm::vec4 texturePositions[line.size()];
+      glm::vec4* texturePositions = new glm::vec4[line.size()];
       GLuint texture = atlas->get(line, texturePositions);
       glm::vec2 offsets = atlas->getOffsets() * scale;
 
@@ -379,6 +385,7 @@ namespace MindlessEngine
         );
       }
 
+      delete[] texturePositions;
       lineOffset += offsets.y;
     }
   }

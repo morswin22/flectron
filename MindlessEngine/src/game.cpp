@@ -1,7 +1,6 @@
 #include <MindlessEngine/game.hpp>
 #include <MindlessEngine/input.hpp>
-
-#include <iostream>
+#include <MindlessEngine/profile.hpp>
 
 namespace MindlessEngine
 {
@@ -15,9 +14,10 @@ namespace MindlessEngine
 
   void Game::run()
   {
-    window.getElapsedTime();
     while (!window.shouldClose())
     {
+      ME_PROFILE_FRAME("Game::run");
+      elapsedTime = window.getElapsedTime();
       window.getCursorPosition(mousePosition);
       window.getFrameSize();
 
@@ -26,7 +26,6 @@ namespace MindlessEngine
       mouseWorldPosition.x = (mousePosition.x - window.width * 0.5f) * scale + cameraPosition.x;
       mouseWorldPosition.y = (window.height * 0.5f - mousePosition.y) * scale + cameraPosition.y;
 
-      elapsedTime = window.getElapsedTime();
       update();
 
       window.shader->bind();
@@ -39,6 +38,7 @@ namespace MindlessEngine
 
       window.swapBuffers();
       window.pollEvents();
+      window.regulateFrameRate();
     }
   }
 

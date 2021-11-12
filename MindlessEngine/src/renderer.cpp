@@ -7,6 +7,7 @@
 
 #include <MindlessEngine/body.hpp>
 #include <MindlessEngine/random.hpp>
+#include <MindlessEngine/profile.hpp>
 #include <stb_image.h>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -481,13 +482,15 @@ namespace MindlessEngine
     for (std::size_t i = 1; i < MaxTextureSlots; i++)
       rendererData.textureSlots[i] = 0;
 
-    int samplers[MaxTextureSlots];
+    int* samplers = new int[MaxTextureSlots];
     for (int i = 0; i < MaxTextureSlots; i++)
       samplers[i] = i;
 
     shader->bind();
     shader->setUniform1iv("uTextures", samplers, MaxTextureSlots);
     
+    delete[] samplers;
+
     rendererData.shader = shader;
 
     rendererData.frameBuffer = createFrameBuffer(width, height, buffer);

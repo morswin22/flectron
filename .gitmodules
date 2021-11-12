@@ -10,3 +10,6 @@
 [submodule "lib/stb_image"]
 	path = lib/stb_image
 	url = https://github.com/morswin22/stb_image
+[submodule "lib/optick"]
+	path = lib/optick
+	url = https://github.com/bombomby/optick

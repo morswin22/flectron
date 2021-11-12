@@ -16,3 +16,4 @@
 #include <MindlessEngine/scene.hpp>
 #include <MindlessEngine/window.hpp>
 #include <MindlessEngine/game.hpp>
+#include <MindlessEngine/profile.hpp>

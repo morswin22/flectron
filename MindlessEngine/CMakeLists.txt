@@ -37,3 +37,7 @@ target_link_libraries(MindlessEngine
   glm
   stb_image
 )
+
+if(MSVC)
+  target_link_libraries(MindlessEngine OptickCore)
+endif()

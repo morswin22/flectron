@@ -3,7 +3,7 @@
 #include <MindlessEngine/math.hpp>
 #include <MindlessEngine/transform.hpp>
 
-#include <math.h>
+#include <cmath>
 #include <exception>
 #include <iostream>
 

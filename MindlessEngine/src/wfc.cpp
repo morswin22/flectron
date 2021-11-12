@@ -4,6 +4,9 @@
 #include <sstream>
 #include <functional>
 #include <random>
+#include <array>
+#include <numeric>
+#include <cmath>
 
 namespace MindlessEngine { namespace WFC{
 

@@ -1,9 +1,7 @@
-#include <iostream>
-#include <list>
-#include <memory>
-#include <sstream>
-
 #include <MindlessEngine/MindlessEngine.hpp>
+
+#include <iostream>
+#include <sstream>
 
 using namespace MindlessEngine;
 
@@ -96,6 +94,7 @@ public:
 
   void render() override
   {
+    ME_PROFILE_EVENT("Mindless::render");
     Renderer::offscreen();
     window.clear();
 

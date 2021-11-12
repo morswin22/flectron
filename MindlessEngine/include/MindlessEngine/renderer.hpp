@@ -200,8 +200,8 @@ namespace MindlessEngine
     friend AnimationRange;
   };
 
-  class Vector;
-  class Color;
+  struct Vector;
+  struct Color;
   class Body;
 
   class Renderer
