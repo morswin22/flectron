@@ -13,3 +13,5 @@ build
 future
 release
 debug
+
+tests/assets/greenGoblin.png
