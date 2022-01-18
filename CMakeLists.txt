@@ -10,6 +10,7 @@ add_subdirectory(lib/glew)
 add_subdirectory(lib/glm)
 add_subdirectory(lib/stb_image)
 add_subdirectory(lib/optick)
+add_subdirectory(lib/entt)
 
 if(MSVC)
   if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
@@ -29,34 +30,16 @@ endif()
 
 project(flectron)
 
-set(flectronSource
-  src/memory.cpp
-  src/stopwatch.cpp
-  src/random.cpp
-  src/color.cpp
-  src/input.cpp
-  src/vector.cpp
-  src/math.cpp
-  src/aabb.cpp
-  src/body.cpp
-  src/transform.cpp
-  src/grid.cpp
-  src/collisions.cpp
-  src/renderer.cpp
-  src/wfc.cpp
-  src/scene.cpp
-  src/world.cpp
-  src/window.cpp
-  src/game.cpp
-)
+file(GLOB_RECURSE FLECTRON_SRC_FILES ./src/*.cpp)
 
-add_library(flectron STATIC ${flectronSource})
+add_library(flectron STATIC ${FLECTRON_SRC_FILES})
 
 target_include_directories(flectron 
   PUBLIC include
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/glew/include  
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/stb_image
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/entt/single_include
 )
 
 target_link_libraries(flectron 
@@ -64,6 +47,7 @@ target_link_libraries(flectron
   libglew_static
   glm
   stb_image
+  EnTT
 )
 
 if(MSVC)

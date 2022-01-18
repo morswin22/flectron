@@ -13,5 +13,6 @@ build
 future
 release
 debug
+.vscode
 
 tests/assets/greenGoblin.png

@@ -1,4 +1,4 @@
-#include <flectron/flectron.hpp>
+#include <flectron.hpp>
 #include <iostream>
 
 using namespace flectron;

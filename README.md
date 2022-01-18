@@ -6,6 +6,7 @@
 * [glm](https://github.com/g-truc/glm/tree/2759ceca04db5c36d2806a2280f51b83a6749c12)
 * [stb_image](https://github.com/nothings/stb)
 * [optick](https://github.com/bombomby/optick)
+* [entt](https:://github.com/skypjack/entt)
 
 ## Download
 Download with dependencies
