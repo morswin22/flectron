@@ -142,55 +142,6 @@ namespace flectron
     return createEntity("Entity", { 0.0f, 0.0f }, 0.0f);
   }
 
-  bool Scene::collide(PositionComponent& pcA, VertexComponent& vcA, PositionComponent& pcB, VertexComponent& vcB, Vector& normal, float& depth)
-  {
-    if (vcA.bodyType == BodyType::Box)
-    {
-      if (vcB.bodyType == BodyType::Box)
-      {
-        return intersectPolygons(pcA.position, vcA.getTransformedVertices(pcA), pcB.position, vcB.getTransformedVertices(pcB), normal, depth);
-      }
-      else if (vcB.bodyType == BodyType::Circle)
-      {
-        bool result = intersectCirclePolygon(pcB.position, vcB.radius, pcA.position, vcA.getTransformedVertices(pcA), normal, depth);
-        if (result)
-          normal = -normal;
-        return result;
-      }
-    }
-    else if (vcA.bodyType == BodyType::Circle)
-    {
-      if (vcB.bodyType == BodyType::Box)
-      {
-        return intersectCirclePolygon(pcA.position, vcA.radius, pcB.position, vcB.getTransformedVertices(pcB), normal, depth);
-      }
-      else if (vcB.bodyType == BodyType::Circle)
-      {
-        return intersectCircles(pcA.position, vcA.radius, pcB.position, vcB.radius, normal, depth);
-      }
-    }
-    return false;
-  }
-
-  void Scene::resolveCollision(PhysicsComponent& phcA, PhysicsComponent& phcB, const Vector& normal)
-  {
-    Vector relativeVelocity = phcB.linearVelocity - phcA.linearVelocity;
-
-    if (dot(relativeVelocity, normal) > 0.0f)
-      return;
-
-    float e = std::min(phcA.resitution, phcB.resitution);
-
-    float j = -(1.0f + e) * dot(relativeVelocity, normal);
-
-    j /= phcA.invMass + phcB.invMass;
-
-    Vector impulse = j * normal;
-
-    phcA.linearVelocity = phcA.linearVelocity - (impulse * phcA.invMass);
-    phcB.linearVelocity = phcB.linearVelocity + (impulse * phcB.invMass);
-  }
-
   void Scene::onPhysicsComponentCreate(entt::registry&, entt::entity entity)
   {
     grid.insert(entity);

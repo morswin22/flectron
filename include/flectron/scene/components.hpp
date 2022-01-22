@@ -3,6 +3,7 @@
 #include <flectron/physics/aabb.hpp>
 #include <flectron/renderer/color.hpp>
 #include <flectron/renderer/renderer.hpp>
+#include <flectron/renderer/animation.hpp>
 #include <entt/entt.hpp>
 #include <vector>
 #include <array>
@@ -64,16 +65,6 @@ namespace flectron
 
     const std::vector<Vector>& getTransformedVertices(const PositionComponent& pc);
     const AABB& getAABB(const PositionComponent& pc);
-
-    static std::vector<size_t> trianglesFromVertices(std::vector<Vector>& vertices);
-    static int getIndex(int index, int length);
-    static bool isPointInTriangle(const Vector& point, const Vector& a, const Vector& b, const Vector& c);
-    static WindingOrder getWindingOrder(const std::vector<Vector>& vertices);
-    static int orientation(const Vector& p, const Vector& q, const Vector& r);
-    static bool containsColinearEdges(const std::vector<Vector>& vertices);
-    static bool isSimplePolygon(const std::vector<Vector>& vertices);
-    static bool intersectLines(const Vector& a, const Vector& b, const Vector& c, const Vector& d);
-    static bool isOnLineSegment(const Vector& p, const Vector& q, const Vector& r);
   };
 
   struct PhysicsComponent

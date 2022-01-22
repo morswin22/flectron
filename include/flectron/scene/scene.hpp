@@ -70,9 +70,6 @@ namespace flectron
       return count;
     }
 
-    bool collide(PositionComponent& pcA, VertexComponent& vcA, PositionComponent& pcB, VertexComponent& vcB, Vector& normal, float& depth);
-    void resolveCollision(PhysicsComponent& phcA, PhysicsComponent& phcB, const Vector& normal);
-
     void onPhysicsComponentCreate(entt::registry&, entt::entity entity);
     static void onPositionComponentUpdate(entt::registry& registry, entt::entity entity);
 

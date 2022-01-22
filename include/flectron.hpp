@@ -6,6 +6,7 @@
 #include <flectron/utils/profile.hpp>
 #include <flectron/utils/random.hpp>
 #include <flectron/utils/stopwatch.hpp>
+#include <flectron/utils/vertex.hpp>
 
 // Physics
 #include <flectron/physics/aabb.hpp>
@@ -16,6 +17,9 @@
 
 // Renderer
 #include <flectron/renderer/color.hpp>
+#include <flectron/renderer/shader.hpp>
+#include <flectron/renderer/texture.hpp>
+#include <flectron/renderer/animation.hpp>
 #include <flectron/renderer/renderer.hpp>
 #include <flectron/renderer/light.hpp>
 
@@ -25,6 +29,7 @@
 #include <flectron/scene/entity.hpp>
 #include <flectron/scene/datetime.hpp>
 #include <flectron/scene/grid.hpp>
+#include <flectron/scene/camera.hpp>
 #include <flectron/scene/window.hpp>
 #include <flectron/scene/game.hpp>
 
