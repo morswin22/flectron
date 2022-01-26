@@ -53,6 +53,10 @@ namespace flectron
     friend class Entity;
     Entity createEntity(const std::string& name, const Vector& position, float rotation);
     Entity createEntity();
+    Entity createScript(const std::string& name, std::function<void()> callback, int order = 0);
+
+    void sortScriptComponents();
+    void updateScriptComponents(int min, int max);
 
     template<typename ...Components>
     size_t getEntityCount() const

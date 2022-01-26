@@ -158,4 +158,12 @@ namespace flectron
     bool isPersistent{ true };
   };
 
+  struct ScriptComponent
+  {
+    std::function<void()> callback;
+    int order;
+
+    ScriptComponent(std::function<void()> callback, int order = 0);
+  };
+
 }

@@ -259,4 +259,8 @@ namespace flectron
     : lightRadius(lightRadius), lightColor(lightColor)
   {}
 
+  ScriptComponent::ScriptComponent(std::function<void()> callback, int order)
+    : callback(callback), order(order)
+  {}
+
 }

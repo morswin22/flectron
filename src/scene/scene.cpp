@@ -142,6 +142,32 @@ namespace flectron
     return createEntity("Entity", { 0.0f, 0.0f }, 0.0f);
   }
 
+  Entity Scene::createScript(const std::string& name, std::function<void()> callback, int order)
+  {
+    Entity entity(registry.create(), this);
+    entity.add<TagComponent>(name);
+    entity.add<ScriptComponent>(callback, order);
+    return entity;
+  }
+
+  void Scene::sortScriptComponents()
+  {
+    registry.sort<ScriptComponent>([](const ScriptComponent& a, const ScriptComponent& b) {
+      return a.order < b.order;
+    });
+  }
+
+  // TODO optimize this implementation
+  void Scene::updateScriptComponents(int min, int max)
+  {
+    for (auto entity : registry.view<ScriptComponent>())
+    {
+      auto& script = registry.get<ScriptComponent>(entity);
+      if (script.order >= min && script.order < max)
+        script.callback();
+    }
+  }
+
   void Scene::onPhysicsComponentCreate(entt::registry&, entt::entity entity)
   {
     grid.insert(entity);
