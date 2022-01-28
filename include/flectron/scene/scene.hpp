@@ -76,6 +76,7 @@ namespace flectron
 
     void onPhysicsComponentCreate(entt::registry&, entt::entity entity);
     static void onPositionComponentUpdate(entt::registry& registry, entt::entity entity);
+    static void onBodyDefiningComponentCreate(entt::registry& registry, entt::entity entity);
 
     void removeEntity(entt::entity entity);
 

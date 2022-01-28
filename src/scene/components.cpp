@@ -39,43 +39,45 @@ namespace flectron
     registry->patch<PositionComponent>(entt::to_entity(*registry, *this));
   }
 
-  VertexComponent::VertexComponent(BodyType bodyType, float radius)
-    : VertexComponent(bodyType, radius, radius)
+  PolygonComponent::PolygonComponent(const std::vector<Vector>& vertices)
+    : vertices(vertices)
   {}
 
-  VertexComponent::VertexComponent(BodyType bodyType, float width, float height)
-    : bodyType(bodyType), radius(width), width(width), height(height), isTransformUpdateRequired(true), aabb(0.0f, 0.0f, 0.0f, 0.0f), isAABBUpdateRequired(true)
+  BoxComponent::BoxComponent(float width, float height)
+    : width(width), height(height)
+  {}
+
+  CircleComponent::CircleComponent(float radius)
+    : radius(radius)
+  {}
+
+  VertexComponent::VertexComponent(entt::registry* registry, entt::entity entity)
+    : registry(registry), entity(entity), isTransformUpdateRequired(true), aabb(0.0f, 0.0f, 0.0f, 0.0f), isAABBUpdateRequired(true)
   {
-    if (bodyType == BodyType::Box)
+    if (registry->any_of<PolygonComponent>(entity))
     {
-      float left = -width / 2.0f;
-      float right = left + width;
-      float top = height / 2.0f;
-      float bottom = -top;
-
-      vertices.push_back({ left, top });
-      vertices.push_back({ right, top });
-      vertices.push_back({ right, bottom });
-      vertices.push_back({ left, bottom });
-
-      transformedVertices.resize(vertices.size());
-
-      triangles = trianglesFromVertices(vertices);
+      vertices = registry->get<PolygonComponent>(entity).vertices;
     }
-    else if (bodyType == BodyType::Circle)
+    else if (registry->any_of<BoxComponent>(entity))
     {
+      auto& bc = registry->get<BoxComponent>(entity);
+      vertices.push_back({ -bc.width * 0.5f,  bc.height * 0.5f });
+      vertices.push_back({  bc.width * 0.5f,  bc.height * 0.5f });
+      vertices.push_back({  bc.width * 0.5f, -bc.height * 0.5f });
+      vertices.push_back({ -bc.width * 0.5f, -bc.height * 0.5f });
+    }
+    else if (registry->any_of<CircleComponent>(entity))
+    {
+      auto& cc = registry->get<CircleComponent>(entity);
       float step = 2.0f * (float)M_PI / (float)Scene::numCircleVerticies;
       for (int i = 0; i < Scene::numCircleVerticies; i++)
-        vertices.push_back({ radius * cos(-i * step), radius * sin(-i * step) });
-      
-      transformedVertices.resize(vertices.size());
-
-      triangles = trianglesFromVertices(vertices);
+        vertices.push_back({ cc.radius * cos(-i * step), cc.radius * sin(-i * step) });
     }
     else
-    {
-      throw std::runtime_error("Unknown body type");
-    }
+      throw std::runtime_error("Entity must have a body defining component");
+    
+    transformedVertices.resize(vertices.size());
+    triangles = trianglesFromVertices(vertices);
   }
 
   const std::vector<Vector>& VertexComponent::getTransformedVertices(const PositionComponent& pc)
@@ -98,7 +100,15 @@ namespace flectron
     if (!isAABBUpdateRequired)
       return aabb;
 
-    if (bodyType == BodyType::Box)
+    if (registry->any_of<CircleComponent>(entity))
+    {
+      auto& cc = registry->get<CircleComponent>(entity);
+      aabb.min.x = pc.position.x - cc.radius;
+      aabb.min.y = pc.position.y - cc.radius;
+      aabb.max.x = pc.position.x + cc.radius;
+      aabb.max.y = pc.position.y + cc.radius;
+    }
+    else
     {
       aabb.min.x = FLT_MAX;
       aabb.min.y = FLT_MAX;
@@ -118,15 +128,6 @@ namespace flectron
           aabb.max.y = transformedVertices[i].y;
       }
     }
-    else if (bodyType == BodyType::Circle)
-    {
-      aabb.min.x = pc.position.x - radius;
-      aabb.min.y = pc.position.y - radius;
-      aabb.max.x = pc.position.x + radius;
-      aabb.max.y = pc.position.y + radius;
-    }
-    else
-      throw std::runtime_error("Unsupported body type");
 
     isAABBUpdateRequired = false;
     return aabb;
@@ -135,10 +136,18 @@ namespace flectron
   PhysicsComponent::PhysicsComponent(VertexComponent& vc, float density, float resitution, bool isStatic)
     : linearVelocity(), rotationalVelocity(0.0f), force(), isStatic(isStatic), density(density), invMass(0.0f), resitution(clamp(resitution, 0.0f, 1.0f)), area(0.0f)
   { 
-    if (vc.bodyType == BodyType::Box)
-      area = vc.width * vc.height;
-    else if (vc.bodyType == BodyType::Circle)
-      area = (float)M_PI * vc.width * vc.width;
+    if (vc.registry->any_of<BoxComponent>(vc.entity))
+    {
+      auto& bc = vc.registry->get<BoxComponent>(vc.entity);
+      area = bc.width * bc.height;
+    }
+    else if (vc.registry->any_of<CircleComponent>(vc.entity))
+    {
+      auto& cc = vc.registry->get<CircleComponent>(vc.entity);
+      area = (float)M_PI * cc.radius * cc.radius;
+    }
+    else
+      area = polygonArea(vc.vertices);
 
     if (area < Scene::minBodySize)
       throw std::invalid_argument("Body size too small");

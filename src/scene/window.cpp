@@ -191,7 +191,7 @@ namespace flectron
         auto& vertices = tvc.getTransformedVertices(pc);
         Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], static_cast<Texture*>(ac.animationAtlas.get())->get(), *frame, color);
       }
-      else if (vc.bodyType == BodyType::Box)
+      else if (entity.has<BoxComponent>())
       {
         auto& vertices = vc.getTransformedVertices(pc);
         Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], static_cast<Texture*>(ac.animationAtlas.get())->get(), *frame, color);
@@ -211,7 +211,7 @@ namespace flectron
         auto& vertices = tvc.getTransformedVertices(pc);
         Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], tc.textureIndex, tc.texturePositions, color);
       }
-      else if (vc.bodyType == BodyType::Box)
+      else if (entity.has<BoxComponent>())
       {
         auto& vertices = vc.getTransformedVertices(pc);
         Renderer::draw(vertices[0], vertices[1], vertices[2], vertices[3], tc.textureIndex, tc.texturePositions, color);

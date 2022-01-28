@@ -32,6 +32,9 @@ namespace flectron
   {
     registry.on_construct<PhysicsComponent>().connect<&Scene::onPhysicsComponentCreate>(this);
     registry.on_update<PositionComponent>().connect<&Scene::onPositionComponentUpdate>();
+    registry.on_construct<PolygonComponent>().connect<&Scene::onBodyDefiningComponentCreate>();
+    registry.on_construct<BoxComponent>().connect<&Scene::onBodyDefiningComponentCreate>();
+    registry.on_construct<CircleComponent>().connect<&Scene::onBodyDefiningComponentCreate>();
   }
 
   void Scene::update(float elapsedTime, size_t iterations)
@@ -183,6 +186,11 @@ namespace flectron
     }
     if (registry.all_of<TextureVertexComponent>(entity))
       registry.get<TextureVertexComponent>(entity).isTextureUpdateRequired = true;
+  }
+
+  void Scene::onBodyDefiningComponentCreate(entt::registry& registry, entt::entity entity)
+  {
+    registry.emplace_or_replace<VertexComponent>(entity, &registry, entity);
   }
 
   void Scene::removeEntity(entt::entity entity)

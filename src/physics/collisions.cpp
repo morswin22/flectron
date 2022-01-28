@@ -8,29 +8,29 @@ namespace flectron
 
   bool collide(PositionComponent& pcA, VertexComponent& vcA, PositionComponent& pcB, VertexComponent& vcB, Vector& normal, float& depth)
   {
-    if (vcA.bodyType == BodyType::Box)
+    if (!vcA.registry->any_of<CircleComponent>(vcA.entity))
     {
-      if (vcB.bodyType == BodyType::Box)
+      if (!vcB.registry->any_of<CircleComponent>(vcB.entity))
       {
         return intersectPolygons(pcA.position, vcA.getTransformedVertices(pcA), pcB.position, vcB.getTransformedVertices(pcB), normal, depth);
       }
-      else if (vcB.bodyType == BodyType::Circle)
+      else if (vcB.registry->any_of<CircleComponent>(vcB.entity))
       {
-        bool result = intersectCirclePolygon(pcB.position, vcB.radius, pcA.position, vcA.getTransformedVertices(pcA), normal, depth);
+        bool result = intersectCirclePolygon(pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, pcA.position, vcA.getTransformedVertices(pcA), normal, depth);
         if (result)
           normal = -normal;
         return result;
       }
     }
-    else if (vcA.bodyType == BodyType::Circle)
+    else if (vcA.registry->any_of<CircleComponent>(vcA.entity))
     {
-      if (vcB.bodyType == BodyType::Box)
+      if (!vcB.registry->any_of<CircleComponent>(vcB.entity))
       {
-        return intersectCirclePolygon(pcA.position, vcA.radius, pcB.position, vcB.getTransformedVertices(pcB), normal, depth);
+        return intersectCirclePolygon(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, pcB.position, vcB.getTransformedVertices(pcB), normal, depth);
       }
-      else if (vcB.bodyType == BodyType::Circle)
+      else if (vcB.registry->any_of<CircleComponent>(vcB.entity))
       {
-        return intersectCircles(pcA.position, vcA.radius, pcB.position, vcB.radius, normal, depth);
+        return intersectCircles(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, normal, depth);
       }
     }
     return false;

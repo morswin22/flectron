@@ -18,4 +18,6 @@ namespace flectron
   bool intersectLines(const Vector& a, const Vector& b, const Vector& c, const Vector& d);
   bool isOnLineSegment(const Vector& p, const Vector& q, const Vector& r);
 
+  float polygonArea(const std::vector<Vector>& vertices);
+
 }

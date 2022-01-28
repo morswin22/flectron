@@ -13,11 +13,6 @@ namespace flectron
 
   class Entity;
 
-  enum BodyType
-  {
-    Circle, Box
-  };
-
   enum WindingOrder 
   { 
     Invalid, Clockwise, CounterClockwise 
@@ -44,24 +39,43 @@ namespace flectron
     void moveTo(const Vector& position);
   };
 
-  struct VertexComponent
+  struct PolygonComponent
   {
-    BodyType bodyType;
-    float radius;
+    std::vector<Vector> vertices;
+
+    PolygonComponent(const std::vector<Vector>& vertices);
+  };
+
+  struct BoxComponent
+  {
     float width;
     float height;
+
+    BoxComponent(float width, float height);
+  };
+
+  struct CircleComponent
+  {
+    float radius;
+
+    CircleComponent(float radius);
+  };
+
+  struct VertexComponent
+  {
+    entt::registry* registry;
+    entt::entity entity;
 
     std::vector<Vector> vertices;
     std::vector<size_t> triangles;
 
     std::vector<Vector> transformedVertices;
-    bool isTransformUpdateRequired; // TODO maybe use on_update from EnTT
+    bool isTransformUpdateRequired;
 
     AABB aabb;
     bool isAABBUpdateRequired;
 
-    VertexComponent(BodyType bodyType, float radius);
-    VertexComponent(BodyType bodyType, float width, float height);
+    VertexComponent(entt::registry* registry, entt::entity entity);
 
     const std::vector<Vector>& getTransformedVertices(const PositionComponent& pc);
     const AABB& getAABB(const PositionComponent& pc);

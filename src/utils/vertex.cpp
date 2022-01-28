@@ -211,4 +211,14 @@ namespace flectron
     return false;
   }
 
+  float polygonArea(const std::vector<Vector>& vertices)
+  {
+    float area = 0.0f;
+
+    for (int i = 0; i < vertices.size(); i++)
+      area += cross(vertices[i], vertices[getIndex(i + 1, (int)vertices.size())]);
+
+    return std::abs(area / 2.0f);
+  }
+
 }
