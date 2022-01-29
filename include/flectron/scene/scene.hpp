@@ -86,9 +86,6 @@ namespace flectron
       auto view = registry.view<Components...>();
       for (auto entity : view)
       {
-        if (registry.all_of<PermanentComponent>(entity)) // TODO use exclude instead
-          continue;
-
         auto& pc = registry.get<PositionComponent>(entity);
         if (registry.all_of<VertexComponent>(entity))
         {

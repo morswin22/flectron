@@ -34,7 +34,6 @@ public:
     platform.add<BoxComponent>(cc.right - cc.left - padding * 2.0f, 3.0f);
     platform.add<PhysicsComponent>(platform.get<VertexComponent>(), 1.0f, 0.5f, true);
     platform.add<TextureComponent>(textureAtlas, 0.0f, 0.0f, 9.0f, 1.0f);
-    platform.add<PermanentComponent>();
     platform.add<ScriptComponent>([&]() {
       if (Keyboard::isPressed(Keys::Q))
         platform.get<PositionComponent>().rotate(elapsedTime * (float)M_PI * 0.5f);
@@ -47,7 +46,6 @@ public:
     player.add<PhysicsComponent>(player.get<VertexComponent>(), 1.0f, 0.1f, false);
     player.add<AnimationComponent>(animationAtlas, "idle");
     player.add<TextureVertexComponent>(Vector(0.0f, 0.4f), Vector(4.5f, 3.0f));
-    player.add<PermanentComponent>();
     player.add<ScriptComponent>([&]() {
       if (Keyboard::isPressed(Keys::T))
         player.get<AnimationComponent>().play("taunt");
@@ -67,6 +65,7 @@ public:
         entity.add<PhysicsComponent>(entity.get<VertexComponent>(), 2.0f, 0.6f, false);
         entity.add<FillComponent>(Colors::random());
         entity.add<StrokeComponent>(Colors::white(), 1.0f);
+        entity.add<TemporaryComponent>();
 
         if (randomFloat(0.0f, 1.0f) < 0.1f)
           entity.add<LightComponent>(cc.radius * 3.0f, Colors::random());
@@ -78,6 +77,7 @@ public:
         auto& bc = entity.add<BoxComponent>(randomFloat(1.0f, 2.0f), randomFloat(1.0f, 2.0f));
         entity.add<PhysicsComponent>(entity.get<VertexComponent>(), 2.0f, 0.6f, false);
         entity.add<TextureComponent>(textureAtlas, (float)randomInt(0, 5), 1.0f, 1.0f, 1.0f);
+        entity.add<TemporaryComponent>();
 
         if (randomFloat(0.0f, 1.0f) < 0.1f)
           entity.add<LightComponent>(std::max(bc.width, bc.height) * 3.0f, Colors::random());
@@ -90,14 +90,14 @@ public:
     });
 
     scene.createScript("Remove Offscreen", [&]() {
-      scene.removeEntitiesOutside<PhysicsComponent>(window.camera.getConstraints());
+      scene.removeEntitiesOutside<TemporaryComponent>(window.camera.getConstraints());
     }, FLECTRON_PHYSICS);
 
     scene.createScript("Info Text", [&]() {
       std::ostringstream text;
       text << "Elapsed time: " << (int)(elapsedTime * 1000.0f) << "ms";
       text << " (" << (int)(physicsTime * 1000.0f) << "ms)";
-      text << "\nNumber of entities: " << scene.getEntityCount<PhysicsComponent>();
+      text << "\nSpawned entities: " << scene.getEntityCount<TemporaryComponent>();
       text << " (" << scene.getEntityCount("Circle") << "|" << scene.getEntityCount("Box") << ")";
       text << "\n" << scene.dateTime->getDay() << "d " << std::floorf(scene.dateTime->getTime() * 24.0f);
       text << "h (" << std::floorf(scene.dateTime->getDarkness() * 100.0f) / 100.f << ")";

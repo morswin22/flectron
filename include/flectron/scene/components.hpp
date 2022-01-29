@@ -167,9 +167,10 @@ namespace flectron
     LightComponent(float lightRadius, const Color& lightColor);
   };
 
-  struct PermanentComponent
+  struct TemporaryComponent
   {
-    bool isPersistent{ true };
+    bool isTemporary;
+    TemporaryComponent() = default;
   };
 
   struct ScriptComponent
