@@ -6,19 +6,24 @@
 namespace flectron
 {
 
-  bool collide(PositionComponent& pcA, VertexComponent& vcA, PositionComponent& pcB, VertexComponent& vcB, Vector& normal, float& depth)
+  Collision::Collision()
+    : normal(), depth(0.0f), contact(), contacts(0u)
+  {}
+
+  // TODO polygon does not have its center in PositionComponent, it has to be calculated
+  bool collide(PositionComponent& pcA, VertexComponent& vcA, PositionComponent& pcB, VertexComponent& vcB, Collision& collision)
   {
     if (!vcA.registry->any_of<CircleComponent>(vcA.entity))
     {
       if (!vcB.registry->any_of<CircleComponent>(vcB.entity))
       {
-        return intersectPolygons(pcA.position, vcA.getTransformedVertices(pcA), pcB.position, vcB.getTransformedVertices(pcB), normal, depth);
+        return intersectPolygons(pcA.position, vcA.getTransformedVertices(pcA), pcB.position, vcB.getTransformedVertices(pcB), collision);
       }
       else if (vcB.registry->any_of<CircleComponent>(vcB.entity))
       {
-        bool result = intersectCirclePolygon(pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, pcA.position, vcA.getTransformedVertices(pcA), normal, depth);
+        bool result = intersectCirclePolygon(pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, pcA.position, vcA.getTransformedVertices(pcA), collision);
         if (result)
-          normal = -normal;
+          collision.normal = -collision.normal;
         return result;
       }
     }
@@ -26,36 +31,72 @@ namespace flectron
     {
       if (!vcB.registry->any_of<CircleComponent>(vcB.entity))
       {
-        return intersectCirclePolygon(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, pcB.position, vcB.getTransformedVertices(pcB), normal, depth);
+        return intersectCirclePolygon(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, pcB.position, vcB.getTransformedVertices(pcB), collision);
       }
       else if (vcB.registry->any_of<CircleComponent>(vcB.entity))
       {
-        return intersectCircles(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, normal, depth);
+        return intersectCircles(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, collision);
       }
     }
     return false;
   }
 
-  void resolveCollision(PhysicsComponent& phcA, PhysicsComponent& phcB, const Vector& normal)
+  void resolveCollision(PhysicsComponent& phcA, PhysicsComponent& phcB, Collision& collision)
   {
-    Vector relativeVelocity = phcB.linearVelocity - phcA.linearVelocity;
+    for (size_t i = 0; i < collision.contacts; i++)
+    {
+      Vector radiusA = collision.contact[i] - collision.centerA;
+      Vector radiusB = collision.contact[i] - collision.centerB;
 
-    if (dot(relativeVelocity, normal) > 0.0f)
-      return;
+      Vector relativeVelocity = phcB.linearVelocity + cross(phcB.rotationalVelocity, radiusB) - phcA.linearVelocity - cross(phcA.rotationalVelocity, radiusA);
+      float contactVelocity = dot(relativeVelocity, collision.normal);
 
-    float e = std::min(phcA.resitution, phcB.resitution);
+      if (contactVelocity > 0.0f)
+        continue;
 
-    float j = -(1.0f + e) * dot(relativeVelocity, normal);
+      float e = std::min(phcA.resitution, phcB.resitution);
 
-    j /= phcA.invMass + phcB.invMass;
+      float crossAN = cross(radiusA, collision.normal);
+      float crossBN = cross(radiusB, collision.normal);
+      float invMassSum = phcA.invMass + phcB.invMass + crossAN * crossAN * phcA.invInertia + crossBN * crossBN * phcB.invInertia;
 
-    Vector impulse = j * normal;
+      float j = -(1.0f + e) * contactVelocity;
+      j /= invMassSum;
+      j /= static_cast<float>(collision.contacts);
 
-    phcA.linearVelocity = phcA.linearVelocity - (impulse * phcA.invMass);
-    phcB.linearVelocity = phcB.linearVelocity + (impulse * phcB.invMass);
+      Vector impulse = j * collision.normal;
+
+      phcA.applyImpulse(-impulse, radiusA);
+      phcB.applyImpulse( impulse, radiusB);
+
+      // Friction
+      relativeVelocity = phcB.linearVelocity + cross(phcB.rotationalVelocity, radiusB) - phcA.linearVelocity - cross(phcA.rotationalVelocity, radiusA);
+
+      Vector t = relativeVelocity - (collision.normal * dot(relativeVelocity, collision.normal));
+
+      if (dot(t, t) < FLT_EPSILON)
+        continue;
+
+      t = normalize(t);
+
+      // j tangent magnitude
+      float jt = -dot(relativeVelocity, t);
+      jt /= invMassSum;
+      jt /= static_cast<float>(collision.contacts);
+
+      // Coulumb's law
+      Vector tangentImpulse;
+      if(std::abs(jt) < j * std::sqrt(phcA.staticFriction * phcB.staticFriction))
+        tangentImpulse = t * jt;
+      else
+        tangentImpulse = t * -j * std::sqrt(phcA.dynamicFriction * phcB.dynamicFriction);
+      
+      phcA.applyImpulse(-tangentImpulse, radiusA);
+      phcB.applyImpulse( tangentImpulse, radiusB);
+    }
   }
   
-  bool intersectCircles(const Vector& centerA, float radiusA, const Vector& centerB, float radiusB, Vector& normal, float& depth)
+  bool intersectCircles(const Vector& centerA, float radiusA, const Vector& centerB, float radiusB, Collision& collision)
   {
     float dist = distance(centerA, centerB);
     float radii = radiusA + radiusB;
@@ -63,18 +104,31 @@ namespace flectron
     if (dist >= radii)
       return false;
 
-    normal = normalize(centerB - centerA);
-    depth = radii - dist;
+    if (dist == 0.0f)
+    {
+      collision.normal = Vector(1.0f, 0.0f);
+      collision.depth = radiusA;
+      collision.contact[0] = centerA;
+    }
+    else
+    {
+      collision.normal = (centerB - centerA) / dist;
+      collision.depth = radii - dist;
+      collision.contact[0] = centerA + collision.normal * radiusA;
+    }
+    collision.centerA = centerA;
+    collision.centerB = centerB;
+    collision.contacts = 1u;
 
     return true;
   }
 
-  bool intersectPolygons(const std::vector<Vector>& verticesA, const std::vector<Vector>& verticesB, Vector& normal, float& depth)
+  bool intersectPolygons(const std::vector<Vector>& verticesA, const std::vector<Vector>& verticesB, Collision& collision)
   {
     float minA, maxA;
     float minB, maxB;
 
-    depth = FLT_MAX;
+    collision.depth = FLT_MAX;
 
     for (int i = 0; i < verticesA.size(); i++)
     {
@@ -91,10 +145,10 @@ namespace flectron
         return false;
 
       float axisDepth = std::min(maxB - minA, maxA - minB);
-      if (axisDepth < depth)
+      if (axisDepth < collision.depth)
       {
-        depth = axisDepth;
-        normal = axis;
+        collision.normal = axis;
+        collision.depth = axisDepth;
       }
     }
 
@@ -113,10 +167,10 @@ namespace flectron
         return false;
 
       float axisDepth = std::min(maxB - minA, maxA - minB);
-      if (axisDepth < depth)
+      if (axisDepth < collision.depth)
       {
-        depth = axisDepth;
-        normal = axis;
+        collision.normal = axis;
+        collision.depth = axisDepth;
       }
     }
 
@@ -124,20 +178,41 @@ namespace flectron
     Vector centerB = findArithmeticMean(verticesB);
 
     Vector direction = centerB - centerA;
-    if (dot(normal, direction) < 0)
+    if (dot(collision.normal, direction) < 0)
+      collision.normal = -collision.normal;
+
+    collision.centerA = centerA;
+    collision.centerB = centerB;
+    
+    collision.contacts = 0u;
+    for (int i = 0; i < verticesA.size(); i++)
     {
-      normal = -normal;
+      const Vector& va = verticesA[i];
+      const Vector& vb = verticesA[(i + 1) % verticesA.size()];
+
+      for (int j = 0; j < verticesB.size(); j++)
+      {
+        const Vector& vc = verticesB[j];
+        const Vector& vd = verticesB[(j + 1) % verticesB.size()];
+
+        if (findLineLineIntersection(va, vb, vc, vd, collision.contact[collision.contacts]))
+        {
+          collision.contacts++;
+          if (collision.contacts == 2)
+            return true;
+        }
+      }
     }
 
     return true;
   }
 
-  bool intersectPolygons(const Vector& centerA, const std::vector<Vector>& verticesA, const Vector& centerB, const std::vector<Vector>& verticesB, Vector& normal, float& depth)
+  bool intersectPolygons(const Vector& centerA, const std::vector<Vector>& verticesA, const Vector& centerB, const std::vector<Vector>& verticesB, Collision& collision)
   {
     float minA, maxA;
     float minB, maxB;
 
-    depth = FLT_MAX;
+    collision.depth = FLT_MAX;
 
     for (int i = 0; i < verticesA.size(); i++)
     {
@@ -154,10 +229,10 @@ namespace flectron
         return false;
 
       float axisDepth = std::min(maxB - minA, maxA - minB);
-      if (axisDepth < depth)
+      if (axisDepth < collision.depth)
       {
-        depth = axisDepth;
-        normal = axis;
+        collision.normal = axis;
+        collision.depth = axisDepth;
       }
     }
 
@@ -176,28 +251,49 @@ namespace flectron
         return false;
 
       float axisDepth = std::min(maxB - minA, maxA - minB);
-      if (axisDepth < depth)
+      if (axisDepth < collision.depth)
       {
-        depth = axisDepth;
-        normal = axis;
+        collision.normal = axis;
+        collision.depth = axisDepth;
       }
     }
 
     Vector direction = centerB - centerA;
-    if (dot(normal, direction) < 0)
+    if (dot(collision.normal, direction) < 0)
+      collision.normal = -collision.normal;
+    
+    collision.centerA = centerA;
+    collision.centerB = centerB;
+    
+    collision.contacts = 0u;
+    for (int i = 0; i < verticesA.size(); i++)
     {
-      normal = -normal;
+      const Vector& va = verticesA[i];
+      const Vector& vb = verticesA[(i + 1) % verticesA.size()];
+
+      for (int j = 0; j < verticesB.size(); j++)
+      {
+        const Vector& vc = verticesB[j];
+        const Vector& vd = verticesB[(j + 1) % verticesB.size()];
+
+        if (findLineLineIntersection(va, vb, vc, vd, collision.contact[collision.contacts]))
+        {
+          collision.contacts++;
+          if (collision.contacts == 2)
+            return true;
+        }
+      }
     }
 
     return true;
   }
 
-  bool intersectCirclePolygon(const Vector& center, float radius, const std::vector<Vector>& vertices, Vector& normal, float& depth)
+  bool intersectCirclePolygon(const Vector& center, float radius, const std::vector<Vector>& vertices, Collision& collision)
   {
     float minA, maxA;
     float minB, maxB;
 
-    depth = FLT_MAX;
+    collision.depth = FLT_MAX;
 
     for (int i = 0; i < vertices.size(); i++)
     {
@@ -214,10 +310,10 @@ namespace flectron
         return false;
 
       float axisDepth = std::min(maxB - minA, maxA - minB);
-      if (axisDepth < depth)
+      if (axisDepth < collision.depth)
       {
-        depth = axisDepth;
-        normal = axis;
+        collision.normal = axis;
+        collision.depth = axisDepth;
       }
     }
 
@@ -234,29 +330,32 @@ namespace flectron
 
     float axisDepth = std::min(maxB - minA, maxA - minB);
 
-    if (axisDepth < depth)
+    if (axisDepth < collision.depth)
     {
-      depth = axisDepth;
-      normal = axis;
+      collision.normal = axis;
+      collision.depth = axisDepth;
     }
 
     Vector polygonCenter = findArithmeticMean(vertices);
 
     Vector direction = polygonCenter - center;
-    if (dot(normal, direction) < 0)
-    {
-      normal = -normal;
-    }
+    if (dot(collision.normal, direction) < 0)
+      collision.normal = -collision.normal;
+
+    collision.centerA = center;
+    collision.centerB = polygonCenter;
+    collision.contact[0] = center + collision.normal * radius;
+    collision.contacts = 1u;
 
     return true;
   }
 
-  bool intersectCirclePolygon(const Vector& center, float radius, const Vector& polygonCenter, const std::vector<Vector>& vertices, Vector& normal, float& depth)
+  bool intersectCirclePolygon(const Vector& center, float radius, const Vector& polygonCenter, const std::vector<Vector>& vertices, Collision& collision)
   {
     float minA, maxA;
     float minB, maxB;
 
-    depth = FLT_MAX;
+    collision.depth = FLT_MAX;
 
     for (int i = 0; i < vertices.size(); i++)
     {
@@ -273,10 +372,10 @@ namespace flectron
         return false;
 
       float axisDepth = std::min(maxB - minA, maxA - minB);
-      if (axisDepth < depth)
+      if (axisDepth < collision.depth)
       {
-        depth = axisDepth;
-        normal = axis;
+        collision.normal = axis;
+        collision.depth = axisDepth;
       }
     }
 
@@ -293,17 +392,20 @@ namespace flectron
 
     float axisDepth = std::min(maxB - minA, maxA - minB);
 
-    if (axisDepth < depth)
+    if (axisDepth < collision.depth)
     {
-      depth = axisDepth;
-      normal = axis;
+      collision.normal = axis;
+      collision.depth = axisDepth;
     }
 
     Vector direction = polygonCenter - center;
-    if (dot(normal, direction) < 0)
-    {
-      normal = -normal;
-    }
+    if (dot(collision.normal, direction) < 0)
+      collision.normal = -collision.normal;
+
+    collision.centerA = center;
+    collision.centerB = polygonCenter;
+    collision.contact[0] = center + collision.normal * radius;
+    collision.contacts = 1u;
 
     return true;
   }
@@ -340,11 +442,7 @@ namespace flectron
     max = dot(p2, axis);
 
     if (min > max)
-    {
-      float tmp = min;
-      min = max;
-      max = tmp;
-    }
+      std::swap(min, max);
   }
 
   void projectVertices(const std::vector<Vector>& vertices, const Vector& axis, float& min, float& max)
@@ -378,6 +476,25 @@ namespace flectron
     }
 
     return { sumX / vertices.size(), sumY / vertices.size() };
+  }
+
+  bool findLineLineIntersection(const Vector& a, const Vector& b, const Vector& c, const Vector& d, Vector& intersection)
+  {
+    float s1_x, s1_y, s2_x, s2_y;
+    s1_x = b.x - a.x;     s1_y = b.y - a.y;
+    s2_x = d.x - c.x;     s2_y = d.y - c.y;
+
+    float s, t;
+    s = (-s1_y * (a.x - c.x) + s1_x * (a.y - c.y)) / (-s2_x * s1_y + s1_x * s2_y);
+    t = ( s2_x * (a.y - c.y) - s2_y * (a.x - c.x)) / (-s2_x * s1_y + s1_x * s2_y);
+
+    if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
+    {
+      intersection = { a.x + (t * s1_x), a.y + (t * s1_y) };
+      return true;
+    }
+
+    return false;
   }
 
 }

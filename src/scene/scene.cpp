@@ -47,7 +47,6 @@ namespace flectron
     iterations = std::clamp(iterations, minIterations, maxIterations);
     float timeStep = elapsedTime / (float)iterations;
 
-    // TODO check if this view could change between iterations
     auto view = registry.view<PhysicsComponent>();
     if (view.size() == 0)
       return;
@@ -59,8 +58,7 @@ namespace flectron
         view.get<PhysicsComponent>(entity).update(registry.get<PositionComponent>(entity), timeStep, gravity);
 
       // collisions
-      Vector normal;
-      float depth;
+      Collision collision;
       for (auto entityA : view)
       {
         auto& pcA = registry.get<PositionComponent>(entityA);
@@ -80,23 +78,23 @@ namespace flectron
 
           auto& pcB = registry.get<PositionComponent>(entityB);
           auto& vcB = registry.get<VertexComponent>(entityB);
-          if (collide(pcA, vcA, pcB, vcB, normal, depth))
+          if (collide(pcA, vcA, pcB, vcB, collision))
           {
             if (phcA.isStatic)
             {
-              pcB.move(normal * depth);
+              pcB.move(collision.normal * collision.depth);
             }
             else if (phcB.isStatic)
             {
-              pcA.move(-normal * depth);
+              pcA.move(-collision.normal * collision.depth);
             }
             else 
             {
-              pcA.move(-normal * depth * 0.5f);
-              pcB.move(normal * depth * 0.5f);
+              pcA.move(-collision.normal * collision.depth * 0.5f);
+              pcB.move( collision.normal * collision.depth * 0.5f);
             }
 
-            resolveCollision(phcA, phcB, normal);
+            resolveCollision(phcA, phcB, collision);
             grid.insert(entityA);
             grid.insert(entityB);
           }

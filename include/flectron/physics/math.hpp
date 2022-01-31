@@ -19,5 +19,7 @@ namespace flectron
   float dot(const Vector& a, const Vector& b);
 
   float cross(const Vector& a, const Vector& b);
+  Vector cross(const Vector& a, float b);
+  Vector cross(float a, const Vector& b);
 
 }

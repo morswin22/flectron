@@ -211,14 +211,24 @@ namespace flectron
     return false;
   }
 
-  float polygonArea(const std::vector<Vector>& vertices)
+  float polygonCross(const std::vector<Vector>& vertices)
   {
-    float area = 0.0f;
+    float sum = 0.0f;
 
     for (int i = 0; i < vertices.size(); i++)
-      area += cross(vertices[i], vertices[getIndex(i + 1, (int)vertices.size())]);
+      sum += cross(vertices[i], vertices[getIndex(i + 1, (int)vertices.size())]);
+    
+    return sum;
+  }
 
-    return std::abs(area / 2.0f);
+  float polygonArea(const std::vector<Vector>& vertices)
+  {
+    return std::abs(polygonCross(vertices)) * 0.5f;
+  }
+
+  float polygonInertia(const std::vector<Vector>& vertices, float mass)
+  {
+    return std::abs(polygonCross(vertices)) * mass / 12.0f;
   }
 
 }

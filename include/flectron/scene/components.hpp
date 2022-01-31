@@ -87,18 +87,30 @@ namespace flectron
     float rotationalVelocity;
 
     Vector force;
+    float torque;
     bool isStatic;
 
     float density;
+    float area;
+
     float mass;
     float invMass;
+    
+    float inertia;
+    float invInertia;
+
     float resitution;
-    float area;
+
+    float staticFriction;
+    float dynamicFriction;
 
     PhysicsComponent(VertexComponent& vc, float density, float resitution, bool isStatic);
 
     void update(PositionComponent& pc, float deltaTime, const Vector& gravity);
-    void addForce(const Vector& force);
+
+    void applyForce(const Vector& force);
+    void applyTorque(float torque);
+    void applyImpulse(const Vector& impulse, const Vector& offset);
   };
 
   struct SpatialHashGridComponent

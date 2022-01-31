@@ -19,5 +19,6 @@ namespace flectron
   bool isOnLineSegment(const Vector& p, const Vector& q, const Vector& r);
 
   float polygonArea(const std::vector<Vector>& vertices);
+  float polygonInertia(const std::vector<Vector>& vertices, float mass);
 
 }

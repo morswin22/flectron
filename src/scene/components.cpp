@@ -134,7 +134,12 @@ namespace flectron
   }
 
   PhysicsComponent::PhysicsComponent(VertexComponent& vc, float density, float resitution, bool isStatic)
-    : linearVelocity(), rotationalVelocity(0.0f), force(), isStatic(isStatic), density(density), invMass(0.0f), resitution(clamp(resitution, 0.0f, 1.0f)), area(0.0f)
+    : linearVelocity(), rotationalVelocity(0.0f), 
+      force(), torque(0.0f), isStatic(isStatic),
+      density(density), area(0.0f),
+      mass(0.0f), invMass(0.0f), inertia(0.0f), invInertia(0.0f),
+      staticFriction(0.4f), dynamicFriction(0.3f),
+      resitution(clamp(resitution, 0.0f, 1.0f))
   { 
     if (vc.registry->any_of<BoxComponent>(vc.entity))
     {
@@ -163,8 +168,24 @@ namespace flectron
 
     mass = area * density;
 
+    if (vc.registry->any_of<BoxComponent>(vc.entity))
+    {
+      auto& bc = vc.registry->get<BoxComponent>(vc.entity);
+      inertia = bc.width * bc.height * mass / 6.0f;
+    }
+    else if (vc.registry->any_of<CircleComponent>(vc.entity))
+    {
+      auto& cc = vc.registry->get<CircleComponent>(vc.entity);
+      inertia = mass * cc.radius * cc.radius;
+    }
+    else
+      inertia = polygonInertia(vc.vertices, mass);
+
     if (!isStatic)
+    {
       invMass = 1.0f / mass;
+      invInertia = 1.0f / inertia;
+    }
   }
 
   void PhysicsComponent::update(PositionComponent& pc, float deltaTime, const Vector& gravity)
@@ -172,12 +193,10 @@ namespace flectron
     if (isStatic)
       return;
 
-    // Vector acceleration = force / mass;
-    // linearVelocity = linearVelocity + acceleration * deltaTime;
+    linearVelocity = linearVelocity + (force * invMass + gravity) * deltaTime;
+    rotationalVelocity = rotationalVelocity + (torque * invInertia) * deltaTime;
 
-    linearVelocity = linearVelocity + gravity * deltaTime;
-
-    if (length(linearVelocity) > 0.0f || std::abs(rotationalVelocity) > 0.0f)
+    if (dot(linearVelocity, linearVelocity) > 0.0f || rotationalVelocity != 0.0f)
       pc.registry->patch<PositionComponent>(entt::to_entity(*pc.registry, *this));
 
     pc.position = pc.position + linearVelocity * deltaTime;
@@ -185,6 +204,23 @@ namespace flectron
 
     force.x = 0.0f;
     force.y = 0.0f;
+    torque = 0.0f;
+  }
+
+  void PhysicsComponent::applyForce(const Vector& force)
+  {
+    this->force = this->force + force;
+  }
+
+  void PhysicsComponent::applyTorque(float torque)
+  {
+    this->torque += torque;
+  }
+
+  void PhysicsComponent::applyImpulse(const Vector& impulse, const Vector& offset)
+  {
+    linearVelocity = linearVelocity + impulse * invMass;
+    torque += cross(offset, impulse) * invInertia;
   }
 
   SpatialHashGridComponent::SpatialHashGridComponent(const std::pair<std::pair<int,int>, std::pair<int,int>>& clientIndices, int clientQuery)

@@ -80,4 +80,14 @@ namespace flectron
     return a.x * b.y - a.y * b.x;
   }
 
+  Vector cross(const Vector& a, float b)
+  {
+    return { a.y * b, -a.x * b };
+  }
+
+  Vector cross(float a, const Vector& b)
+  {
+    return { -a * b.y, a * b.x };
+  }
+
 }
