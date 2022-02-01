@@ -220,7 +220,7 @@ namespace flectron
   void PhysicsComponent::applyImpulse(const Vector& impulse, const Vector& offset)
   {
     linearVelocity = linearVelocity + impulse * invMass;
-    torque += cross(offset, impulse) * invInertia;
+    rotationalVelocity += cross(offset, impulse) * invInertia;
   }
 
   SpatialHashGridComponent::SpatialHashGridComponent(const std::pair<std::pair<int,int>, std::pair<int,int>>& clientIndices, int clientQuery)
