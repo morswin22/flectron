@@ -13,6 +13,11 @@ namespace flectron
 
   class Entity;
 
+  enum ShapeType
+  {
+    Circle, Box, Polygon
+  };
+
   enum WindingOrder 
   { 
     Invalid, Clockwise, CounterClockwise 
@@ -65,6 +70,8 @@ namespace flectron
   {
     entt::registry* registry;
     entt::entity entity;
+    ShapeType shape;
+    Vector center;
 
     std::vector<Vector> vertices;
     std::vector<size_t> triangles;

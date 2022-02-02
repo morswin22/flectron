@@ -1,6 +1,7 @@
 #include <flectron/physics/collisions.hpp>
 
 #include <flectron/physics/math.hpp>
+#include <flectron/physics/transform.hpp>
 #include <float.h>
 
 namespace flectron
@@ -10,33 +11,43 @@ namespace flectron
     : normal(), depth(0.0f), contact(), contacts(0u)
   {}
 
-  // TODO polygon does not have its center in PositionComponent, it has to be calculated
   bool collide(PositionComponent& pcA, VertexComponent& vcA, PositionComponent& pcB, VertexComponent& vcB, Collision& collision)
   {
-    if (!vcA.registry->any_of<CircleComponent>(vcA.entity))
+    switch (vcA.shape)
     {
-      if (!vcB.registry->any_of<CircleComponent>(vcB.entity))
+    case ShapeType::Circle:
+      switch (vcB.shape)
       {
-        return intersectPolygons(pcA.position, vcA.getTransformedVertices(pcA), pcB.position, vcB.getTransformedVertices(pcB), collision);
-      }
-      else if (vcB.registry->any_of<CircleComponent>(vcB.entity))
-      {
-        bool result = intersectCirclePolygon(pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, pcA.position, vcA.getTransformedVertices(pcA), collision);
-        if (result)
-          collision.normal = -collision.normal;
-        return result;
-      }
-    }
-    else if (vcA.registry->any_of<CircleComponent>(vcA.entity))
-    {
-      if (!vcB.registry->any_of<CircleComponent>(vcB.entity))
-      {
-        return intersectCirclePolygon(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, pcB.position, vcB.getTransformedVertices(pcB), collision);
-      }
-      else if (vcB.registry->any_of<CircleComponent>(vcB.entity))
-      {
+      case ShapeType::Circle:
         return intersectCircles(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, collision);
+      case ShapeType::Box:
+        return intersectCirclePolygon(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, pcB.position, vcB.getTransformedVertices(pcB), collision);
+      case ShapeType::Polygon:
+        return intersectCirclePolygon(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, transform(vcB.center, { pcB.position, pcB.rotation }), vcB.getTransformedVertices(pcB), collision);
       }
+      return false;
+    case ShapeType::Box:
+      switch (vcB.shape)
+      {
+      case ShapeType::Circle:
+        return intersectCirclePolygon(pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, pcA.position, vcA.getTransformedVertices(pcA), collision, true);
+      case ShapeType::Box:
+        return intersectPolygons(pcA.position, vcA.getTransformedVertices(pcA), pcB.position, vcB.getTransformedVertices(pcB), collision);
+      case ShapeType::Polygon:
+        return intersectPolygons(pcA.position, vcA.getTransformedVertices(pcA), transform(vcB.center, { pcB.position, pcB.rotation }), vcB.getTransformedVertices(pcB), collision);
+      }
+      return false;
+    case ShapeType::Polygon:
+      switch (vcB.shape)
+      {
+      case ShapeType::Circle:
+        return intersectCirclePolygon(pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, transform(vcA.center, { pcA.position, pcA.rotation }), vcA.getTransformedVertices(pcA), collision, true);
+      case ShapeType::Box:
+        return intersectPolygons(transform(vcA.center, { pcA.position, pcA.rotation }), vcA.getTransformedVertices(pcA), pcB.position, vcB.getTransformedVertices(pcB), collision);
+      case ShapeType::Polygon:
+        return intersectPolygons(transform(vcA.center, { pcA.position, pcA.rotation }), vcA.getTransformedVertices(pcA), transform(vcB.center, { pcB.position, pcB.rotation }), vcB.getTransformedVertices(pcB), collision);
+      }
+      return false;
     }
     return false;
   }
@@ -123,90 +134,6 @@ namespace flectron
     return true;
   }
 
-  bool intersectPolygons(const std::vector<Vector>& verticesA, const std::vector<Vector>& verticesB, Collision& collision)
-  {
-    float minA, maxA;
-    float minB, maxB;
-
-    collision.depth = FLT_MAX;
-
-    for (int i = 0; i < verticesA.size(); i++)
-    {
-      Vector va = verticesA[i];
-      Vector vb = verticesA[(i + 1) % verticesA.size()];
-
-      Vector edge = vb - va;
-      Vector axis = normalize({ -edge.y, edge.x });
-
-      projectVertices(verticesA, axis, minA, maxA);
-      projectVertices(verticesB, axis, minB, maxB);
-
-      if (minA >= maxB || minB >= maxA)
-        return false;
-
-      float axisDepth = std::min(maxB - minA, maxA - minB);
-      if (axisDepth < collision.depth)
-      {
-        collision.normal = axis;
-        collision.depth = axisDepth;
-      }
-    }
-
-    for (int i = 0; i < verticesB.size(); i++)
-    {
-      Vector va = verticesB[i];
-      Vector vb = verticesB[(i + 1) % verticesB.size()];
-
-      Vector edge = vb - va;
-      Vector axis = normalize({ -edge.y, edge.x });
-
-      projectVertices(verticesA, axis, minA, maxA);
-      projectVertices(verticesB, axis, minB, maxB);
-
-      if (minA >= maxB || minB >= maxA)
-        return false;
-
-      float axisDepth = std::min(maxB - minA, maxA - minB);
-      if (axisDepth < collision.depth)
-      {
-        collision.normal = axis;
-        collision.depth = axisDepth;
-      }
-    }
-
-    Vector centerA = findArithmeticMean(verticesA);
-    Vector centerB = findArithmeticMean(verticesB);
-
-    Vector direction = centerB - centerA;
-    if (dot(collision.normal, direction) < 0)
-      collision.normal = -collision.normal;
-
-    collision.centerA = centerA;
-    collision.centerB = centerB;
-    
-    collision.contacts = 0u;
-    for (int i = 0; i < verticesA.size(); i++)
-    {
-      const Vector& va = verticesA[i];
-      const Vector& vb = verticesA[(i + 1) % verticesA.size()];
-
-      for (int j = 0; j < verticesB.size(); j++)
-      {
-        const Vector& vc = verticesB[j];
-        const Vector& vd = verticesB[(j + 1) % verticesB.size()];
-
-        if (findLineLineIntersection(va, vb, vc, vd, collision.contact[collision.contacts]))
-        {
-          collision.contacts++;
-          if (collision.contacts == 2)
-            return true;
-        }
-      }
-    }
-
-    return true;
-  }
-
   bool intersectPolygons(const Vector& centerA, const std::vector<Vector>& verticesA, const Vector& centerB, const std::vector<Vector>& verticesB, Collision& collision)
   {
     float minA, maxA;
@@ -288,69 +215,7 @@ namespace flectron
     return true;
   }
 
-  bool intersectCirclePolygon(const Vector& center, float radius, const std::vector<Vector>& vertices, Collision& collision)
-  {
-    float minA, maxA;
-    float minB, maxB;
-
-    collision.depth = FLT_MAX;
-
-    for (int i = 0; i < vertices.size(); i++)
-    {
-      Vector va = vertices[i];
-      Vector vb = vertices[(i + 1) % vertices.size()];
-
-      Vector edge = vb - va;
-      Vector axis = normalize({ -edge.y, edge.x });
-
-      projectVertices(vertices, axis, minA, maxA);
-      projectCircle(center, radius, axis, minB, maxB);
-
-      if (minA >= maxB || minB >= maxA)
-        return false;
-
-      float axisDepth = std::min(maxB - minA, maxA - minB);
-      if (axisDepth < collision.depth)
-      {
-        collision.normal = axis;
-        collision.depth = axisDepth;
-      }
-    }
-
-    int closestPointIndex = findClosestPointOnPolygon(center, vertices);
-    Vector closestPoint = vertices[closestPointIndex];
-
-    Vector axis = normalize(closestPoint - center);
-
-    projectVertices(vertices, axis, minA, maxA);
-    projectCircle(center, radius, axis, minB, maxB);
-
-    if (minA >= maxB || minB >= maxA)
-      return false;
-
-    float axisDepth = std::min(maxB - minA, maxA - minB);
-
-    if (axisDepth < collision.depth)
-    {
-      collision.normal = axis;
-      collision.depth = axisDepth;
-    }
-
-    Vector polygonCenter = findArithmeticMean(vertices);
-
-    Vector direction = polygonCenter - center;
-    if (dot(collision.normal, direction) < 0)
-      collision.normal = -collision.normal;
-
-    collision.centerA = center;
-    collision.centerB = polygonCenter;
-    collision.contact[0] = center + collision.normal * radius;
-    collision.contacts = 1u;
-
-    return true;
-  }
-
-  bool intersectCirclePolygon(const Vector& center, float radius, const Vector& polygonCenter, const std::vector<Vector>& vertices, Collision& collision)
+  bool intersectCirclePolygon(const Vector& center, float radius, const Vector& polygonCenter, const std::vector<Vector>& vertices, Collision& collision, bool inverse)
   {
     float minA, maxA;
     float minB, maxB;
@@ -406,6 +271,13 @@ namespace flectron
     collision.centerB = polygonCenter;
     collision.contact[0] = center + collision.normal * radius;
     collision.contacts = 1u;
+
+    if (inverse)
+    {
+      collision.normal = -collision.normal;
+      collision.centerA = polygonCenter;
+      collision.centerB = center;
+    }
 
     return true;
   }

@@ -4,6 +4,7 @@
 #include <flectron/scene/scene.hpp>
 #include <flectron/scene/entity.hpp>
 #include <flectron/utils/vertex.hpp>
+#include <flectron/physics/collisions.hpp>
 #include <cmath>
 
 namespace flectron
@@ -57,6 +58,8 @@ namespace flectron
     if (registry->any_of<PolygonComponent>(entity))
     {
       vertices = registry->get<PolygonComponent>(entity).vertices;
+      shape = ShapeType::Polygon;
+      center = findArithmeticMean(vertices);
     }
     else if (registry->any_of<BoxComponent>(entity))
     {
@@ -65,6 +68,7 @@ namespace flectron
       vertices.push_back({  bc.width * 0.5f,  bc.height * 0.5f });
       vertices.push_back({  bc.width * 0.5f, -bc.height * 0.5f });
       vertices.push_back({ -bc.width * 0.5f, -bc.height * 0.5f });
+      shape = ShapeType::Box;
     }
     else if (registry->any_of<CircleComponent>(entity))
     {
@@ -72,6 +76,7 @@ namespace flectron
       float step = 2.0f * (float)M_PI / (float)Scene::numCircleVerticies;
       for (int i = 0; i < Scene::numCircleVerticies; i++)
         vertices.push_back({ cc.radius * cos(-i * step), cc.radius * sin(-i * step) });
+      shape = ShapeType::Circle;
     }
     else
       throw std::runtime_error("Entity must have a body defining component");

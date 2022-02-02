@@ -23,12 +23,8 @@ namespace flectron
   void resolveCollision(PhysicsComponent& phcA, PhysicsComponent& phcB, Collision& collision);
 
   bool intersectCircles(const Vector& centerA, float radiusA, const Vector& centerB, float radiusB, Collision& collision);
-
-  bool intersectPolygons(const std::vector<Vector>& verticesA, const std::vector<Vector>& verticesB, Collision& collision);
   bool intersectPolygons(const Vector& centerA, const std::vector<Vector>& verticesA, const Vector& centerB, const std::vector<Vector>& verticesB, Collision& collision);
-
-  bool intersectCirclePolygon(const Vector& center, float radius, const std::vector<Vector>& vertices, Collision& collision);
-  bool intersectCirclePolygon(const Vector& center, float radius, const Vector& polygonCenter, const std::vector<Vector>& vertices, Collision& collision);
+  bool intersectCirclePolygon(const Vector& center, float radius, const Vector& polygonCenter, const std::vector<Vector>& vertices, Collision& collision, bool inverse = false);
 
   int findClosestPointOnPolygon(const Vector& circleCenter, const std::vector<Vector>& vertices);
 
