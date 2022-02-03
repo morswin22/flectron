@@ -1,5 +1,5 @@
 #pragma once
-#include <flectron/scene/scene.hpp>
+#include <entt/entt.hpp>
 
 namespace flectron {
 
@@ -7,28 +7,28 @@ namespace flectron {
   { 
   private:
     entt::entity entityHandle;
-    Scene* scene; // TODO maybe use std::weak_ptr
+    entt::registry* registry;
     
   public:
     Entity();
-    Entity(entt::entity entityHandle, Scene* scene);
+    Entity(entt::entity entityHandle, entt::registry* registry);
 
     template<typename Component>
     bool has() const
     {
-      return scene->registry.all_of<Component>(entityHandle);
+      return registry->all_of<Component>(entityHandle);
     }
 
     template<typename... Components>
     bool hasAll() const
     {
-      return scene->registry.all_of<Components>(entityHandle);
+      return registry->all_of<Components>(entityHandle);
     }
 
     template<typename... Components>
     bool hasAny() const
     {
-      return scene->registry.any_of<Components>(entityHandle);
+      return registry->any_of<Components>(entityHandle);
     }
 
     template<typename Component, typename... Args>
@@ -36,7 +36,7 @@ namespace flectron {
     {
       if (has<Component>())
         throw std::runtime_error("Entity already has component");
-      return scene->registry.emplace<Component>(entityHandle, std::forward<Args>(args)...);
+      return registry->emplace<Component>(entityHandle, *this, std::forward<Args>(args)...);
     }
 
     template<typename Component>
@@ -44,7 +44,7 @@ namespace flectron {
     {
       if (!has<Component>())
         throw std::runtime_error("Entity does not have component");
-      return scene->registry.get<Component>(entityHandle);
+      return registry->get<Component>(entityHandle);
     }
 
     template<typename Component>
@@ -52,7 +52,7 @@ namespace flectron {
     {
       if (!has<Component>())
         throw std::runtime_error("Entity does not have component");
-      scene->registry.remove<Component>(entityHandle);
+      registry->remove<Component>(entityHandle);
     }
 
     void destroy();
@@ -62,7 +62,7 @@ namespace flectron {
     {
       if (!has<Component>())
         throw std::runtime_error("Entity does not have component");
-      scene->registry.patch<Component>(entityHandle);
+      registry->patch<Component>(entityHandle);
     }
 
     operator bool() const;

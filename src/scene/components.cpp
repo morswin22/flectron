@@ -2,7 +2,6 @@
 #include <flectron/physics/math.hpp>
 #include <flectron/physics/transform.hpp>
 #include <flectron/scene/scene.hpp>
-#include <flectron/scene/entity.hpp>
 #include <flectron/utils/vertex.hpp>
 #include <flectron/physics/collisions.hpp>
 #include <cmath>
@@ -10,69 +9,69 @@
 namespace flectron
 {
 
-  TagComponent::TagComponent(const std::string& tag)
+  TagComponent::TagComponent(Entity entity, const std::string& tag)
     : tag(tag) 
   {}
   
-  PositionComponent::PositionComponent(entt::registry* registry)
-    : registry(registry), position(), rotation(0.0f)
+  PositionComponent::PositionComponent(Entity entity)
+    : entity(entity), position(), rotation(0.0f)
   {}
 
-  PositionComponent::PositionComponent(entt::registry* registry, const Vector& position, float rotation)
-    : registry(registry), position(position), rotation(rotation)
+  PositionComponent::PositionComponent(Entity entity, const Vector& position, float rotation)
+    : entity(entity), position(position), rotation(rotation)
   {}
 
   void PositionComponent::rotate(float amount)
   {
     rotation += amount;
-    registry->patch<PositionComponent>(entt::to_entity(*registry, *this));
+    entity.patch<PositionComponent>();
   }
 
   void PositionComponent::move(const Vector& amount)
   {
     position = position + amount;
-    registry->patch<PositionComponent>(entt::to_entity(*registry, *this));
+    entity.patch<PositionComponent>();
   }
 
   void PositionComponent::moveTo(const Vector& destination)
   {
     position = destination;
-    registry->patch<PositionComponent>(entt::to_entity(*registry, *this));
+    entity.patch<PositionComponent>();
   }
 
-  PolygonComponent::PolygonComponent(const std::vector<Vector>& vertices)
-    : vertices(vertices)
+  PolygonComponent::PolygonComponent(Entity entity, const std::vector<Vector>& vertices)
+    : entity(entity), vertices(vertices)
   {}
 
-  BoxComponent::BoxComponent(float width, float height)
-    : width(width), height(height)
+  BoxComponent::BoxComponent(Entity entity, float width, float height)
+    : entity(entity), width(width), height(height)
   {}
 
-  CircleComponent::CircleComponent(float radius)
-    : radius(radius)
+  CircleComponent::CircleComponent(Entity entity, float radius)
+    : entity(entity), radius(radius)
   {}
 
-  VertexComponent::VertexComponent(entt::registry* registry, entt::entity entity)
-    : registry(registry), entity(entity), isTransformUpdateRequired(true), aabb(0.0f, 0.0f, 0.0f, 0.0f), isAABBUpdateRequired(true)
+  VertexComponent::VertexComponent(Entity entity)
+    : entity(entity), isTransformUpdateRequired(true), aabb(0.0f, 0.0f, 0.0f, 0.0f), isAABBUpdateRequired(true)
   {
-    if (registry->any_of<PolygonComponent>(entity))
+    if (entity.has<PolygonComponent>())
     {
-      vertices = registry->get<PolygonComponent>(entity).vertices;
+      vertices = entity.get<PolygonComponent>().vertices;
       shape = ShapeType::Polygon;
       center = findArithmeticMean(vertices);
     }
-    else if (registry->any_of<BoxComponent>(entity))
+    else if (entity.has<BoxComponent>())
     {
-      auto& bc = registry->get<BoxComponent>(entity);
+      auto& bc = entity.get<BoxComponent>();
       vertices.push_back({ -bc.width * 0.5f,  bc.height * 0.5f });
       vertices.push_back({  bc.width * 0.5f,  bc.height * 0.5f });
       vertices.push_back({  bc.width * 0.5f, -bc.height * 0.5f });
       vertices.push_back({ -bc.width * 0.5f, -bc.height * 0.5f });
       shape = ShapeType::Box;
     }
-    else if (registry->any_of<CircleComponent>(entity))
+    else if (entity.has<CircleComponent>())
     {
-      auto& cc = registry->get<CircleComponent>(entity);
+      auto& cc = entity.get<CircleComponent>();
       float step = 2.0f * (float)M_PI / (float)Scene::numCircleVerticies;
       for (int i = 0; i < Scene::numCircleVerticies; i++)
         vertices.push_back({ cc.radius * cos(-i * step), cc.radius * sin(-i * step) });
@@ -105,9 +104,9 @@ namespace flectron
     if (!isAABBUpdateRequired)
       return aabb;
 
-    if (registry->any_of<CircleComponent>(entity))
+    if (entity.has<CircleComponent>())
     {
-      auto& cc = registry->get<CircleComponent>(entity);
+      auto& cc = entity.get<CircleComponent>();
       aabb.min.x = pc.position.x - cc.radius;
       aabb.min.y = pc.position.y - cc.radius;
       aabb.max.x = pc.position.x + cc.radius;
@@ -138,26 +137,27 @@ namespace flectron
     return aabb;
   }
 
-  PhysicsComponent::PhysicsComponent(VertexComponent& vc, float density, float resitution, bool isStatic)
-    : linearVelocity(), rotationalVelocity(0.0f), 
+  PhysicsComponent::PhysicsComponent(Entity entity, float density, float resitution, bool isStatic)
+    : entity(entity),
+      linearVelocity(), rotationalVelocity(0.0f), 
       force(), torque(0.0f), isStatic(isStatic),
       density(density), area(0.0f),
       mass(0.0f), invMass(0.0f), inertia(0.0f), invInertia(0.0f),
       staticFriction(0.4f), dynamicFriction(0.3f),
       resitution(clamp(resitution, 0.0f, 1.0f))
   { 
-    if (vc.registry->any_of<BoxComponent>(vc.entity))
+    if (entity.has<BoxComponent>())
     {
-      auto& bc = vc.registry->get<BoxComponent>(vc.entity);
+      auto& bc = entity.get<BoxComponent>();
       area = bc.width * bc.height;
     }
-    else if (vc.registry->any_of<CircleComponent>(vc.entity))
+    else if (entity.has<CircleComponent>())
     {
-      auto& cc = vc.registry->get<CircleComponent>(vc.entity);
+      auto& cc = entity.get<CircleComponent>();
       area = (float)M_PI * cc.radius * cc.radius;
     }
     else
-      area = polygonArea(vc.vertices);
+      area = polygonArea(entity.get<VertexComponent>().vertices);
 
     if (area < Scene::minBodySize)
       throw std::invalid_argument("Body size too small");
@@ -173,18 +173,18 @@ namespace flectron
 
     mass = area * density;
 
-    if (vc.registry->any_of<BoxComponent>(vc.entity))
+    if (entity.has<BoxComponent>())
     {
-      auto& bc = vc.registry->get<BoxComponent>(vc.entity);
+      auto& bc = entity.get<BoxComponent>();
       inertia = bc.width * bc.height * mass / 6.0f;
     }
-    else if (vc.registry->any_of<CircleComponent>(vc.entity))
+    else if (entity.has<CircleComponent>())
     {
-      auto& cc = vc.registry->get<CircleComponent>(vc.entity);
+      auto& cc = entity.get<CircleComponent>();
       inertia = mass * cc.radius * cc.radius;
     }
     else
-      inertia = polygonInertia(vc.vertices, mass);
+      inertia = polygonInertia(entity.get<VertexComponent>().vertices, mass);
 
     if (!isStatic)
     {
@@ -202,7 +202,7 @@ namespace flectron
     rotationalVelocity = rotationalVelocity + (torque * invInertia) * deltaTime;
 
     if (dot(linearVelocity, linearVelocity) > 0.0f || rotationalVelocity != 0.0f)
-      pc.registry->patch<PositionComponent>(entt::to_entity(*pc.registry, *this));
+      entity.patch<PositionComponent>();
 
     pc.position = pc.position + linearVelocity * deltaTime;
     pc.rotation += rotationalVelocity * deltaTime;
@@ -228,45 +228,46 @@ namespace flectron
     rotationalVelocity += cross(offset, impulse) * invInertia;
   }
 
-  SpatialHashGridComponent::SpatialHashGridComponent(const std::pair<std::pair<int,int>, std::pair<int,int>>& clientIndices, int clientQuery)
-    : clientIndices(clientIndices), clientQuery(clientQuery)
+  SpatialHashGridComponent::SpatialHashGridComponent(Entity entity, const std::pair<std::pair<int,int>, std::pair<int,int>>& clientIndices, int clientQuery)
+    : entity(entity), clientIndices(clientIndices), clientQuery(clientQuery)
   {}
 
-  FillComponent::FillComponent()
-    : fillColor(Colors::white())
+  FillComponent::FillComponent(Entity entity)
+    : entity(entity), fillColor(Colors::white())
   {}
 
-  FillComponent::FillComponent(const Color& fillColor)
-    : fillColor(fillColor)
+  FillComponent::FillComponent(Entity entity, const Color& fillColor)
+    : entity(entity), fillColor(fillColor)
   {}
 
-  StrokeComponent::StrokeComponent()
-    : strokeColor(Colors::white()), strokeWidth(1.0f)
+  StrokeComponent::StrokeComponent(Entity entity)
+    : entity(entity), strokeColor(Colors::white()), strokeWidth(1.0f)
   {}
 
-  StrokeComponent::StrokeComponent(const Color& strokeColor, float strokeWidth)
-    : strokeColor(strokeColor), strokeWidth(strokeWidth)
+  StrokeComponent::StrokeComponent(Entity entity, const Color& strokeColor, float strokeWidth)
+    : entity(entity), strokeColor(strokeColor), strokeWidth(strokeWidth)
   {}
 
-  TextureComponent::TextureComponent()
-    : textureIndex(0), texturePositions(0.0f, 0.0f, 0.0f, 0.0f)
+  TextureComponent::TextureComponent(Entity entity)
+    : entity(entity), textureIndex(0), texturePositions(0.0f, 0.0f, 0.0f, 0.0f)
   {}
 
-  TextureComponent::TextureComponent(GLuint textureIndex, const glm::vec4& texturePositions)
-    : textureIndex(textureIndex), texturePositions(texturePositions)
+  TextureComponent::TextureComponent(Entity entity, GLuint textureIndex, const glm::vec4& texturePositions)
+    : entity(entity), textureIndex(textureIndex), texturePositions(texturePositions)
   {}
 
-  TextureComponent::TextureComponent(const Ref<Texture>& texture)
-    : textureIndex(texture->get()), texturePositions(0.0f, 0.0f, 1.0f, 1.0f)
+  TextureComponent::TextureComponent(Entity entity, const Ref<Texture>& texture)
+    : entity(entity), textureIndex(texture->get()), texturePositions(0.0f, 0.0f, 1.0f, 1.0f)
   {}
 
-  TextureComponent::TextureComponent(const Ref<TextureAtlas>& textureAtlas, float x, float y, float width, float height)
+  TextureComponent::TextureComponent(Entity entity, const Ref<TextureAtlas>& textureAtlas, float x, float y, float width, float height)
+    : entity(entity)
   {
     textureIndex = textureAtlas->get(x, y, width, height, texturePositions);
   }
 
-  TextureVertexComponent::TextureVertexComponent(const Vector& offset, const Vector& size)
-    : textureOffset(offset), textureHalfSize(size), textureVertices(), isTextureUpdateRequired(true)
+  TextureVertexComponent::TextureVertexComponent(Entity entity, const Vector& offset, const Vector& size)
+    : entity(entity), textureOffset(offset), textureHalfSize(size), textureVertices(), isTextureUpdateRequired(true)
   {}
 
   const std::array<Vector, 4>& TextureVertexComponent::getTransformedVertices(const PositionComponent& pc)
@@ -286,12 +287,12 @@ namespace flectron
     return textureVertices;
   }
 
-  AnimationComponent::AnimationComponent()
-    : animationAtlas(nullptr), animationState("")
+  AnimationComponent::AnimationComponent(Entity entity)
+    : entity(entity), animationAtlas(nullptr), animationState("")
   {}
 
-  AnimationComponent::AnimationComponent(const Ref<AnimationAtlas>& animationAtlas, const std::string& animationState)
-    : animationAtlas(animationAtlas), animationState(animationState)
+  AnimationComponent::AnimationComponent(Entity entity, const Ref<AnimationAtlas>& animationAtlas, const std::string& animationState)
+    : entity(entity), animationAtlas(animationAtlas), animationState(animationState)
   {}
 
   void AnimationComponent::play(const std::string& name, bool reset)
@@ -301,16 +302,20 @@ namespace flectron
     animationState = AnimationState(name);
   }
 
-  LightComponent::LightComponent()
-    : lightRadius(0.0f), lightColor(Colors::white())
+  LightComponent::LightComponent(Entity entity)
+    : entity(entity), lightRadius(0.0f), lightColor(Colors::white())
   {}
 
-  LightComponent::LightComponent(float lightRadius, const Color& lightColor)
-    : lightRadius(lightRadius), lightColor(lightColor)
+  LightComponent::LightComponent(Entity entity, float lightRadius, const Color& lightColor)
+    : entity(entity), lightRadius(lightRadius), lightColor(lightColor)
   {}
 
-  ScriptComponent::ScriptComponent(std::function<void()> callback, int order)
-    : callback(callback), order(order)
+  TemporaryComponent::TemporaryComponent(Entity entity)
+    : entity(entity)
+  {}
+
+  ScriptComponent::ScriptComponent(Entity entity, std::function<void()> callback, int order)
+    : entity(entity), callback(callback), order(order)
   {}
 
 }

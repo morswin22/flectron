@@ -32,7 +32,7 @@ public:
     float padding = (cc.right - cc.left) * 0.10f;
     platform = scene.createEntity("Platform", { 0.0f, -10.0f }, 0.0f);
     platform.add<BoxComponent>(cc.right - cc.left - padding * 2.0f, 3.0f);
-    platform.add<PhysicsComponent>(platform.get<VertexComponent>(), 1.0f, 0.5f, true);
+    platform.add<PhysicsComponent>(1.0f, 0.5f, true);
     platform.add<TextureComponent>(textureAtlas, 0.0f, 0.0f, 9.0f, 1.0f);
     platform.add<ScriptComponent>([&]() {
       if (Keyboard::isPressed(Keys::Q))
@@ -43,7 +43,7 @@ public:
 
     player = scene.createEntity("Player", { 0.0f, 0.0f }, 0.0f);
     player.add<BoxComponent>(3.0f, 4.4f);
-    player.add<PhysicsComponent>(player.get<VertexComponent>(), 1.0f, 0.1f, false);
+    player.add<PhysicsComponent>(1.0f, 0.1f, false);
     player.add<AnimationComponent>(animationAtlas, "idle");
     player.add<TextureVertexComponent>(Vector(0.0f, 0.4f), Vector(4.5f, 3.0f));
     player.add<ScriptComponent>([&]() {
@@ -53,7 +53,7 @@ public:
 
     auto triangle = scene.createEntity("Triangle", { 8.0f, 0.0f }, 0.0f);
     triangle.add<PolygonComponent>(std::vector<Vector>{ { -1.0f, -1.0f }, { 1.0f, -1.0f }, { 0.0f,  1.0f } });
-    triangle.add<PhysicsComponent>(triangle.get<VertexComponent>(), 1.0f, 0.1f, false);
+    triangle.add<PhysicsComponent>(1.0f, 0.1f, false);
     triangle.add<FillComponent>(Colors::lightCyan());
     triangle.add<LightComponent>(4.0f, Colors::cyan());
 
@@ -62,7 +62,7 @@ public:
       {
         auto entity = scene.createEntity("Circle", mouseWorldPosition, 0.0f);
         auto& cc = entity.add<CircleComponent>(randomFloat(0.75f, 1.25f));
-        entity.add<PhysicsComponent>(entity.get<VertexComponent>(), 2.0f, 0.6f, false);
+        entity.add<PhysicsComponent>(2.0f, 0.6f, false);
         entity.add<FillComponent>(Colors::random());
         entity.add<StrokeComponent>(Colors::white(), 1.0f);
         entity.add<TemporaryComponent>();
@@ -75,7 +75,7 @@ public:
       {
         auto entity = scene.createEntity("Box", mouseWorldPosition, 0.0f);
         auto& bc = entity.add<BoxComponent>(randomFloat(1.0f, 2.0f), randomFloat(1.0f, 2.0f));
-        entity.add<PhysicsComponent>(entity.get<VertexComponent>(), 2.0f, 0.6f, false);
+        entity.add<PhysicsComponent>(2.0f, 0.6f, false);
         entity.add<TextureComponent>(textureAtlas, (float)randomInt(0, 5), 1.0f, 1.0f, 1.0f);
         entity.add<TemporaryComponent>();
 

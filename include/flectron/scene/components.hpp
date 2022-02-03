@@ -4,14 +4,12 @@
 #include <flectron/renderer/color.hpp>
 #include <flectron/renderer/renderer.hpp>
 #include <flectron/renderer/animation.hpp>
-#include <entt/entt.hpp>
+#include <flectron/scene/entity.hpp>
 #include <vector>
 #include <array>
 
 namespace flectron 
 {
-
-  class Entity;
 
   enum ShapeType
   {
@@ -25,19 +23,20 @@ namespace flectron
 
   struct TagComponent
   {
+    Entity entity;
     std::string tag;
 
-    TagComponent(const std::string& tag);
+    TagComponent(Entity entity, const std::string& tag);
   };
 
   struct PositionComponent
   {
+    Entity entity;
     Vector position;
     float rotation;
-    entt::registry* registry;
 
-    PositionComponent(entt::registry* registry);
-    PositionComponent(entt::registry* registry, const Vector& position, float rotation);
+    PositionComponent(Entity entity);
+    PositionComponent(Entity entity, const Vector& position, float rotation);
 
     void rotate(float amount);
     void move(const Vector& amount);
@@ -46,30 +45,32 @@ namespace flectron
 
   struct PolygonComponent
   {
+    Entity entity;
     std::vector<Vector> vertices;
 
-    PolygonComponent(const std::vector<Vector>& vertices);
+    PolygonComponent(Entity entity, const std::vector<Vector>& vertices);
   };
 
   struct BoxComponent
   {
+    Entity entity;
     float width;
     float height;
 
-    BoxComponent(float width, float height);
+    BoxComponent(Entity entity, float width, float height);
   };
 
   struct CircleComponent
   {
+    Entity entity;
     float radius;
 
-    CircleComponent(float radius);
+    CircleComponent(Entity entity, float radius);
   };
 
   struct VertexComponent
   {
-    entt::registry* registry;
-    entt::entity entity;
+    Entity entity;
     ShapeType shape;
     Vector center;
 
@@ -82,7 +83,7 @@ namespace flectron
     AABB aabb;
     bool isAABBUpdateRequired;
 
-    VertexComponent(entt::registry* registry, entt::entity entity);
+    VertexComponent(Entity entity);
 
     const std::vector<Vector>& getTransformedVertices(const PositionComponent& pc);
     const AABB& getAABB(const PositionComponent& pc);
@@ -90,6 +91,7 @@ namespace flectron
 
   struct PhysicsComponent
   {
+    Entity entity;
     Vector linearVelocity;
     float rotationalVelocity;
 
@@ -111,7 +113,7 @@ namespace flectron
     float staticFriction;
     float dynamicFriction;
 
-    PhysicsComponent(VertexComponent& vc, float density, float resitution, bool isStatic);
+    PhysicsComponent(Entity entity, float density, float resitution, bool isStatic);
 
     void update(PositionComponent& pc, float deltaTime, const Vector& gravity);
 
@@ -122,82 +124,90 @@ namespace flectron
 
   struct SpatialHashGridComponent
   {
+    Entity entity;
     std::pair<std::pair<int,int>, std::pair<int,int>> clientIndices;
     int clientQuery;
 
-    SpatialHashGridComponent(const std::pair<std::pair<int,int>, std::pair<int,int>>& clientIndices, int clientQuery);
+    SpatialHashGridComponent(Entity entity, const std::pair<std::pair<int,int>, std::pair<int,int>>& clientIndices, int clientQuery);
   };
 
   struct FillComponent
   {
+    Entity entity;
     Color fillColor;
-    FillComponent();
-    FillComponent(const Color& fillColor);
+    FillComponent(Entity entity);
+    FillComponent(Entity entity, const Color& fillColor);
   };
 
   struct StrokeComponent
   {
+    Entity entity;
     Color strokeColor;
     float strokeWidth;
-    StrokeComponent();
-    StrokeComponent(const Color& strokeColor, float strokeWidth);
+    StrokeComponent(Entity entity);
+    StrokeComponent(Entity entity, const Color& strokeColor, float strokeWidth);
   };
 
   struct TextureComponent
   {
+    Entity entity;
     GLuint textureIndex;
     glm::vec4 texturePositions;
 
-    TextureComponent();
-    TextureComponent(GLuint textureIndex, const glm::vec4& texturePositions);
-    TextureComponent(const Ref<Texture>& texture);
-    TextureComponent(const Ref<TextureAtlas>& textureAtlas, float x, float y, float width, float height);
+    TextureComponent(Entity entity);
+    TextureComponent(Entity entity, GLuint textureIndex, const glm::vec4& texturePositions);
+    TextureComponent(Entity entity, const Ref<Texture>& texture);
+    TextureComponent(Entity entity, const Ref<TextureAtlas>& textureAtlas, float x, float y, float width, float height);
   };
 
   struct TextureVertexComponent
   {
+    Entity entity;
     Vector textureOffset;
     Vector textureHalfSize;
     std::array<Vector, 4> textureVertices;
     bool isTextureUpdateRequired;
 
-    TextureVertexComponent(const Vector& offset, const Vector& size);
+    TextureVertexComponent(Entity entity, const Vector& offset, const Vector& size);
 
     const std::array<Vector, 4>& getTransformedVertices(const PositionComponent& pc);
   };
 
   struct AnimationComponent
   {
+    Entity entity;
     Ref<AnimationAtlas> animationAtlas;
     AnimationState animationState;
 
-    AnimationComponent();
-    AnimationComponent(const Ref<AnimationAtlas>& animationAtlas, const std::string& animationState);
+    AnimationComponent(Entity entity);
+    AnimationComponent(Entity entity, const Ref<AnimationAtlas>& animationAtlas, const std::string& animationState);
 
     void play(const std::string& name, bool reset = false);
   };
 
   struct LightComponent
   {
+    Entity entity;
     float lightRadius;
     Color lightColor;
 
-    LightComponent();
-    LightComponent(float lightRadius, const Color& lightColor);
+    LightComponent(Entity entity);
+    LightComponent(Entity entity, float lightRadius, const Color& lightColor);
   };
 
   struct TemporaryComponent
   {
-    bool isTemporary;
-    TemporaryComponent() = default;
+    Entity entity;
+    TemporaryComponent(Entity entity);
   };
 
   struct ScriptComponent
   {
+    Entity entity;
     std::function<void()> callback;
     int order;
 
-    ScriptComponent(std::function<void()> callback, int order = 0);
+    ScriptComponent(Entity entity, std::function<void()> callback, int order = 0);
   };
 
 }

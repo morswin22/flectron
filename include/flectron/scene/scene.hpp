@@ -5,11 +5,10 @@
 #include <flectron/scene/grid.hpp>
 #include <flectron/scene/window.hpp>
 #include <flectron/renderer/light.hpp>
+#include <flectron/scene/entity.hpp>
 
 namespace flectron
 {
-
-  class Entity;
 
   struct Environment
   {
@@ -75,6 +74,7 @@ namespace flectron
     }
 
     void onPhysicsComponentCreate(entt::registry&, entt::entity entity);
+    void onSpatialHashGridComponentDestroy(entt::registry&, entt::entity entity);
     static void onPositionComponentUpdate(entt::registry& registry, entt::entity entity);
     static void onBodyDefiningComponentCreate(entt::registry& registry, entt::entity entity);
 

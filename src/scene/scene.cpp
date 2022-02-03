@@ -1,5 +1,4 @@
 #include <flectron/scene/scene.hpp>
-#include <flectron/scene/entity.hpp>
 #include <flectron/scene/components.hpp>
 #include <flectron/physics/math.hpp>
 #include <flectron/physics/collisions.hpp>
@@ -31,6 +30,7 @@ namespace flectron
     : registry(), grid(4, registry), gravity(0.0f, -9.81f), lightRenderer(nullptr), dateTime(nullptr), environment()
   {
     registry.on_construct<PhysicsComponent>().connect<&Scene::onPhysicsComponentCreate>(this);
+    registry.on_destroy<SpatialHashGridComponent>().connect<&Scene::onSpatialHashGridComponentDestroy>(this);
     registry.on_update<PositionComponent>().connect<&Scene::onPositionComponentUpdate>();
     registry.on_construct<PolygonComponent>().connect<&Scene::onBodyDefiningComponentCreate>();
     registry.on_construct<BoxComponent>().connect<&Scene::onBodyDefiningComponentCreate>();
@@ -114,7 +114,7 @@ namespace flectron
     auto renderables = registry.view<VertexComponent>();
     for (auto entity : renderables)
       if (registry.any_of<StrokeComponent, FillComponent, AnimationComponent, TextureComponent>(entity))
-        window.draw({ entity, this });
+        window.draw({ entity, &registry });
 
     auto lights = registry.view<LightComponent>();
     if (!lights.empty())
@@ -123,7 +123,7 @@ namespace flectron
         throw std::runtime_error("LightRenderer not initialized");
       
       for (auto entity : lights)
-        lightRenderer->addLight({ entity, this });
+        lightRenderer->addLight({ entity, &registry });
     }
 
     if (lightRenderer != nullptr)
@@ -132,9 +132,9 @@ namespace flectron
 
   Entity Scene::createEntity(const std::string& name, const Vector& position, float rotation)
   {
-    Entity entity(registry.create(), this);
+    Entity entity(registry.create(), &registry);
     entity.add<TagComponent>(name);
-    entity.add<PositionComponent>(&registry, position, rotation);
+    entity.add<PositionComponent>(position, rotation);
     return entity;
   }
 
@@ -145,7 +145,7 @@ namespace flectron
 
   Entity Scene::createScript(const std::string& name, std::function<void()> callback, int order)
   {
-    Entity entity(registry.create(), this);
+    Entity entity(registry.create(), &registry);
     entity.add<TagComponent>(name);
     entity.add<ScriptComponent>(callback, order);
     return entity;
@@ -174,6 +174,11 @@ namespace flectron
     grid.insert(entity);
   }
 
+  void Scene::onSpatialHashGridComponentDestroy(entt::registry&, entt::entity entity)
+  {
+    grid.remove(entity);
+  }
+
   void Scene::onPositionComponentUpdate(entt::registry& registry, entt::entity entity)
   {
     if (registry.all_of<VertexComponent>(entity))
@@ -188,12 +193,11 @@ namespace flectron
 
   void Scene::onBodyDefiningComponentCreate(entt::registry& registry, entt::entity entity)
   {
-    registry.emplace_or_replace<VertexComponent>(entity, &registry, entity);
+    registry.emplace_or_replace<VertexComponent>(entity, Entity(entity, &registry));
   }
 
   void Scene::removeEntity(entt::entity entity)
   {
-    grid.remove(entity);
     registry.destroy(entity);
   }
 

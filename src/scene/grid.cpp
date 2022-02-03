@@ -30,7 +30,7 @@ namespace flectron
       remove(entity);
     }
 
-    registry.emplace_or_replace<SpatialHashGridComponent>(entity, std::make_pair<std::pair<int, int>, std::pair<int, int>>({minX, minY}, {maxX, maxY}), -1);
+    registry.emplace_or_replace<SpatialHashGridComponent>(entity, Entity(entity, &registry), std::make_pair<std::pair<int, int>, std::pair<int, int>>({minX, minY}, {maxX, maxY}), -1);
 
     for (int x = minX; x <= maxX; x++)
       for (int y = minY; y <= maxY; y++)
@@ -81,8 +81,6 @@ namespace flectron
         cells[getHash(x, y)].erase(entity);
       }
     }
-
-    registry.remove<SpatialHashGridComponent>(entity);
   }
 
 }

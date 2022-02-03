@@ -3,16 +3,16 @@
 namespace flectron {
 
   Entity::Entity()
-    : entityHandle(entt::null), scene(nullptr) 
+    : entityHandle(entt::null), registry(nullptr) 
   {}
 
-  Entity::Entity(entt::entity entityHandle, Scene* scene)
-    : entityHandle(entityHandle), scene(scene) 
+  Entity::Entity(entt::entity entityHandle, entt::registry* registry)
+    : entityHandle(entityHandle), registry(registry) 
   {}
 
   void Entity::destroy()
   {
-    scene->removeEntity(entityHandle);
+    registry->destroy(entityHandle);
   }
 
   Entity::operator bool() const {

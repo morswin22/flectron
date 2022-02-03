@@ -19,18 +19,18 @@ namespace flectron
       switch (vcB.shape)
       {
       case ShapeType::Circle:
-        return intersectCircles(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, collision);
+        return intersectCircles(pcA.position, vcA.entity.get<CircleComponent>().radius, pcB.position, vcB.entity.get<CircleComponent>().radius, collision);
       case ShapeType::Box:
-        return intersectCirclePolygon(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, pcB.position, vcB.getTransformedVertices(pcB), collision);
+        return intersectCirclePolygon(pcA.position, vcA.entity.get<CircleComponent>().radius, pcB.position, vcB.getTransformedVertices(pcB), collision);
       case ShapeType::Polygon:
-        return intersectCirclePolygon(pcA.position, vcA.registry->get<CircleComponent>(vcA.entity).radius, transform(vcB.center, { pcB.position, pcB.rotation }), vcB.getTransformedVertices(pcB), collision);
+        return intersectCirclePolygon(pcA.position, vcA.entity.get<CircleComponent>().radius, transform(vcB.center, { pcB.position, pcB.rotation }), vcB.getTransformedVertices(pcB), collision);
       }
       return false;
     case ShapeType::Box:
       switch (vcB.shape)
       {
       case ShapeType::Circle:
-        return intersectCirclePolygon(pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, pcA.position, vcA.getTransformedVertices(pcA), collision, true);
+        return intersectCirclePolygon(pcB.position, vcB.entity.get<CircleComponent>().radius, pcA.position, vcA.getTransformedVertices(pcA), collision, true);
       case ShapeType::Box:
         return intersectPolygons(pcA.position, vcA.getTransformedVertices(pcA), pcB.position, vcB.getTransformedVertices(pcB), collision);
       case ShapeType::Polygon:
@@ -41,7 +41,7 @@ namespace flectron
       switch (vcB.shape)
       {
       case ShapeType::Circle:
-        return intersectCirclePolygon(pcB.position, vcB.registry->get<CircleComponent>(vcB.entity).radius, transform(vcA.center, { pcA.position, pcA.rotation }), vcA.getTransformedVertices(pcA), collision, true);
+        return intersectCirclePolygon(pcB.position, vcB.entity.get<CircleComponent>().radius, transform(vcA.center, { pcA.position, pcA.rotation }), vcA.getTransformedVertices(pcA), collision, true);
       case ShapeType::Box:
         return intersectPolygons(transform(vcA.center, { pcA.position, pcA.rotation }), vcA.getTransformedVertices(pcA), pcB.position, vcB.getTransformedVertices(pcB), collision);
       case ShapeType::Polygon:
