@@ -185,6 +185,7 @@ namespace flectron
     {
       auto& vc = registry.get<VertexComponent>(entity);
       vc.isTransformUpdateRequired = true;
+      vc.isTransformCenterUpdateRequired = true;
       vc.isAABBUpdateRequired = true;
     }
     if (registry.all_of<TextureVertexComponent>(entity))

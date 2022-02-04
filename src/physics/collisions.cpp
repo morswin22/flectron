@@ -1,7 +1,6 @@
 #include <flectron/physics/collisions.hpp>
 
 #include <flectron/physics/math.hpp>
-#include <flectron/physics/transform.hpp>
 #include <float.h>
 
 namespace flectron
@@ -23,7 +22,7 @@ namespace flectron
       case ShapeType::Box:
         return intersectCirclePolygon(pcA.position, vcA.entity.get<CircleComponent>().radius, pcB.position, vcB.getTransformedVertices(pcB), collision);
       case ShapeType::Polygon:
-        return intersectCirclePolygon(pcA.position, vcA.entity.get<CircleComponent>().radius, transform(vcB.center, { pcB.position, pcB.rotation }), vcB.getTransformedVertices(pcB), collision);
+        return intersectCirclePolygon(pcA.position, vcA.entity.get<CircleComponent>().radius, vcB.getTransformedCenter(pcB), vcB.getTransformedVertices(pcB), collision);
       }
       return false;
     case ShapeType::Box:
@@ -34,18 +33,18 @@ namespace flectron
       case ShapeType::Box:
         return intersectPolygons(pcA.position, vcA.getTransformedVertices(pcA), pcB.position, vcB.getTransformedVertices(pcB), collision);
       case ShapeType::Polygon:
-        return intersectPolygons(pcA.position, vcA.getTransformedVertices(pcA), transform(vcB.center, { pcB.position, pcB.rotation }), vcB.getTransformedVertices(pcB), collision);
+        return intersectPolygons(pcA.position, vcA.getTransformedVertices(pcA), vcB.getTransformedCenter(pcB), vcB.getTransformedVertices(pcB), collision);
       }
       return false;
     case ShapeType::Polygon:
       switch (vcB.shape)
       {
       case ShapeType::Circle:
-        return intersectCirclePolygon(pcB.position, vcB.entity.get<CircleComponent>().radius, transform(vcA.center, { pcA.position, pcA.rotation }), vcA.getTransformedVertices(pcA), collision, true);
+        return intersectCirclePolygon(pcB.position, vcB.entity.get<CircleComponent>().radius, vcA.getTransformedCenter(pcA), vcA.getTransformedVertices(pcA), collision, true);
       case ShapeType::Box:
-        return intersectPolygons(transform(vcA.center, { pcA.position, pcA.rotation }), vcA.getTransformedVertices(pcA), pcB.position, vcB.getTransformedVertices(pcB), collision);
+        return intersectPolygons(vcA.getTransformedCenter(pcA), vcA.getTransformedVertices(pcA), pcB.position, vcB.getTransformedVertices(pcB), collision);
       case ShapeType::Polygon:
-        return intersectPolygons(transform(vcA.center, { pcA.position, pcA.rotation }), vcA.getTransformedVertices(pcA), transform(vcB.center, { pcB.position, pcB.rotation }), vcB.getTransformedVertices(pcB), collision);
+        return intersectPolygons(vcA.getTransformedCenter(pcA), vcA.getTransformedVertices(pcA), vcB.getTransformedCenter(pcB), vcB.getTransformedVertices(pcB), collision);
       }
       return false;
     }

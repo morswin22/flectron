@@ -99,6 +99,17 @@ namespace flectron
     return transformedVertices;
   }
 
+  const Vector& VertexComponent::getTransformedCenter(const PositionComponent& pc)
+  {
+    if (isTransformCenterUpdateRequired)
+    {
+      transformedCenter = transform(center, Transform(pc.position, pc.rotation));
+      isTransformCenterUpdateRequired = false;
+    }
+
+    return transformedCenter;
+  }
+
   const AABB& VertexComponent::getAABB(const PositionComponent& pc)
   {
     if (!isAABBUpdateRequired)

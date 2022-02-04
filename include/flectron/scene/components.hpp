@@ -72,13 +72,15 @@ namespace flectron
   {
     Entity entity;
     ShapeType shape;
-    Vector center;
 
+    Vector center;
     std::vector<Vector> vertices;
     std::vector<size_t> triangles;
 
+    Vector transformedCenter;
     std::vector<Vector> transformedVertices;
     bool isTransformUpdateRequired;
+    bool isTransformCenterUpdateRequired;
 
     AABB aabb;
     bool isAABBUpdateRequired;
@@ -86,6 +88,7 @@ namespace flectron
     VertexComponent(Entity entity);
 
     const std::vector<Vector>& getTransformedVertices(const PositionComponent& pc);
+    const Vector& getTransformedCenter(const PositionComponent& pc);
     const AABB& getAABB(const PositionComponent& pc);
   };
 
