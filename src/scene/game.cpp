@@ -28,19 +28,22 @@ namespace flectron
       mouseWorldPosition.x = (mousePosition.x - window.width * 0.5f) * scale + cameraPosition.x;
       mouseWorldPosition.y = (window.height * 0.5f - mousePosition.y) * scale + cameraPosition.y;
 
-      scene.sortScriptComponents();
-      scene.updateScriptComponents(std::numeric_limits<int>::min(), FLECTRON_PHYSICS);
+      auto scriptComponents = scene.getScriptComponents();
+      auto scriptsEnd = scriptComponents.end();
+      auto scriptsIterator = scene.updateScriptComponents(FLECTRON_PHYSICS, scriptComponents.begin(), scriptsEnd);
+
       physicsTimer.start();
       scene.update(elapsedTime, physicsIterations);
       physicsTimer.stop();
       physicsTime = physicsTimer.getElapsedTime();
-      scene.updateScriptComponents(FLECTRON_PHYSICS, FLECTRON_RENDER);
+      
+      scriptsIterator = scene.updateScriptComponents(FLECTRON_RENDER, scriptsIterator, scriptsEnd);
 
       window.shader->bind();
       window.shader->setUniformMat4f("uViewProjection", window.camera.getViewProjectionMatrix());
       Renderer::beginBatch();
       scene.render(window);
-      scene.updateScriptComponents(FLECTRON_RENDER, std::numeric_limits<int>::max());
+      scene.updateScriptComponents(std::numeric_limits<int>::max(), scriptsIterator, scriptsEnd);
       Renderer::endBatch();
       
       Mouse::resetScroll();

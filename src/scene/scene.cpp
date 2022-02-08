@@ -151,22 +151,16 @@ namespace flectron
     return entity;
   }
 
-  void Scene::sortScriptComponents()
+  entt::sparse_set::iterator Scene::updateScriptComponents(int max, entt::sparse_set::iterator iterator, entt::sparse_set::iterator end)
   {
-    registry.sort<ScriptComponent>([](const ScriptComponent& a, const ScriptComponent& b) {
-      return a.order < b.order;
-    });
-  }
-
-  // TODO optimize this implementation
-  void Scene::updateScriptComponents(int min, int max)
-  {
-    for (auto entity : registry.view<ScriptComponent>())
+    for (; iterator != end; ++iterator)
     {
-      auto& script = registry.get<ScriptComponent>(entity);
-      if (script.order >= min && script.order < max)
-        script.callback();
+      auto& script = registry.get<ScriptComponent>(*iterator);
+      if (script.order >= max)
+        break;
+      script.callback();
     }
+    return iterator;
   }
 
   void Scene::onPhysicsComponentCreate(entt::registry&, entt::entity entity)

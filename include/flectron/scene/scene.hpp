@@ -54,8 +54,15 @@ namespace flectron
     Entity createEntity();
     Entity createScript(const std::string& name, std::function<void()> callback, int order = 0);
 
-    void sortScriptComponents();
-    void updateScriptComponents(int min, int max);
+    auto getScriptComponents()
+    {
+      registry.sort<ScriptComponent>([](const ScriptComponent& a, const ScriptComponent& b) {
+        return a.order < b.order;
+      });
+      return registry.view<ScriptComponent>();
+    }
+    
+    entt::sparse_set::iterator updateScriptComponents(int max, entt::sparse_set::iterator iterator, entt::sparse_set::iterator end);
 
     template<typename ...Components>
     size_t getEntityCount() const
