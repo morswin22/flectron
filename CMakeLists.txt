@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(MindlessProjects)
-
-# include(CTest)
-# enable_testing()
+project(flectron VERSION 0.1.0)
 
 find_package(OpenGL REQUIRED)
 add_subdirectory(lib/glfw)
@@ -28,7 +25,8 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_USE_MATH_DEFINES")
 endif()
 
-project(flectron)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 file(GLOB_RECURSE FLECTRON_SRC_FILES ./src/*.cpp)
 
