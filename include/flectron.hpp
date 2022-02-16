@@ -1,6 +1,8 @@
 #pragma once
 
 // Utils
+#include <flectron/utils/platform.hpp>
+#include <flectron/utils/entry.hpp>
 #include <flectron/utils/input.hpp>
 #include <flectron/utils/memory.hpp>
 #include <flectron/utils/profile.hpp>

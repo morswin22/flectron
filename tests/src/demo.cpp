@@ -1,7 +1,5 @@
-#include <iostream>
-#include <sstream>
-
 #include <flectron.hpp>
+#include <sstream>
 
 using namespace flectron;
 
@@ -117,10 +115,7 @@ public:
   }
 };
 
-int main(void)
+Game* flectron::createGame()
 {
-  Demo test;
-  test.run();
-
-  return 0;
+  return new Demo();
 }

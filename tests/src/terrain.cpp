@@ -41,10 +41,7 @@ public:
   }
 };
 
-int main(void)
+Game* flectron::createGame()
 {
-  Terrain test;
-  test.run();
-
-  return 0;
+  return new Terrain();
 }

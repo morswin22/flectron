@@ -30,4 +30,6 @@ namespace flectron
     void run();
   };
 
+  Game* createGame();
+
 }
