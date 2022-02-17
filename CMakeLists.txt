@@ -52,4 +52,69 @@ if(MSVC)
   target_link_libraries(flectron OptickCore)
 endif()
 
-add_subdirectory(tests)
+include(InstallRequiredSystemLibraries)
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_NAME "Flectron")
+set(CPACK_PACKAGE_VENDOR "Patryk Janiak")
+set(CPACK_PACKAGE_DESCRIPTION "Flectron is a 2D engine written in C++")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/morswin22/flectron")
+# set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/flectron.png")
+set(CPACK_PACKAGE_EXECUTABLES "flectron-demo;Flectron Demo" "flectron-terrain;Terrain Generator")
+# set(CPACK_CREATE_DESKTOP_LINKS "flectron-demo;Flectron Demo" "flectron-terrain;Terrain Generator")
+set(CPACK_THREADS 0)
+include(CPack)
+
+option(FLECTRON_INSTALL "Install the flectron library" ON)
+option(FLECTRON_BUILD_DOCS "Build flectron documentation" OFF)
+option(FLECTRON_INSTALL_DOCS "Install flectron documentation" OFF)
+option(FLECTRON_BUILD_TESTS "Build flectron tests" OFF)
+
+cpack_add_component_group(flectron_core DISPLAY_NAME "Flectron" DESCRIPTION "Flectron core library")
+
+if (FLECTRON_INSTALL)
+  set_target_properties(flectron PROPERTIES PUBLIC_HEADER "include/flectron.hpp")
+
+  install(DIRECTORY include/ 
+    DESTINATION include/
+    FILES_MATCHING PATTERN "*.hpp"
+    PATTERN "include/flectron.hpp" EXCLUDE
+  )
+  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION include/flectron)
+  install(TARGETS flectron 
+    LIBRARY DESTINATION lib
+    PUBLIC_HEADER DESTINATION include/flectron
+    COMPONENT flectron_lib
+  )
+  cpack_add_component(flectron_lib DISPLAY_NAME "Library" DESCRIPTION "Flectron library" GROUP flectron_core)
+endif()
+
+if(FLECTRON_BUILD_DOCS OR FLECTRON_INSTALL_DOCS)
+  find_package(Doxygen)
+  if(DOXYGEN_FOUND)
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+    set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+
+    add_custom_target(flectron-docs ALL
+      COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Generate flectron documentation" 
+    )
+
+    if(FLECTRON_INSTALL_DOCS)
+      include(GNUInstallDirs)
+      install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/docs/
+        DESTINATION ${CMAKE_INSTALL_DOCDIR}
+        COMPONENT flectron_docs
+      )
+      cpack_add_component(flectron_docs DISPLAY_NAME "Documentation" DESCRIPTION "Flectron documentation" GROUP flectron_core)
+    endif()
+  else()
+    message(FATAL_ERROR "Doxygen needs to be installed to generate flectron documentation")
+  endif()
+endif()
+
+if(FLECTRON_BUILD_TESTS)
+  add_subdirectory(tests)
+endif()
