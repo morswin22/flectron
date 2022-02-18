@@ -8,18 +8,36 @@
 * [optick](https://github.com/bombomby/optick)
 * [entt](https:://github.com/skypjack/entt)
 
-## Download
-Download with dependencies
-```sh
-git clone --recurse-submodules -j8 https://github.com/morswin22/flectron.git
-```
+## Requirements
+* [cmake](https://cmake.org/)
 
-Download without dependencies (You will be required to manually copy the dependencies into `lib/` directory)
+## Build
+Clone the repository
 ```sh
 git clone https://github.com/morswin22/flectron.git
+cd flectron
 ```
 
-If you change your mind and want to download dependencies after cloning
+Create a build directory
 ```sh
-git submodule update --init
+mkdir build
+cd build
+```
+
+Build the project
+```sh
+cmake ..
+cmake --build . --config Release
+```
+
+## Create an installer
+```sh
+cpack -C Release
+```
+
+## Run the tests
+```sh
+cd tests/Release
+./flectron-demo
+./flectron-terrain
 ```

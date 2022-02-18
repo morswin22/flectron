@@ -1,13 +1,7 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.15.0)
 project(flectron VERSION 0.1.0)
 
-find_package(OpenGL REQUIRED)
-add_subdirectory(lib/glfw)
-add_subdirectory(lib/glew)
-add_subdirectory(lib/glm)
-add_subdirectory(lib/stb_image)
-add_subdirectory(lib/optick)
-add_subdirectory(lib/entt)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/GetDependencies.cmake")
 
 if(MSVC)
   if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
@@ -34,10 +28,12 @@ add_library(flectron STATIC ${FLECTRON_SRC_FILES})
 
 target_include_directories(flectron 
   PUBLIC include
-  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
-  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/glew/include  
-  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/stb_image
-  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/entt/single_include
+  PUBLIC ${GLFW_INCLUDE_DIR}
+  PUBLIC ${GLEW_INCLUDE_DIR} 
+  PUBLIC ${GLM_INCLUDE_DIR}
+  PUBLIC ${STB_IMAGE_INCLUDE_DIR}
+  PUBLIC ${OPTICK_INCLUDE_DIR}
+  PUBLIC ${ENTT_INCLUDE_DIR}
 )
 
 target_link_libraries(flectron 
@@ -52,22 +48,29 @@ if(MSVC)
   target_link_libraries(flectron OptickCore)
 endif()
 
-include(InstallRequiredSystemLibraries)
+if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+  set(FLECTRON_STANDALONE TRUE)
+endif()
+
+option(FLECTRON_BUILD_TESTS "Build flectron tests" ${FLECTRON_STANDALONE})
+option(FLECTRON_BUILD_DOCS "Build flectron documentation" ON)
+option(FLECTRON_INSTALL "Install the flectron library" ON)
+
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_NAME "Flectron")
 set(CPACK_PACKAGE_VENDOR "Patryk Janiak")
 set(CPACK_PACKAGE_DESCRIPTION "Flectron is a 2D engine written in C++")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/morswin22/flectron")
 # set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/flectron.png")
-set(CPACK_PACKAGE_EXECUTABLES "flectron-demo;Flectron Demo" "flectron-terrain;Terrain Generator")
-# set(CPACK_CREATE_DESKTOP_LINKS "flectron-demo;Flectron Demo" "flectron-terrain;Terrain Generator")
+
+if(FLECTRON_BUILD_TESTS)
+  include(InstallRequiredSystemLibraries)
+  set(CPACK_PACKAGE_EXECUTABLES "flectron-demo;Flectron Demo" "flectron-terrain;Terrain Generator")
+  # set(CPACK_CREATE_DESKTOP_LINKS "flectron-demo;Flectron Demo" "flectron-terrain;Terrain Generator")
+endif()
+
 set(CPACK_THREADS 0)
 include(CPack)
-
-option(FLECTRON_INSTALL "Install the flectron library" ON)
-option(FLECTRON_BUILD_DOCS "Build flectron documentation" OFF)
-option(FLECTRON_INSTALL_DOCS "Install flectron documentation" OFF)
-option(FLECTRON_BUILD_TESTS "Build flectron tests" OFF)
 
 cpack_add_component_group(flectron_core DISPLAY_NAME "Flectron" DESCRIPTION "Flectron core library")
 
@@ -88,7 +91,7 @@ if (FLECTRON_INSTALL)
   cpack_add_component(flectron_lib DISPLAY_NAME "Library" DESCRIPTION "Flectron library" GROUP flectron_core)
 endif()
 
-if(FLECTRON_BUILD_DOCS OR FLECTRON_INSTALL_DOCS)
+if(FLECTRON_BUILD_DOCS)
   find_package(Doxygen)
   if(DOXYGEN_FOUND)
     set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
@@ -102,7 +105,7 @@ if(FLECTRON_BUILD_DOCS OR FLECTRON_INSTALL_DOCS)
       COMMENT "Generate flectron documentation" 
     )
 
-    if(FLECTRON_INSTALL_DOCS)
+    if(FLECTRON_INSTALL)
       include(GNUInstallDirs)
       install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/docs/
         DESTINATION ${CMAKE_INSTALL_DOCDIR}
