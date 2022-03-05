@@ -2,7 +2,6 @@
 
 // Utils
 #include <flectron/utils/platform.hpp>
-#include <flectron/utils/entry.hpp>
 #include <flectron/utils/input.hpp>
 #include <flectron/utils/memory.hpp>
 #include <flectron/utils/profile.hpp>
@@ -31,9 +30,13 @@
 #include <flectron/scene/entity.hpp>
 #include <flectron/scene/datetime.hpp>
 #include <flectron/scene/grid.hpp>
-#include <flectron/scene/camera.hpp>
-#include <flectron/scene/window.hpp>
-#include <flectron/scene/game.hpp>
 
 // Generation
 #include <flectron/generation/wfc.hpp>
+
+// Application
+#include <flectron/application/camera.hpp>
+#include <flectron/application/window.hpp>
+#include <flectron/application/layer.hpp>
+#include <flectron/application/application.hpp>
+#include <flectron/application/entry.hpp>

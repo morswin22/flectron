@@ -4,7 +4,7 @@
 #include <flectron/renderer/renderer.hpp>
 #include <flectron/renderer/light.hpp>
 #include <flectron/generation/wfc.hpp>
-#include <flectron/scene/camera.hpp>
+#include <flectron/application/camera.hpp>
 
 #include <string>
 #include <memory>
@@ -13,26 +13,40 @@
 namespace flectron
 {
 
+  enum WindowFlags
+  {
+    FULLSCREEN = 0x1, VSYNC = 0x2
+  };
+
+  struct WindowProperties
+  {
+    std::string title;
+    int width;
+    int height;
+    float fps;
+    bool fullscreen;
+    bool vsync;
+
+    WindowProperties(const std::string& title, WindowFlags flags);
+    WindowProperties(const std::string& title, int width, int height, WindowFlags flags);
+    WindowProperties(const std::string& title, int width, int height, float fps);
+  };
+
   class Entity;
 
   class Window
   {
+  public:
+    WindowProperties properties;
+
   private:
     GLFWwindow* window;
-
-  public:
-    int width;
-    int height;
-
-  private:
-    std::string title;
 
   public:
     Ref<Shader> shader;
     GLuint rendererBuffer;
 
   private:
-    float desiredFrameRate;
     float desiredInterval;
     float lastMeasuredTime;
 
@@ -40,7 +54,7 @@ namespace flectron
     Camera camera;
 
   public:
-    Window(int width, int height, const std::string& title, const std::string& shaderVertPath, const std::string& shaderFragPath);
+    Window(const WindowProperties& properties, const std::string& shaderVertPath, const std::string& shaderFragPath);
     ~Window();
 
     Window(const Window&) = delete;
@@ -71,7 +85,6 @@ namespace flectron
     void regulateFrameRate();
 
     void draw(Entity body);
-    void draw(Ref<Body>& body);
     void draw(const AABB& aabb, const Color& color);
     void draw(const Vector& a, const Vector& b, float weight, const Color& color);
     void draw(Ref<FontAtlas>& atlas, const Vector& position, const std::string& text, float scale, const Color& color);

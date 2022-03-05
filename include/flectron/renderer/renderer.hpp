@@ -14,7 +14,6 @@ namespace flectron
 
   struct Vector;
   struct Color;
-  class Body;
 
   class Renderer
   {

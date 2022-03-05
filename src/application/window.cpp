@@ -1,4 +1,4 @@
-#include <flectron/scene/window.hpp>
+#include <flectron/application/window.hpp>
 
 #include <flectron/utils/input.hpp>
 #include <flectron/physics/math.hpp>
@@ -16,11 +16,26 @@ namespace flectron
     if (type == GL_DEBUG_TYPE_ERROR) fprintf(stderr, "GL CALLBACK: source = 0x%x, type = 0x%x, id = 0x%x, severity = 0x%x, message = %s\n", source, type, id, severity, message);
   }
   
-  Window::Window(int width, int height, const std::string& title, const std::string& shaderVertPath, const std::string& shaderFragPath) 
-  : window(nullptr), width(width), height(height), title(title),
+  WindowProperties::WindowProperties(const std::string& title, WindowFlags flags)
+    : title(title), width(800), height(600), fps(60.0f), fullscreen(flags & FULLSCREEN), vsync(flags & VSYNC)
+  {
+  }
+
+  WindowProperties::WindowProperties(const std::string& title, int width, int height, WindowFlags flags)
+    : title(title), width(width), height(height), fps(60.0f), fullscreen(false), vsync(flags & VSYNC)
+  {
+  }
+
+  WindowProperties::WindowProperties(const std::string& title, int width, int height, float fps)
+    : title(title), width(width), height(height), fps(fps), fullscreen(false), vsync(false)
+  {
+  }
+
+  Window::Window(const WindowProperties& properties, const std::string& shaderVertPath, const std::string& shaderFragPath) 
+  : properties(properties), window(nullptr),
     shader(nullptr),
-    desiredFrameRate(60.0f), desiredInterval(1.0f / desiredFrameRate), lastMeasuredTime(0), 
-    camera(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f)
+    desiredInterval(1.0f / properties.fps), lastMeasuredTime(0), 
+    camera(-properties.width * 0.5f, properties.width * 0.5f, -properties.height * 0.5f, properties.height * 0.5f)
   {
     if (!glfwInit())
       return;
@@ -28,7 +43,7 @@ namespace flectron
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
-    window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+    window = glfwCreateWindow(properties.width, properties.height, properties.title.c_str(), nullptr, nullptr);
     if (!window)
     {
       glfwTerminate();
@@ -54,7 +69,7 @@ namespace flectron
     glfwSetScrollCallback(window, scrollCallback);
 
     shader = createRef<Shader>(shaderVertPath, shaderFragPath);
-    Renderer::init(shader, width, height, rendererBuffer);
+    Renderer::init(shader, properties.width, properties.height, rendererBuffer);
   }
 
   Window::~Window()
@@ -66,13 +81,13 @@ namespace flectron
 
   void Window::setTitle(const std::string& title)
   {
-    this->title = title;
+    properties.title = title;
     glfwSetWindowTitle(window, title.c_str());
   }
 
   std::string Window::getTitle() const
   {
-    return title;
+    return properties.title;
   }
 
   GLuint Window::getRendererBuffer() const
@@ -96,16 +111,16 @@ namespace flectron
   {
     int newWidth, newHeight;
     glfwGetFramebufferSize(window, &newWidth, &newHeight);
-    if (newWidth == width && newHeight == height)
+    if (newWidth == properties.width && newHeight == properties.height)
       return;
 
-    width = newWidth;
-    height = newHeight;
-    glViewport(0, 0, width, height);
+    properties.width = newWidth;
+    properties.height = newHeight;
+    glViewport(0, 0, properties.width, properties.height);
     const float scale = camera.getScale();
-    camera.setProjection(-width * 0.5f * scale, width * 0.5f * scale, -height * 0.5f * scale, height * 0.5f * scale);
+    camera.setProjection(-properties.width * 0.5f * scale, properties.width * 0.5f * scale, -properties.height * 0.5f * scale, properties.height * 0.5f * scale);
     glBindTexture(GL_TEXTURE_2D, rendererBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, properties.width, properties.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 
@@ -135,8 +150,8 @@ namespace flectron
   {
     glfwSetWindowSize(window, width, height);
     glViewport(0, 0, width, height);
-    this->width = width;
-    this->height = height;
+    properties.width = width;
+    properties.height = height;
     const float scale = camera.getScale();
     camera.setProjection(-width * 0.5f * scale, width * 0.5f * scale, -height * 0.5f * scale, height * 0.5f * scale);
     glBindTexture(GL_TEXTURE_2D, rendererBuffer);
@@ -151,13 +166,13 @@ namespace flectron
 
   void Window::setDesiredFrameRate(float desiredFrameRate)
   {
-    this->desiredFrameRate = desiredFrameRate;
-    desiredInterval = 1.0f / desiredFrameRate;
+    properties.fps = desiredFrameRate;
+    desiredInterval = 1.0f / properties.fps;
   }
 
   float Window::getDesiredFrameRate() const
   {
-    return desiredFrameRate;
+    return properties.fps;
   }
 
   void Window::regulateFrameRate()
@@ -304,7 +319,7 @@ namespace flectron
       nightColor,
       darkness,
       camera.getPosition(),
-      { width * scale, height * scale },
+      { properties.width * scale, properties.height * scale },
       rendererBuffer
     );
   }

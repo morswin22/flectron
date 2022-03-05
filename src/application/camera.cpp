@@ -1,4 +1,4 @@
-#include <flectron/scene/camera.hpp>
+#include <flectron/application/camera.hpp>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <flectron/utils/input.hpp>

@@ -3,16 +3,17 @@
 #include <flectron/physics/math.hpp>
 #include <flectron/physics/collisions.hpp>
 #include <flectron/utils/profile.hpp>
+#include <flectron/application/application.hpp>
 
 namespace flectron 
 {
 
   Environment::Environment()
-    : nightColor(Colors::darkGray()), darkness(0.0f)
+    : gravity(0.0f, -9.81f), nightColor(Colors::darkGray()), darkness(0.0f)
   {}
 
-  Environment::Environment(const Color& nightColor, float darkness)
-    : nightColor(nightColor), darkness(darkness)
+  Environment::Environment(const Vector& gravity, const Color& nightColor, float darkness)
+    : gravity(gravity), nightColor(nightColor), darkness(darkness)
   {}
 
   float Scene::minBodySize = 0.01f * 0.01f;
@@ -26,8 +27,8 @@ namespace flectron
   size_t Scene::minIterations = 1;
   size_t Scene::maxIterations = 128;
 
-  Scene::Scene()
-    : registry(), grid(4, registry), gravity(0.0f, -9.81f), lightRenderer(nullptr), dateTime(nullptr), environment()
+  Scene::Scene(size_t physicsIterations, size_t gridSize)
+    : registry(), grid(static_cast<int>(gridSize), registry), environment(), lightRenderer(nullptr), dateTime(nullptr), physicsIterations(physicsIterations)
   {
     registry.on_construct<PhysicsComponent>().connect<&Scene::onPhysicsComponentCreate>(this);
     registry.on_destroy<SpatialHashGridComponent>().connect<&Scene::onSpatialHashGridComponentDestroy>(this);
@@ -37,9 +38,25 @@ namespace flectron
     registry.on_construct<CircleComponent>().connect<&Scene::onBodyDefiningComponentCreate>();
   }
 
-  void Scene::update(float elapsedTime, size_t iterations)
+  void Scene::update(Application& application)
   {
-    FLECTRON_PROFILE_EVENT("Scene::update");
+    FLECTRON_PROFILE_FRAME("Scene::update");
+
+    auto scriptComponents = getScriptComponents();
+    auto scriptsEnd = scriptComponents.end();
+    auto scriptsIterator = updateScriptComponents(FLECTRON_PHYSICS, scriptComponents.begin(), scriptsEnd);
+
+    updatePhysics(application.elapsedTime, physicsIterations);
+    
+    scriptsIterator = updateScriptComponents(FLECTRON_RENDER, scriptsIterator, scriptsEnd);
+
+    render(application.window);
+    updateScriptComponents(std::numeric_limits<int>::max(), scriptsIterator, scriptsEnd);
+  }
+
+  void Scene::updatePhysics(float elapsedTime, size_t iterations)
+  {
+    FLECTRON_PROFILE_EVENT("Scene::updatePhysics");
 
     if (dateTime)
       dateTime->update(elapsedTime, environment);
@@ -55,7 +72,7 @@ namespace flectron
     {
       // movement
       for (auto entity : view)
-        view.get<PhysicsComponent>(entity).update(registry.get<PositionComponent>(entity), timeStep, gravity);
+        view.get<PhysicsComponent>(entity).update(registry.get<PositionComponent>(entity), timeStep, environment.gravity);
 
       // collisions
       Collision collision;
@@ -151,7 +168,7 @@ namespace flectron
     return entity;
   }
 
-  entt::sparse_set::iterator Scene::updateScriptComponents(int max, entt::sparse_set::iterator iterator, entt::sparse_set::iterator end)
+  ScriptComponentIterator Scene::updateScriptComponents(int max, ScriptComponentIterator iterator, ScriptComponentIterator end)
   {
     for (; iterator != end; ++iterator)
     {
@@ -189,6 +206,18 @@ namespace flectron
   void Scene::onBodyDefiningComponentCreate(entt::registry& registry, entt::entity entity)
   {
     registry.emplace_or_replace<VertexComponent>(entity, Entity(entity, &registry));
+  }
+
+  void Scene::clear()
+  {
+    registry.clear();
+    grid.clear();
+
+    if (lightRenderer != nullptr)
+      lightRenderer->reset();
+
+    if (dateTime != nullptr)
+      dateTime->reset();
   }
 
   void Scene::removeEntity(entt::entity entity)

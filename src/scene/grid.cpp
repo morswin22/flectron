@@ -37,6 +37,12 @@ namespace flectron
         cells[getHash(x, y)].insert(entity);
   }
 
+  void SpatialHashGrid::clear()
+  {
+    cells.clear();
+    queryIdentifier = 0;
+  }
+
   std::vector<entt::entity> SpatialHashGrid::getCells(const AABB& aabb)
   {
     int minX = (int)floor(aabb.min.x / cellSize);

@@ -17,6 +17,7 @@ namespace flectron
   void DateTime::reset()
   {
     time = 0.0f;
+    day = 0;
   }
 
   void DateTime::setTime(float time)

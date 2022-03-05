@@ -26,6 +26,7 @@ namespace flectron
 
     void insert(entt::entity entity);
     void remove(entt::entity entity);
+    void clear();
     
     std::vector<entt::entity> getCells(const AABB& aabb);
 

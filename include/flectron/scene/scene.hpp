@@ -3,20 +3,27 @@
 #include <flectron/scene/datetime.hpp>
 #include <flectron/scene/components.hpp>
 #include <flectron/scene/grid.hpp>
-#include <flectron/scene/window.hpp>
+#include <flectron/application/window.hpp>
 #include <flectron/renderer/light.hpp>
 #include <flectron/scene/entity.hpp>
+
+#define FLECTRON_PHYSICS 100
+#define FLECTRON_RENDER 200
 
 namespace flectron
 {
 
+  class Application;
+  using ScriptComponentIterator = entt::sparse_set::iterator;
+
   struct Environment
   {
+    Vector gravity;
     Color nightColor;
     float darkness;
 
     Environment();
-    Environment(const Color& nightColor, float darkness);
+    Environment(const Vector& gravity, const Color& nightColor, float darkness);
   };
 
   class Scene
@@ -38,15 +45,16 @@ namespace flectron
     SpatialHashGrid grid;
 
   public:
-    Vector gravity; // TODO put gravity in environment
     Environment environment;
     Scope<LightRenderer> lightRenderer;
     Scope<DateTime> dateTime;
+    size_t physicsIterations;
 
   public:
-    Scene();
+    Scene(size_t physicsIterations, size_t gridSize);
 
-    void update(float elapsedTime, size_t iterations);
+    void update(Application& application);
+    void updatePhysics(float elapsedTime, size_t iterations);
     void render(Window& window);
 
     friend class Entity;
@@ -62,7 +70,7 @@ namespace flectron
       return registry.view<ScriptComponent>();
     }
     
-    entt::sparse_set::iterator updateScriptComponents(int max, entt::sparse_set::iterator iterator, entt::sparse_set::iterator end);
+    ScriptComponentIterator updateScriptComponents(int max, ScriptComponentIterator iterator, ScriptComponentIterator end);
 
     template<typename ...Components>
     size_t getEntityCount() const
@@ -84,6 +92,8 @@ namespace flectron
     void onSpatialHashGridComponentDestroy(entt::registry&, entt::entity entity);
     static void onPositionComponentUpdate(entt::registry& registry, entt::entity entity);
     static void onBodyDefiningComponentCreate(entt::registry& registry, entt::entity entity);
+
+    void clear();
 
     void removeEntity(entt::entity entity);
 
