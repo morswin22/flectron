@@ -4,9 +4,13 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <array>
 
 #include <flectron/renderer/color.hpp>
 #include <flectron/physics/vector.hpp>
+#include <flectron/physics/math.hpp>
+#include <flectron/physics/transform.hpp>
+#include <flectron/physics/aabb.hpp>
 #include <flectron/utils/random.hpp>
 #include <flectron/utils/profile.hpp>
 #include <stb_image.h>
@@ -20,7 +24,7 @@ namespace flectron
   static const std::size_t MaxIndexCount = MaxTriangleCount * 3;
   static size_t MaxTextureSlots;
 
-  struct Vertex
+  struct TextureVertex
   {
     glm::vec2 position;
     glm::vec4 color;
@@ -29,62 +33,104 @@ namespace flectron
     float tilingFactor;
   };
 
+  struct CircleVertex
+  {
+    glm::vec2 worldPosition;
+    glm::vec2 localPosition;
+    glm::vec4 color;
+    float thickness;
+    float fade;
+  };
+
+  struct LineVertex
+  {
+    glm::vec2 position;
+    glm::vec4 color;
+  };
+
   struct RendererData
   {
-    GLuint va = 0;
-    GLuint vb = 0;
-    GLuint ib = 0;
+    GLuint frameBuffer = 0;
 
-    Vertex* buffer = nullptr;
-    Vertex* bufferPointer = nullptr;
+    // Texture rendering
+    GLuint textureVertexArray = 0;
+    GLuint textureVertexBuffer = 0;
+    GLuint textureIndexBuffer = 0;
 
-    uint32_t* indices = nullptr;
-    uint32_t* indicesPointer = nullptr;
+    TextureVertex* textureBuffer = nullptr;
+    TextureVertex* textureBufferPointer = nullptr;
 
-    uint32_t indexCount = 0;
-    uint32_t offset = 0;
+    uint32_t* textureIndices = nullptr;
+    uint32_t* textureIndicesPointer = nullptr;
+
+    uint32_t textureIndexCount = 0;
+    uint32_t textureOffset = 0;
 
     GLuint whiteTexture = 0;
 
     uint32_t* textureSlots = nullptr;
     uint32_t textureSlotIndex = 1;
 
-    Ref<Shader> shader = nullptr;
-    GLuint frameBuffer = 0;
+    Scope<Shader> textureShader = nullptr;
+
+    // Circle rendering
+    GLuint circleVertexArray = 0;
+    GLuint circleVertexBuffer = 0;
+    GLuint circleIndexBuffer = 0;
+    
+    CircleVertex* circleBuffer = nullptr;
+    CircleVertex* circleBufferPointer = nullptr;
+
+    uint32_t circleIndexCount = 0;
+
+    glm::vec2 circleVertexPositions[4];
+
+    Scope<Shader> circleShader = nullptr;
+
+    // Line rendering
+    GLuint lineVertexArray = 0;
+    GLuint lineVertexBuffer = 0;
+
+    LineVertex* lineBuffer = nullptr;
+    LineVertex* lineBufferPointer = nullptr;
+
+    uint32_t lineIndexCount = 0;
+
+    Scope<Shader> lineShader = nullptr;
   };
 
   static RendererData rendererData;
 
-  void Renderer::init(Ref<Shader>& shader, int width, int height, GLuint& buffer)
+  void Renderer::initTextureRendering()
   {
-    rendererData.buffer = new Vertex[MaxVertexCount];
+    rendererData.textureBuffer = new TextureVertex[MaxVertexCount];
 
-    glCreateVertexArrays(1, &rendererData.va);
-    glBindVertexArray(rendererData.va);
+    glCreateVertexArrays(1, &rendererData.textureVertexArray);
+    glBindVertexArray(rendererData.textureVertexArray);
 
-    glCreateBuffers(1, &rendererData.vb);
-    glBindBuffer(GL_ARRAY_BUFFER, rendererData.vb);
-    glBufferData(GL_ARRAY_BUFFER, MaxVertexCount * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
+    glCreateBuffers(1, &rendererData.textureVertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, rendererData.textureVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, MaxVertexCount * sizeof(TextureVertex), nullptr, GL_DYNAMIC_DRAW);
 
-    glEnableVertexArrayAttrib(rendererData.va, 0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, position));
+    glEnableVertexArrayAttrib(rendererData.textureVertexArray, 0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), (const void*)offsetof(TextureVertex, position));
 
-    glEnableVertexArrayAttrib(rendererData.va, 1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, color));
+    glEnableVertexArrayAttrib(rendererData.textureVertexArray, 1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), (const void*)offsetof(TextureVertex, color));
 
-    glEnableVertexArrayAttrib(rendererData.va, 2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, textureCoord));
+    glEnableVertexArrayAttrib(rendererData.textureVertexArray, 2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), (const void*)offsetof(TextureVertex, textureCoord));
 
-    glEnableVertexArrayAttrib(rendererData.va, 3);
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, textureIndex));
+    glEnableVertexArrayAttrib(rendererData.textureVertexArray, 3);
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), (const void*)offsetof(TextureVertex, textureIndex));
 
-    glEnableVertexArrayAttrib(rendererData.va, 4);
-    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, tilingFactor));
+    glEnableVertexArrayAttrib(rendererData.textureVertexArray, 4);
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), (const void*)offsetof(TextureVertex, tilingFactor));
 
-    rendererData.indices = new uint32_t[MaxIndexCount];
+    rendererData.textureIndices = new uint32_t[MaxIndexCount];
 
-    glGenBuffers(1, &rendererData.ib);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererData.ib);
+    glGenBuffers(1, &rendererData.textureIndexBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererData.textureIndexBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, MaxIndexCount * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
 
     GLint tempMaxTextureSlots;
@@ -109,56 +155,226 @@ namespace flectron
     for (size_t i = 0; i < MaxTextureSlots; i++)
       samplers[i] = (int)i;
 
-    shader->bind();
-    shader->setUniform1iv("uTextures", samplers, tempMaxTextureSlots);
+    rendererData.textureShader = createScope<Shader>("shaders/texture.vert", "shaders/texture.frag");
+    rendererData.textureShader->bind();
+    rendererData.textureShader->setUniform1iv("uTextures", samplers, tempMaxTextureSlots);
+    rendererData.textureShader->setUniform1f("uZIndex", 0.3f);
     
     delete[] samplers;
+  }
 
-    rendererData.shader = shader;
+  void Renderer::initCircleRendering()
+  {
+    rendererData.circleBuffer = new CircleVertex[MaxVertexCount];
 
+    glCreateVertexArrays(1, &rendererData.circleVertexArray);
+    glBindVertexArray(rendererData.circleVertexArray);
+
+    glCreateBuffers(1, &rendererData.circleVertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, rendererData.circleVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, MaxVertexCount * sizeof(CircleVertex), nullptr, GL_DYNAMIC_DRAW);
+
+    glEnableVertexArrayAttrib(rendererData.circleVertexArray, 0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(CircleVertex), (const void*)offsetof(CircleVertex, worldPosition));
+
+    glEnableVertexArrayAttrib(rendererData.circleVertexArray, 1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(CircleVertex), (const void*)offsetof(CircleVertex, localPosition));
+
+    glEnableVertexArrayAttrib(rendererData.circleVertexArray, 2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(CircleVertex), (const void*)offsetof(CircleVertex, color));
+
+    glEnableVertexArrayAttrib(rendererData.circleVertexArray, 3);
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(CircleVertex), (const void*)offsetof(CircleVertex, fade));
+
+    glEnableVertexArrayAttrib(rendererData.circleVertexArray, 4);
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(CircleVertex), (const void*)offsetof(CircleVertex, thickness));
+
+    uint32_t* indices = new uint32_t[MaxIndexCount];
+    uint32_t offset = 0;
+
+    for (uint32_t i = 0; i < MaxIndexCount; i += 6)
+    {
+      indices[i + 0] = offset + 0;
+      indices[i + 1] = offset + 1;
+      indices[i + 2] = offset + 2;
+
+      indices[i + 3] = offset + 2;
+      indices[i + 4] = offset + 3;
+      indices[i + 5] = offset + 0;
+
+      offset += 4;
+    }
+
+    glCreateBuffers(1, &rendererData.circleIndexBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererData.circleIndexBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, MaxIndexCount * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+
+    delete[] indices;
+
+    rendererData.circleVertexPositions[0] = glm::vec2(-0.5f, -0.5f) * 2.0f;
+		rendererData.circleVertexPositions[1] = glm::vec2( 0.5f, -0.5f) * 2.0f;
+		rendererData.circleVertexPositions[2] = glm::vec2( 0.5f,  0.5f) * 2.0f;
+		rendererData.circleVertexPositions[3] = glm::vec2(-0.5f,  0.5f) * 2.0f;
+
+    rendererData.circleShader = createScope<Shader>("shaders/circle.vert", "shaders/circle.frag");
+    rendererData.circleShader->bind();
+    rendererData.circleShader->setUniform1f("uZIndex", 0.2f);
+  }
+
+  void Renderer::initLineRendering()
+  {
+    rendererData.lineBuffer = new LineVertex[MaxVertexCount];
+
+    glCreateVertexArrays(1, &rendererData.lineVertexArray);
+    glBindVertexArray(rendererData.lineVertexArray);
+
+    glCreateBuffers(1, &rendererData.lineVertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, rendererData.lineVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, MaxVertexCount * sizeof(LineVertex), nullptr, GL_DYNAMIC_DRAW);
+
+    glEnableVertexArrayAttrib(rendererData.lineVertexArray, 0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (const void*)offsetof(LineVertex, position));
+
+    glEnableVertexArrayAttrib(rendererData.lineVertexArray, 1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (const void*)offsetof(LineVertex, color));
+
+    rendererData.lineShader = createScope<Shader>("shaders/line.vert", "shaders/line.frag");
+    rendererData.lineShader->bind();
+    rendererData.lineShader->setUniform1f("uZIndex", 0.1f);
+
+    debugLineWidth(2.0f);
+  }
+
+  void Renderer::init(int width, int height, GLuint& buffer)
+  {
+    initTextureRendering();
+    initCircleRendering();
+    initLineRendering();
     rendererData.frameBuffer = createFrameBuffer(width, height, buffer);
   }
 
   void Renderer::shutdown()
   {
-    glDeleteVertexArrays(1, &rendererData.va);
-    glDeleteBuffers(1, &rendererData.vb);
-    glDeleteBuffers(1, &rendererData.ib);
+    glDeleteVertexArrays(1, &rendererData.textureVertexArray);
+    glDeleteBuffers(1, &rendererData.textureVertexBuffer);
+    glDeleteBuffers(1, &rendererData.textureIndexBuffer);
     glDeleteTextures(1, &rendererData.whiteTexture);
+
+    glDeleteVertexArrays(1, &rendererData.circleVertexArray);
+    glDeleteBuffers(1, &rendererData.circleVertexBuffer);
+    glDeleteBuffers(1, &rendererData.circleIndexBuffer);
+
+    glDeleteVertexArrays(1, &rendererData.lineVertexArray);
+    glDeleteBuffers(1, &rendererData.lineVertexBuffer);
+
     if (rendererData.frameBuffer != 0)
       glDeleteFramebuffers(1, &rendererData.frameBuffer);
 
-    delete[] rendererData.buffer;
-    delete[] rendererData.indices;
+    delete[] rendererData.textureBuffer;
+    delete[] rendererData.textureIndices;
     delete[] rendererData.textureSlots;
+
+    delete[] rendererData.circleBuffer;
+
+    delete[] rendererData.lineBuffer;
+  }
+
+  void Renderer::setViewProjectionMatrix(const Camera& camera)
+  {
+    const auto viewProjectionMatrix = camera.getViewProjectionMatrix(); 
+    rendererData.textureShader->bind();
+    rendererData.textureShader->setUniformMat4f("uViewProjection", viewProjectionMatrix);
+    rendererData.circleShader->bind();
+    rendererData.circleShader->setUniformMat4f("uViewProjection", viewProjectionMatrix);
+    rendererData.lineShader->bind();
+    rendererData.lineShader->setUniformMat4f("uViewProjection", viewProjectionMatrix);
   }
 
   void Renderer::beginBatch()
   {
-    rendererData.bufferPointer = rendererData.buffer;
-    rendererData.indicesPointer = rendererData.indices;
-    rendererData.indexCount = 0;
-    rendererData.offset = 0;
-    rendererData.textureSlotIndex = 1;
+    beginTextureBatch();
+    beginCircleBatch();
+    beginLineBatch();
   }
 
   void Renderer::endBatch()
   {
-    rendererData.shader->bind();
+    endTextureBatch();
+    endCircleBatch();
+    endLineBatch();
+  }
 
-    GLsizeiptr quadSize = (uint8_t*)rendererData.bufferPointer - (uint8_t*)rendererData.buffer;
-    glBindBuffer(GL_ARRAY_BUFFER, rendererData.vb);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, quadSize, rendererData.buffer);
+  void Renderer::beginTextureBatch()
+  {
+    rendererData.textureBufferPointer = rendererData.textureBuffer;
+    rendererData.textureIndicesPointer = rendererData.textureIndices;
+    rendererData.textureIndexCount = 0;
+    rendererData.textureOffset = 0;
+    rendererData.textureSlotIndex = 1;
+  }
 
-    GLsizeiptr indexSize = (uint8_t*)rendererData.indicesPointer - (uint8_t*)rendererData.indices;
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererData.ib);
-    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indexSize, rendererData.indices);
+  void Renderer::endTextureBatch()
+  {
+    if (rendererData.textureIndexCount == 0)
+      return;
+
+    rendererData.textureShader->bind();
+
+    GLsizeiptr textureSize = (uint8_t*)rendererData.textureBufferPointer - (uint8_t*)rendererData.textureBuffer;
+    glBindBuffer(GL_ARRAY_BUFFER, rendererData.textureVertexBuffer);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, textureSize, rendererData.textureBuffer);
+
+    GLsizeiptr indexSize = (uint8_t*)rendererData.textureIndicesPointer - (uint8_t*)rendererData.textureIndices;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererData.textureIndexBuffer);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indexSize, rendererData.textureIndices);
 
     for (uint32_t i = 0; i < rendererData.textureSlotIndex; i++)
       glBindTextureUnit(i, rendererData.textureSlots[i]);
 
-    glBindVertexArray(rendererData.va);
-    glDrawElements(GL_TRIANGLES, rendererData.indexCount, GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(rendererData.textureVertexArray);
+    glDrawElements(GL_TRIANGLES, rendererData.textureIndexCount, GL_UNSIGNED_INT, nullptr);
+  }
+
+  void Renderer::beginCircleBatch()
+  {
+    rendererData.circleBufferPointer = rendererData.circleBuffer;
+    rendererData.circleIndexCount = 0;
+  }
+
+  void Renderer::endCircleBatch()
+  {
+    if (rendererData.circleIndexCount == 0)
+      return;
+
+    rendererData.circleShader->bind();
+
+    GLsizeiptr circleSize = (uint8_t*)rendererData.circleBufferPointer - (uint8_t*)rendererData.circleBuffer;
+    glBindBuffer(GL_ARRAY_BUFFER, rendererData.circleVertexBuffer);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, circleSize, rendererData.circleBuffer);
+
+    glBindVertexArray(rendererData.circleVertexArray);
+    glDrawElements(GL_TRIANGLES, rendererData.circleIndexCount, GL_UNSIGNED_INT, nullptr);
+  }
+
+  void Renderer::beginLineBatch()
+  {
+    rendererData.lineBufferPointer = rendererData.lineBuffer;
+    rendererData.lineIndexCount = 0;
+  }
+
+  void Renderer::endLineBatch()
+  {
+    if (rendererData.lineIndexCount == 0)
+      return;
+
+    rendererData.lineShader->bind();
+
+    GLsizeiptr lineSize = (uint8_t*)rendererData.lineBufferPointer - (uint8_t*)rendererData.lineBuffer;
+    glBindBuffer(GL_ARRAY_BUFFER, rendererData.lineVertexBuffer);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, lineSize, rendererData.lineBuffer);
+
+    glBindVertexArray(rendererData.lineVertexArray);
+    glDrawArrays(GL_LINES, 0, rendererData.lineIndexCount);
   }
 
   void Renderer::onscreen()
@@ -171,14 +387,193 @@ namespace flectron
     glBindFramebuffer(GL_FRAMEBUFFER, rendererData.frameBuffer);
   }
 
-  void Renderer::draw(const std::vector<Vector>& vertices, const std::vector<size_t>& triangles, const Color& color)
+  void Renderer::square(const Vector& position, float size, const Color& color)
+  {
+    square(position, size, rendererData.whiteTexture, 1.0f, { 0.0f, 0.0f, 1.0f, 1.0f }, color);
+  }
+
+  void Renderer::square(const Vector& position, float size, uint32_t textureID, float tilingFactor, const Color& tint)
+  {
+    square(position, size, textureID, tilingFactor, { 0.0f, 0.0f, 1.0f, 1.0f }, tint);
+  }
+
+  void Renderer::square(const Vector& position, float size, uint32_t textureID, const glm::vec4& texturePosition, const Color& tint)
+  {
+    square(position, size, textureID, 1.0f, texturePosition, tint);
+  }
+
+  void Renderer::square(const Vector& position, float size, uint32_t textureID, float tilingFactor, const glm::vec4& texturePosition, const Color& tint)
+  {
+    // TODO for now assume that position is the left most corner
+    quad(
+      { position.x, position.y },
+      { position.x + size, position.y },
+      { position.x + size, position.y + size },
+      { position.x, position.y + size },
+      textureID, tilingFactor, texturePosition, tint);
+  }
+
+  void Renderer::square(const Vector& position, float size, float rotation, const Color& color)
+  {
+    square(position, size, rotation, rendererData.whiteTexture, 1.0f, { 0.0f, 0.0f, 1.0f, 1.0f }, color);
+  }
+
+  void Renderer::square(const Vector& position, float size, float rotation, uint32_t textureID, float tilingFactor, const Color& tint)
+  {
+    square(position, size, rotation, textureID, tilingFactor, { 0.0f, 0.0f, 1.0f, 1.0f }, tint);
+  }
+
+  void Renderer::square(const Vector& position, float size, float rotation, uint32_t textureID, const glm::vec4& texturePosition, const Color& tint)
+  {
+    square(position, size, rotation, textureID, 1.0f, texturePosition, tint);
+  }
+
+  void Renderer::square(const Vector& position, float size, float rotation, uint32_t textureID, float tilingFactor, const glm::vec4& texturePosition, const Color& tint)
+  {
+    // TODO for now assume that the rotation is around the corner of the square
+    Transform tf(position, rotation);
+    quad(
+      transform({ position.x, position.y }, tf),
+      transform({ position.x + size, position.y }, tf),
+      transform({ position.x + size, position.y + size }, tf),
+      transform({ position.x, position.y + size }, tf),
+      textureID, tilingFactor, texturePosition, tint);
+  }
+
+  void Renderer::rect(const Vector& position, const Vector& size, const Color& color)
+  {
+    rect(position, size, rendererData.whiteTexture, 1.0f, { 0.0f, 0.0f, 1.0f, 1.0f }, color);
+  }
+
+  void Renderer::rect(const Vector& position, const Vector& size, uint32_t textureID, float tilingFactor, const Color& tint)
+  {
+    rect(position, size, textureID, tilingFactor, { 0.0f, 0.0f, 1.0f, 1.0f }, tint);
+  }
+  void Renderer::rect(const Vector& position, const Vector& size, uint32_t textureID, const glm::vec4& texturePosition, const Color& tint)
+  {
+    rect(position, size, textureID, 1.0f, texturePosition, tint);
+  }
+
+  void Renderer::rect(const Vector& position, const Vector& size, uint32_t textureID, float tilingFactor, const glm::vec4& texturePosition, const Color& tint)
+  {
+    // TODO for now assume that position is the left most corner
+    quad(
+      { position.x, position.y },
+      { position.x + size.x, position.y },
+      { position.x + size.x, position.y + size.y },
+      { position.x, position.y + size.y },
+      textureID, tilingFactor, texturePosition, tint);
+  }
+
+  void Renderer::rect(const Vector& position, const Vector& size, float rotation, const Color& color)
+  {
+    rect(position, size, rotation, rendererData.whiteTexture, 1.0f, { 0.0f, 0.0f, 1.0f, 1.0f }, color);
+  }
+
+  void Renderer::rect(const Vector& position, const Vector& size, float rotation, uint32_t textureID, float tilingFactor, const Color& tint)
+  {
+    rect(position, size, rotation, textureID, tilingFactor, { 0.0f, 0.0f, 1.0f, 1.0f }, tint);
+  }
+
+  void Renderer::rect(const Vector& position, const Vector& size, float rotation, uint32_t textureID, const glm::vec4& texturePosition, const Color& tint)
+  {
+    rect(position, size, rotation, textureID, 1.0f, texturePosition, tint);
+  }
+
+  void Renderer::rect(const Vector& position, const Vector& size, float rotation, uint32_t textureID, float tilingFactor, const glm::vec4& texturePosition, const Color& tint)
+  {
+    // TODO for now assume that the rotation is around the corner of the rectangle
+    Transform tf(position, rotation);
+    quad(
+      transform({ position.x, position.y }, tf),
+      transform({ position.x + size.x, position.y }, tf),
+      transform({ position.x + size.x, position.y + size.y }, tf),
+      transform({ position.x, position.y + size.y }, tf),
+      textureID, tilingFactor, texturePosition, tint);
+  }
+
+  void Renderer::quad(const Vector& a, const Vector& b, const Vector& c, const Vector& d, const Color& color)
+  {
+    quad(a, b, c, d, rendererData.whiteTexture, 1.0f, { 0.0f, 0.0f, 1.0f, 1.0f }, color);
+  }
+
+  void Renderer::quad(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, float tilingFactor, const Color& tint)
+  {
+    quad(a, b, c, d, textureID, tilingFactor, { 0.0f, 0.0f, 1.0f, 1.0f }, tint);
+  }
+
+  void Renderer::quad(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, const glm::vec4& texturePosition, const Color& tint)
+  {
+    quad(a, b, c, d, textureID, 1.0f, texturePosition, tint);
+  }
+
+  void Renderer::quad(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, float tilingFactor, const glm::vec4& texturePosition, const Color& tint)
+  {
+    if (rendererData.textureIndexCount + 6 >= MaxIndexCount || rendererData.textureSlotIndex >= MaxTextureSlots)
+    {
+      endTextureBatch();
+      beginTextureBatch();
+    }
+
+    const std::array<glm::vec2, 4> vertices = { { { a.x, a.y }, { b.x, b.y }, { c.x, c.y }, { d.x, d.y } } };
+    const std::array<glm::vec2, 4> textureCoords = { { 
+      { texturePosition.x, texturePosition.y }, 
+      { texturePosition.x + texturePosition.p, texturePosition.y }, 
+      { texturePosition.x + texturePosition.p, texturePosition.y + texturePosition.q }, 
+      { texturePosition.x, texturePosition.y + texturePosition.q } } };
+    const glm::vec4 color = { tint.r, tint.g, tint.b, tint.a };
+
+    float textureIndex = 0.0f;
+    for (uint32_t i = 1; i < rendererData.textureSlotIndex; i++)
+    {
+      if (rendererData.textureSlots[i] == textureID)
+      {
+        textureIndex = (float)i;
+        break;
+      }
+    }
+
+    if (textureIndex == 0.0f)
+    {
+      textureIndex = (float)rendererData.textureSlotIndex;
+      rendererData.textureSlots[rendererData.textureSlotIndex] = textureID;
+      rendererData.textureSlotIndex++;
+    }
+
+    for (uint32_t i = 0; i < 4; i++)
+    {
+      rendererData.textureBufferPointer->position = vertices[i];
+      rendererData.textureBufferPointer->color = color;
+      rendererData.textureBufferPointer->textureCoord = textureCoords[i];
+      rendererData.textureBufferPointer->textureIndex = textureIndex;
+      rendererData.textureBufferPointer->tilingFactor = tilingFactor;
+      rendererData.textureBufferPointer++;
+    }
+
+    rendererData.textureIndices[rendererData.textureIndexCount++] = rendererData.textureOffset + 0;
+    rendererData.textureIndices[rendererData.textureIndexCount++] = rendererData.textureOffset + 1;
+    rendererData.textureIndices[rendererData.textureIndexCount++] = rendererData.textureOffset + 2;
+    rendererData.textureIndices[rendererData.textureIndexCount++] = rendererData.textureOffset + 2;
+    rendererData.textureIndices[rendererData.textureIndexCount++] = rendererData.textureOffset + 3;
+    rendererData.textureIndices[rendererData.textureIndexCount++] = rendererData.textureOffset + 0;
+    rendererData.textureIndicesPointer += 6;
+
+    rendererData.textureOffset += 4;
+  }
+
+  void Renderer::triangle(const Vector& a, const Vector& b, const Vector& c, const Color& color)
+  {
+    polygon({ a, b, c }, { 0u, 1u, 2u }, color);
+  }
+
+  void Renderer::polygon(const std::vector<Vector>& vertices, const std::vector<size_t>& triangles, const Color& color)
   {
     int numTriangles = (vertices.size() - 2) * 3;
 
-    if (rendererData.indexCount + numTriangles >= MaxIndexCount)
+    if (rendererData.textureIndexCount + numTriangles >= MaxIndexCount)
     {
-      endBatch();
-      beginBatch();
+      endTextureBatch();
+      beginTextureBatch();
     }
 
     constexpr glm::vec2 textureCoord(0.0f, 0.0f);
@@ -187,160 +582,199 @@ namespace flectron
 
     for (int i = 0; i < vertices.size(); i++)
     {
-      rendererData.bufferPointer->position = { vertices[i].x, vertices[i].y };
-      rendererData.bufferPointer->color = { color.r, color.g, color.b, color.a };
-      rendererData.bufferPointer->textureCoord = textureCoord;
-      rendererData.bufferPointer->textureIndex = whiteTexture;
-      rendererData.bufferPointer->tilingFactor = tilingFactor;
-      rendererData.bufferPointer++;
+      rendererData.textureBufferPointer->position = { vertices[i].x, vertices[i].y };
+      rendererData.textureBufferPointer->color = { color.r, color.g, color.b, color.a };
+      rendererData.textureBufferPointer->textureCoord = textureCoord;
+      rendererData.textureBufferPointer->textureIndex = whiteTexture;
+      rendererData.textureBufferPointer->tilingFactor = tilingFactor;
+      rendererData.textureBufferPointer++;
     }
 
     for (int i = 0; i < numTriangles; i++)
     {
-      rendererData.indices[rendererData.indexCount++] = triangles[i] + rendererData.offset;
-      rendererData.indicesPointer++;
+      rendererData.textureIndices[rendererData.textureIndexCount++] = triangles[i] + rendererData.textureOffset;
+      rendererData.textureIndicesPointer++;
     }
-    rendererData.offset += vertices.size();
+    rendererData.textureOffset += vertices.size();
   }
 
-  void Renderer::draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, float tilingFactor, const Color& tint)
+  void Renderer::line(const Vector& a, const Vector& b, const Color& color)
   {
-    if (rendererData.indexCount + 6 >= MaxIndexCount || rendererData.textureSlotIndex >= MaxTextureSlots)
+    line(a, b, 1.0f, color);
+  }
+
+  void Renderer::line(const Vector& a, const Vector& b, float thickness, const Color& color)
+  {
+    Vector axis = normalize(b - a) * thickness;
+    Vector normal = normalize({ -axis.y, axis.x  }) * thickness;
+
+    quad(
+      a + normal - axis,
+      a - normal - axis,
+      b - normal + axis,
+      b + normal + axis,
+      color);
+  }
+
+  void Renderer::debugLine(const Vector& a, const Vector& b, const Color& color)
+  {
+    if (rendererData.lineIndexCount + 2 >= MaxIndexCount)
     {
-      endBatch();
-      beginBatch();
+      endLineBatch();
+      beginLineBatch();
     }
 
-    const glm::vec4 color( tint.r, tint.g, tint.b, tint.a );
+    rendererData.lineBufferPointer->position = { a.x, a.y };
+    rendererData.lineBufferPointer->color = { color.r, color.g, color.b, color.a };
+    rendererData.lineBufferPointer++;
 
-    float textureIndex = 0.0f;
-    for (uint32_t i = 1; i < rendererData.textureSlotIndex; i++)
+    rendererData.lineBufferPointer->position = { b.x, b.y };
+    rendererData.lineBufferPointer->color = { color.r, color.g, color.b, color.a };
+    rendererData.lineBufferPointer++;
+
+    rendererData.lineIndexCount += 2;
+  }
+
+  void Renderer::debugLineWidth(float width)
+  {
+    glLineWidth(width);
+  }
+
+  void Renderer::point(const Vector& position, const Color& color)
+  {
+    circle(position, 1.0f, 1.0f, 0.005f, color);
+  }
+
+  void Renderer::circle(const Vector& center, float radius, const Color& color)
+  {
+    circle(center, radius, 1.0f, 0.005f, color);
+  }
+
+  void Renderer::circle(const Vector& center, float radius, float thickness, const Color& color)
+  {
+    circle(center, radius, thickness, 0.005f, color);
+  }
+
+  void Renderer::circle(const Vector& center, float radius, float thickness, float fade, const Color& color)
+  {
+    ellipse(
+      { center.x - radius, center.y - radius }, 
+      { center.x + radius, center.y - radius }, 
+      { center.x + radius, center.y + radius }, 
+      { center.x - radius, center.y + radius },
+      thickness, fade, color);
+  }
+
+  void Renderer::ellipse(const Vector& center, const Vector& size, const Color& color)
+  {
+    ellipse(center, size, 1.0f, 0.005f, color);
+  }
+  
+  void Renderer::ellipse(const Vector& center, const Vector& size, float thickness, const Color& color)
+  {
+    ellipse(center, size, thickness, 0.005f, color);
+  }
+
+  void Renderer::ellipse(const Vector& center, const Vector& size, float thickness, float fade, const Color& color)
+  {
+    ellipse(
+      { center.x - size.x, center.y - size.y }, 
+      { center.x + size.x, center.y - size.y }, 
+      { center.x + size.x, center.y + size.y }, 
+      { center.x - size.x, center.y + size.y },
+      thickness, fade, color);
+  }
+
+  // void Renderer::ellipse(const Vector& center, const Vector& size, float rotation, const Color& color)
+  // {
+  //   ellipse(center, size, rotation, 1.0f, 0.005f, color);
+  // }
+
+  // void Renderer::ellipse(const Vector& center, const Vector& size, float rotation, float thickness, const Color& color)
+  // {
+  //   ellipse(center, size, rotation, thickness, 0.005f, color);
+  // }
+
+  void Renderer::ellipse(const Vector& center, const Vector& size, float rotation, float thickness, float fade, const Color& color)
+  {
+    Transform tf(center, rotation);
+    ellipse(
+      transform({ center.x - size.x, center.y - size.y }, tf),
+      transform({ center.x + size.x, center.y - size.y }, tf),
+      transform({ center.x + size.x, center.y + size.y }, tf),
+      transform({ center.x - size.x, center.y + size.y }, tf),
+      thickness, fade, color);
+  }
+
+  void Renderer::ellipse(const Vector& a, const Vector& b, const Vector& c, const Vector& d, const Color& color)
+  {
+    ellipse(a, b, c, d, 1.0f, 0.005f, color);
+  }
+
+  void Renderer::ellipse(const Vector& a, const Vector& b, const Vector& c, const Vector& d, float thickness, const Color& color)
+  {
+    ellipse(a, b, c, d, thickness, 0.005f, color);
+  }
+
+  void Renderer::ellipse(const Vector& a, const Vector& b, const Vector& c, const Vector& d, float thickness, float fade, const Color& color)
+  {
+    if (rendererData.circleIndexCount + 6 >= MaxIndexCount)
     {
-      if (rendererData.textureSlots[i] == textureID)
+      endCircleBatch();
+      beginCircleBatch();
+    }
+
+    const std::array<glm::vec2, 4> vertices = { { 
+      { a.x, a.y },
+      { b.x, b.y },
+      { c.x, c.y },
+      { d.x, d.y } } };
+
+    for (size_t i = 0; i < vertices.size(); i++)
+    {
+      rendererData.circleBufferPointer->worldPosition = vertices[i];
+      rendererData.circleBufferPointer->localPosition = rendererData.circleVertexPositions[i];
+      rendererData.circleBufferPointer->color = { color.r, color.g, color.b, color.a };
+      rendererData.circleBufferPointer->thickness = thickness;
+      rendererData.circleBufferPointer->fade = fade;
+      rendererData.circleBufferPointer++;
+    }
+
+    rendererData.circleIndexCount += 6;
+  }
+
+  void Renderer::text(Ref<FontAtlas>& atlas, const Vector& position, const std::string& text, float scale, const Color& color)
+  {
+    std::stringstream ss(text);
+    std::string line;
+
+    if (text.size() == 0.0f)
+      return;
+
+    float lineOffset = 0.0f;
+
+    while(std::getline(ss, line, '\n'))
+    {
+      glm::vec4* texturePositions = new glm::vec4[line.size()];
+      GLuint texture = atlas->get(line, texturePositions);
+      glm::vec2 offsets = atlas->getOffsets() * scale;
+
+      for (float i = 0; i < line.size(); i++)
       {
-        textureIndex = (float)i;
-        break;
+        quad(
+          {position.x + i * offsets.x, position.y - lineOffset}, 
+          {position.x + (i + 1.0f) * offsets.x, position.y - lineOffset}, 
+          {position.x + (i + 1.0f) * offsets.x, position.y - offsets.y - lineOffset}, 
+          {position.x + i * offsets.x, position.y - offsets.y - lineOffset}, 
+          texture, 
+          texturePositions[static_cast<int>(i)],
+          color
+        );
       }
+
+      delete[] texturePositions;
+      lineOffset += offsets.y;
     }
-
-    if (textureIndex == 0.0f)
-    {
-      textureIndex = (float)rendererData.textureSlotIndex;
-      rendererData.textureSlots[rendererData.textureSlotIndex] = textureID;
-      rendererData.textureSlotIndex++;
-    }
-
-    rendererData.bufferPointer->position = { a.x, a.y };
-    rendererData.bufferPointer->color = color;
-    rendererData.bufferPointer->textureCoord = { 0.0f, 0.0f };
-    rendererData.bufferPointer->textureIndex = textureIndex;
-    rendererData.bufferPointer->tilingFactor = tilingFactor;
-    rendererData.bufferPointer++;
-
-    rendererData.bufferPointer->position = { b.x, b.y };
-    rendererData.bufferPointer->color = color;
-    rendererData.bufferPointer->textureCoord = { 1.0f, 0.0f };
-    rendererData.bufferPointer->textureIndex = textureIndex;
-    rendererData.bufferPointer->tilingFactor = tilingFactor;
-    rendererData.bufferPointer++;
-
-    rendererData.bufferPointer->position = { c.x, c.y };
-    rendererData.bufferPointer->color = color;
-    rendererData.bufferPointer->textureCoord = { 1.0f, 1.0f };
-    rendererData.bufferPointer->textureIndex = textureIndex;
-    rendererData.bufferPointer->tilingFactor = tilingFactor;
-    rendererData.bufferPointer++;
-
-    rendererData.bufferPointer->position = { d.x, d.y };
-    rendererData.bufferPointer->color = color;
-    rendererData.bufferPointer->textureCoord = { 0.0f, 1.0f };
-    rendererData.bufferPointer->textureIndex = textureIndex;
-    rendererData.bufferPointer->tilingFactor = tilingFactor;
-    rendererData.bufferPointer++;
-
-    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 0;
-    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 1;
-    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 2;
-    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 2;
-    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 3;
-    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 0;
-    rendererData.indicesPointer += 6;
-
-    rendererData.offset += 4;
-  }
-
-  void Renderer::draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, uint32_t textureID, const glm::vec4& texturePosition, const Color& tint)
-  {
-    if (rendererData.indexCount + 6 >= MaxIndexCount || rendererData.textureSlotIndex >= MaxTextureSlots)
-    {
-      endBatch();
-      beginBatch();
-    }
-
-    const glm::vec4 color = { tint.r, tint.g, tint.b, tint.a };
-    const float tilingFactor = 1.0f;
-
-    float textureIndex = 0.0f;
-    for (uint32_t i = 1; i < rendererData.textureSlotIndex; i++)
-    {
-      if (rendererData.textureSlots[i] == textureID)
-      {
-        textureIndex = (float)i;
-        break;
-      }
-    }
-
-    if (textureIndex == 0.0f)
-    {
-      textureIndex = (float)rendererData.textureSlotIndex;
-      rendererData.textureSlots[rendererData.textureSlotIndex] = textureID;
-      rendererData.textureSlotIndex++;
-    }
-
-    rendererData.bufferPointer->position = { a.x, a.y };
-    rendererData.bufferPointer->color = color;
-    rendererData.bufferPointer->textureCoord = { texturePosition.x, texturePosition.y };
-    rendererData.bufferPointer->textureIndex = textureIndex;
-    rendererData.bufferPointer->tilingFactor = tilingFactor;
-    rendererData.bufferPointer++;
-
-    rendererData.bufferPointer->position = { b.x, b.y };
-    rendererData.bufferPointer->color = color;
-    rendererData.bufferPointer->textureCoord = { texturePosition.x + texturePosition.p, texturePosition.y };
-    rendererData.bufferPointer->textureIndex = textureIndex;
-    rendererData.bufferPointer->tilingFactor = tilingFactor;
-    rendererData.bufferPointer++;
-
-    rendererData.bufferPointer->position = { c.x, c.y };
-    rendererData.bufferPointer->color = color;
-    rendererData.bufferPointer->textureCoord = { texturePosition.x + texturePosition.p, texturePosition.y + texturePosition.q };
-    rendererData.bufferPointer->textureIndex = textureIndex;
-    rendererData.bufferPointer->tilingFactor = tilingFactor;
-    rendererData.bufferPointer++;
-
-    rendererData.bufferPointer->position = { d.x, d.y };
-    rendererData.bufferPointer->color = color;
-    rendererData.bufferPointer->textureCoord = { texturePosition.x, texturePosition.y + texturePosition.q };
-    rendererData.bufferPointer->textureIndex = textureIndex;
-    rendererData.bufferPointer->tilingFactor = tilingFactor;
-    rendererData.bufferPointer++;
-
-    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 0;
-    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 1;
-    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 2;
-    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 2;
-    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 3;
-    rendererData.indices[rendererData.indexCount++] = rendererData.offset + 0;
-    rendererData.indicesPointer += 6;
-
-    rendererData.offset += 4;
-  }
-
-  void Renderer::draw(const Vector& a, const Vector& b, const Vector& c, const Vector& d, TextureAtlas* textureAtlas, float x, float y, float w, float h, const Color& tint)
-  {
-    glm::vec4 texturePosition;
-    GLuint textureID = textureAtlas->get(x, y, w, h, texturePosition);
-    draw(a, b, c, d, textureID, texturePosition, tint);
   }
 
 }

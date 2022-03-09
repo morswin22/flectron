@@ -30,7 +30,9 @@ namespace flectron { namespace WFC {
     glm::vec4 ab;
     glm::vec4 cd;
 
-    Tile(GLuint texture, const glm::vec4& textureCoords, const glm::vec4& ab, const glm::vec4& cd) : texture(texture), textureCoords(textureCoords), ab(ab), cd(cd) {}
+    Tile(GLuint texture, const glm::vec4& textureCoords, const glm::vec4& ab, const glm::vec4& cd);
+
+    void render(const Vector& position, float size, const Color& color = Colors::white()) const;
   };
 
   struct Output {

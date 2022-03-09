@@ -6,16 +6,19 @@
 #include <flectron/renderer/color.hpp>
 #include <flectron/scene/components.hpp>
 
+#ifndef FLECTRON_NUM_LIGHTS
+#define FLECTRON_NUM_LIGHTS 512
+#endif
+
 namespace flectron
 {
 
-  // TODO maybe convert into a singleton
   class LightRenderer
   {
   private:
     Ref<Shader> shader;
-    float lightsData[128 * 3];
-    float lightsColors[128 * 4];
+    float lightsData[FLECTRON_NUM_LIGHTS * 3];
+    float lightsColors[FLECTRON_NUM_LIGHTS * 4];
 
     int currentLight;
     int currentData;

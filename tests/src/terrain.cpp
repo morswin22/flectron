@@ -34,7 +34,7 @@ public:
 
     for (size_t y = 0; y < generator->height; ++y)
       for (size_t x = 0; x < generator->width; ++x)
-        application.window.draw({(x + xOffset) * tileSize, (y + yOffset) * tileSize}, tileSize, tiles[x][y], Colors::white());
+        tiles[x][y]->render({(x + xOffset) * tileSize, (y + yOffset) * tileSize}, tileSize);
   }
 };
 

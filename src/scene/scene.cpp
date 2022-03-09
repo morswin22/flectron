@@ -22,7 +22,7 @@ namespace flectron
   float Scene::minBodyDensity = 0.5f; // half of water density
   float Scene::maxBodyDensity = 21.4f; // platinum density
 
-  int Scene::numCircleVerticies = 64;
+  int Scene::numCircleVerticies = 24; // TODO make this be appropriate for the body size
 
   size_t Scene::minIterations = 1;
   size_t Scene::maxIterations = 128;
@@ -131,7 +131,7 @@ namespace flectron
     auto renderables = registry.view<VertexComponent>();
     for (auto entity : renderables)
       if (registry.any_of<StrokeComponent, FillComponent, AnimationComponent, TextureComponent>(entity))
-        window.draw({ entity, &registry });
+        Entity(entity, &registry).render();
 
     auto lights = registry.view<LightComponent>();
     if (!lights.empty())
@@ -144,7 +144,15 @@ namespace flectron
     }
 
     if (lightRenderer != nullptr)
-      window.draw(lightRenderer, environment.nightColor, environment.darkness);
+    {
+      const float scale = window.camera.getScale();
+      lightRenderer->render(
+        environment.nightColor,
+        environment.darkness,
+        window.camera.getPosition(),
+        { window.properties.width * scale, window.properties.height * scale },
+        window.rendererBuffer);
+    }
   }
 
   Entity Scene::createEntity(const std::string& name, const Vector& position, float rotation)

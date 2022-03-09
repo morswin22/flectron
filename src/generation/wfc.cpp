@@ -72,6 +72,22 @@ namespace flectron { namespace WFC{
     file.close();
   }
 
+  Tile::Tile(GLuint texture, const glm::vec4& textureCoords, const glm::vec4& ab, const glm::vec4& cd) 
+    : texture(texture), textureCoords(textureCoords), ab(ab), cd(cd) 
+  {}
+
+  void Tile::render(const Vector& position, float size, const Color& color) const
+  {
+    Renderer::quad(
+      {position.x + ab.x * size, position.y + ab.y * size},
+      {position.x + ab.z * size, position.y + ab.w * size},
+      {position.x + cd.x * size, position.y + cd.y * size},
+      {position.x + cd.z * size, position.y + cd.w * size},
+      texture,
+      textureCoords,
+      color);
+  }
+
   const auto kInvalidIndex = static_cast<size_t>(-1);
 
   Output::Output(int w, int h, int d)

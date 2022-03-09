@@ -1,6 +1,5 @@
 #pragma once
 #include <entt/entt.hpp>
-
 namespace flectron {
 
   class Entity
@@ -66,6 +65,8 @@ namespace flectron {
     }
 
     operator bool() const;
+
+    void render();
 
   };
 

@@ -82,7 +82,7 @@ namespace flectron
 
   void LightRenderer::addLight(const Vector& position, float radius, const Color& color)
   {
-    if (currentLight >= 128)
+    if (currentLight >= FLECTRON_NUM_LIGHTS)
       throw std::runtime_error("Too many lights");
 
     lightsData[currentData++] = position.x;
@@ -99,7 +99,7 @@ namespace flectron
 
   void LightRenderer::addLight(Entity entity)
   {
-    if (currentLight >= 128)
+    if (currentLight >= FLECTRON_NUM_LIGHTS)
       throw std::runtime_error("Too many lights");
 
     auto& pc = entity.get<PositionComponent>();

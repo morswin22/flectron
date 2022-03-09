@@ -165,6 +165,8 @@ namespace flectron
     else if (entity.has<CircleComponent>())
     {
       auto& cc = entity.get<CircleComponent>();
+      if (cc.thickness != 1.0f)
+        throw std::runtime_error("CircleComponent thickness must be 1.0f for physics");
       area = (float)M_PI * cc.radius * cc.radius;
     }
     else

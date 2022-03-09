@@ -2,8 +2,6 @@
 
 #include <flectron/renderer/color.hpp>
 #include <flectron/renderer/renderer.hpp>
-#include <flectron/renderer/light.hpp>
-#include <flectron/generation/wfc.hpp>
 #include <flectron/application/camera.hpp>
 
 #include <string>
@@ -43,7 +41,6 @@ namespace flectron
     GLFWwindow* window;
 
   public:
-    Ref<Shader> shader;
     GLuint rendererBuffer;
 
   private:
@@ -54,7 +51,7 @@ namespace flectron
     Camera camera;
 
   public:
-    Window(const WindowProperties& properties, const std::string& shaderVertPath, const std::string& shaderFragPath);
+    Window(const WindowProperties& properties);
     ~Window();
 
     Window(const Window&) = delete;
@@ -83,13 +80,6 @@ namespace flectron
     void setDesiredFrameRate(float desiredFrameRate);
     float getDesiredFrameRate() const;
     void regulateFrameRate();
-
-    void draw(Entity body);
-    void draw(const AABB& aabb, const Color& color);
-    void draw(const Vector& a, const Vector& b, float weight, const Color& color);
-    void draw(Ref<FontAtlas>& atlas, const Vector& position, const std::string& text, float scale, const Color& color);
-    void draw(const Scope<LightRenderer>& scene, const Color& nightColor, float darkness);
-    void draw(const Vector& position, float size, const WFC::Tile* tile, const Color& color);
   };
 
 }

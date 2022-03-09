@@ -26,6 +26,8 @@ public:
     scene.environment.nightColor = { 0.0f, 0.39f, 0.53f, 1.0f };
     scene.dateTime = createScope<DateTime>(8.0f/24.0f, 5.0f/24.0f, 18.0f/24.0f, 3.0f/24.0f, 1.0f/24.0f, 0.0f, 1.0f);
     scene.lightRenderer = createScope<LightRenderer>("shaders/light.vert", "shaders/light.frag");
+
+    Renderer::debugLineWidth(1.0f);
   }
 
   void setup() override
@@ -117,7 +119,7 @@ public:
 
       const float scale = application.window.camera.getScale();
       const Constraints& cc = application.window.camera.getConstraints();
-      application.window.draw(fontAtlas, { cc.left, cc.bottom }, text.str(), 175.0f * scale, Colors::white());
+      Renderer::text(fontAtlas, { cc.left, cc.bottom }, text.str(), 175.0f * scale);
     }, FLECTRON_RENDER);
 
     scene.createScript("Camera Controller", [&]() {

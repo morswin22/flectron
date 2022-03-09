@@ -29,7 +29,7 @@ endfunction()
 
 cpack_add_component_group(flectron_examples DISPLAY_NAME "Examples" DESCRIPTION "Flectron Examples")
 
-flectron_add_executable(demo src/demo.cpp "Demo" "Demo Application" true)
+flectron_add_executable(demo src/demo.cpp "Demo" "Demo Application" false)
 flectron_add_executable(terrain src/terrain.cpp "Terrain Generator" "Uses the Flectron library to generate a terrain" false)
 
 set(flectron_MODES Debug Release RelWithDebInfo MinSizeRel)

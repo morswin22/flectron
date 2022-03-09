@@ -64,6 +64,8 @@ namespace flectron
   {
     Entity entity;
     float radius;
+    float thickness = 1.0f;
+    float fade = 0.005f;
 
     CircleComponent(Entity entity, float radius);
   };

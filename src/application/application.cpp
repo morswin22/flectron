@@ -24,7 +24,7 @@ namespace flectron
   }
 
   Application::Application(const ApplicationArguments& arguments, const WindowProperties& properties)
-    : arguments(arguments), window(properties, "shaders/batch.vert", "shaders/batch.frag") // TODO move to properties
+    : arguments(arguments), window(properties)
   {
   }
 
@@ -48,8 +48,7 @@ namespace flectron
       mouseWorldPosition.x = (mousePosition.x - window.properties.width * 0.5f) * scale + cameraPosition.x;
       mouseWorldPosition.y = (window.properties.height * 0.5f - mousePosition.y) * scale + cameraPosition.y;
 
-      window.shader->bind();
-      window.shader->setUniformMat4f("uViewProjection", window.camera.getViewProjectionMatrix());
+      Renderer::setViewProjectionMatrix(window.camera);
       Renderer::beginBatch();
       for (auto layer : layers)
         layer->update();
