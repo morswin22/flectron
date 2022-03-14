@@ -65,7 +65,7 @@ set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/morswin22/flectron")
 
 if(FLECTRON_BUILD_TESTS)
   include(InstallRequiredSystemLibraries)
-  set(CPACK_PACKAGE_EXECUTABLES "flectron-demo;Flectron Demo" "flectron-terrain;Terrain Generator")
+  set(CPACK_PACKAGE_EXECUTABLES "flectron-demo;Flectron Demo" "flectron-terrain;Flectron Terrain Generator" "flectron-piday;Flectron Pi Day")
   # set(CPACK_CREATE_DESKTOP_LINKS "flectron-demo;Flectron Demo" "flectron-terrain;Terrain Generator")
 endif()
 
