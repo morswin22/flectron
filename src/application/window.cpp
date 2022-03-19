@@ -63,9 +63,8 @@ namespace flectron
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(GLMessageCallback, 0);
 
-    glfwSetKeyCallback(window, keyboardCallback);
-    glfwSetMouseButtonCallback(window, mouseCallback);
-    glfwSetScrollCallback(window, scrollCallback);
+    Keyboard::init(window);
+    Mouse::init(window);
 
     Renderer::init(properties.width, properties.height, rendererBuffer);
   }
@@ -134,6 +133,8 @@ namespace flectron
 
   void Window::pollEvents() const
   {
+    Keyboard::reset();
+    Mouse::reset();
     glfwPollEvents();
   }
 
@@ -177,7 +178,7 @@ namespace flectron
   {
     FLECTRON_PROFILE_EVENT("Window::regulateFrameRate");
     while ((float) glfwGetTime() - lastMeasuredTime < desiredInterval && !shouldClose())
-      pollEvents();
+      glfwPollEvents();
   }
 
 }

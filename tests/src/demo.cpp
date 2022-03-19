@@ -39,9 +39,9 @@ public:
     platform.add<PhysicsComponent>(1.0f, 0.5f, true);
     platform.add<TextureComponent>(textureAtlas, 0.0f, 0.0f, 9.0f, 1.0f);
     platform.add<ScriptComponent>([&]() {
-      if (Keyboard::isPressed(Keys::Q))
+      if (Keyboard::isPressed(Key::Q))
         platform.get<PositionComponent>().rotate(application.elapsedTime * (float)M_PI * 0.5f);
-      if (Keyboard::isPressed(Keys::E))
+      if (Keyboard::isPressed(Key::E))
         platform.get<PositionComponent>().rotate(-application.elapsedTime * (float)M_PI * 0.5f);
     });
 
@@ -51,7 +51,7 @@ public:
     player.add<AnimationComponent>(animationAtlas, "idle");
     player.add<TextureVertexComponent>(Vector(0.0f, 0.4f), Vector(4.5f, 3.0f));
     player.add<ScriptComponent>([&]() {
-      if (Keyboard::isPressed(Keys::T))
+      if (Keyboard::isPressed(Key::T))
         player.get<AnimationComponent>().play("taunt");
     });
 
@@ -62,7 +62,7 @@ public:
     triangle.add<LightComponent>(4.0f, Colors::cyan());
 
     scene.createScript("Spawner", [&]() {
-      if (Mouse::isPressed(Buttons::LEFT))
+      if (Mouse::isClicked(Button::LEFT) || (Keyboard::isPressed(Key::LEFT_CONTROL) && Mouse::isPressed(Button::LEFT)))
       {
         auto entity = scene.createEntity("Circle", application.mouseWorldPosition, 0.0f);
         auto& cc = entity.add<CircleComponent>(randomFloat(0.75f, 1.25f));
@@ -75,7 +75,7 @@ public:
           entity.add<LightComponent>(cc.radius * 3.0f, Colors::random());
       }
 
-      if (Mouse::isPressed(Buttons::RIGHT))
+      if (Mouse::isClicked(Button::RIGHT) || (Keyboard::isPressed(Key::LEFT_CONTROL) && Mouse::isPressed(Button::RIGHT)))
       {
         auto entity = scene.createEntity("Box", application.mouseWorldPosition, 0.0f);
         auto& bc = entity.add<BoxComponent>(randomFloat(1.0f, 2.0f), randomFloat(1.0f, 2.0f));
@@ -89,7 +89,7 @@ public:
     });
 
     scene.createScript("Mouse Light", [&]() {
-      if (Keyboard::isPressed(Keys::L))
+      if (Keyboard::isPressed(Key::L))
         scene.lightRenderer->addLight(application.mouseWorldPosition, 9.0f, Colors::white());
     });
 
@@ -114,7 +114,7 @@ public:
       text << "\n" << scene.dateTime->getDay() << "d " << std::floorf(scene.dateTime->getTime() * 24.0f);
       text << "h (" << std::floorf(scene.dateTime->getDarkness() * 100.0f) / 100.f << ")";
 
-      if (Keyboard::isPressed(Keys::H))
+      if (Keyboard::isPressed(Key::H))
         text << "\n\nPress Q/E to rotate\nPress LEFT/RIGHT to add circles/boxes";
 
       const float scale = application.window.camera.getScale();

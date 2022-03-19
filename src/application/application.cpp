@@ -53,8 +53,6 @@ namespace flectron
       for (auto layer : layers)
         layer->update();
       Renderer::endBatch();
-      
-      Mouse::resetScroll();
 
       window.swapBuffers();
       window.pollEvents();

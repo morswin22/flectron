@@ -1,56 +1,80 @@
 #include <flectron/utils/input.hpp>
 
-#include <iostream>
-
 namespace flectron
 {
 
-  bool Keyboard::keys[128]{ false };
+  std::array<bool, GLFW_KEY_LAST> Keyboard::pressed;
+  std::array<bool, GLFW_KEY_LAST> Keyboard::clicked;
 
-  bool Keyboard::isPressed(int key)
+  void Keyboard::init(GLFWwindow* window)
   {
-    return keys[key];
+    pressed.fill(false);
+    clicked.fill(false);
+    glfwSetKeyCallback(window, keyboardCallback);
+  }
+
+  void Keyboard::reset()
+  {
+    clicked.fill(false);
+  }
+
+  bool Keyboard::isPressed(Key::Keys key)
+  {
+    return pressed[key];
+  }
+
+  bool Keyboard::isClicked(Key::Keys key)
+  {
+    return clicked[key];
   }
 
   void keyboardCallback(GLFWwindow*, int key, int, int action, int)
   {
-    Keyboard::keys[key] = action == GLFW_PRESS || action == GLFW_REPEAT;
+    Keyboard::pressed[key] = action == GLFW_PRESS || action == GLFW_REPEAT;
+    if (action == GLFW_PRESS)
+      Keyboard::clicked[key] = true;
   }
 
-  bool Mouse::buttons[9]{ false };
-  float Mouse::scrollX{ 0.0f };
-  float Mouse::scrollY{ 0.0f };
+  std::array<bool, GLFW_MOUSE_BUTTON_LAST> Mouse::pressed;
+  std::array<bool, GLFW_MOUSE_BUTTON_LAST> Mouse::clicked;
+  Vector Mouse::scroll;
 
-  bool Mouse::isPressed(int button)
+  void Mouse::init(GLFWwindow* window)
   {
-    return buttons[button];
+    pressed.fill(false);
+    clicked.fill(false);
+    glfwSetMouseButtonCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);
   }
 
-  float Mouse::getScrollX()
+  void Mouse::reset()
   {
-    return scrollX;
+    clicked.fill(false);
+    scroll.x = 0.0f;
+    scroll.y = 0.0f;
   }
 
-  float Mouse::getScrollY()
+  bool Mouse::isPressed(Button::Buttons button)
   {
-    return scrollY;
+    return pressed[button];
   }
 
-  void Mouse::resetScroll()
+  bool Mouse::isClicked(Button::Buttons button)
   {
-    scrollX = 0.0f;
-    scrollY = 0.0f;
+    return clicked[button];
   }
 
   void mouseCallback(GLFWwindow*, int button, int action, int)
   {
-    Mouse::buttons[button] = action == GLFW_PRESS;
+    Mouse::pressed[button] = action == GLFW_PRESS;
+    if (action == GLFW_PRESS)
+      Mouse::clicked[button] = true;
   }
 
   void scrollCallback(GLFWwindow*, double xoffset, double yoffset)
   {
-    Mouse::scrollX += (float)xoffset;
-    Mouse::scrollY += (float)yoffset;
+    Mouse::scroll.x += static_cast<float>(xoffset);
+    Mouse::scroll.y += static_cast<float>(yoffset);
   }
 
 }

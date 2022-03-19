@@ -110,13 +110,13 @@ namespace flectron
     float dx = 0.0f;
     float dy = 0.0f;
 
-    if (Keyboard::isPressed(Keys::W))
+    if (Keyboard::isPressed(Key::W))
       dy++;
-    if (Keyboard::isPressed(Keys::S))
+    if (Keyboard::isPressed(Key::S))
       dy--;
-    if (Keyboard::isPressed(Keys::A))
+    if (Keyboard::isPressed(Key::A))
       dx--;
-    if (Keyboard::isPressed(Keys::D))
+    if (Keyboard::isPressed(Key::D))
       dx++;
 
     if (dx != 0.0f || dy != 0.0f)
