@@ -16,7 +16,7 @@ namespace flectron
     Circle, Box, Polygon
   };
 
-  enum WindingOrder 
+  enum WindingOrder : short
   { 
     Invalid, Clockwise, CounterClockwise 
   };

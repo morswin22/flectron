@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#include <vector>
 #include <flectron/utils/memory.hpp>
 #include <flectron/renderer/shader.hpp>
 #include <flectron/renderer/texture.hpp>

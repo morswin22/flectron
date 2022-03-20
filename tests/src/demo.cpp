@@ -112,8 +112,8 @@ public:
       text << " (" << (int)(physicsTimer.getElapsedTime() * 1000.0f) << "ms)";
       text << "\nSpawned entities: " << scene.getEntityCount<TemporaryComponent>();
       text << " (" << scene.getEntityCount("Circle") << "|" << scene.getEntityCount("Box") << ")";
-      text << "\n" << scene.dateTime->getDay() << "d " << std::floorf(scene.dateTime->getTime() * 24.0f);
-      text << "h (" << std::floorf(scene.dateTime->getDarkness() * 100.0f) / 100.f << ")";
+      text << "\n" << scene.dateTime->getDay() << "d " << std::floor(scene.dateTime->getTime() * 24.0f);
+      text << "h (" << std::floor(scene.dateTime->getDarkness() * 100.0f) / 100.f << ")";
 
       if (Keyboard::isPressed(Key::H))
         text << "\n\nPress Q/E to rotate\nPress LEFT/RIGHT to add circles/boxes";

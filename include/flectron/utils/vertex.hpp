@@ -6,7 +6,7 @@
 namespace flectron
 {
 
-  enum WindingOrder : int;
+  enum WindingOrder : short;
 
   std::vector<size_t> trianglesFromVertices(std::vector<Vector>& vertices);
   int getIndex(int index, int length);

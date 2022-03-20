@@ -21,13 +21,13 @@ namespace flectron {
     template<typename... Components>
     bool hasAll() const
     {
-      return registry->all_of<Components>(entityHandle);
+      return registry->all_of<Components...>(entityHandle);
     }
 
     template<typename... Components>
     bool hasAny() const
     {
-      return registry->any_of<Components>(entityHandle);
+      return registry->any_of<Components...>(entityHandle);
     }
 
     template<typename Component, typename... Args>
