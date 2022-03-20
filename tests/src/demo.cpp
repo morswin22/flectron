@@ -1,4 +1,5 @@
 #include <flectron.hpp>
+#include <flectron/application/entry.hpp>
 #include <sstream>
 
 using namespace flectron;

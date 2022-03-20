@@ -15,6 +15,7 @@ namespace flectron {
   void Entity::destroy()
   {
     registry->destroy(entityHandle);
+    entityHandle = entt::null;
   }
 
   Entity::operator bool() const {

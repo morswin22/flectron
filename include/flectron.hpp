@@ -39,4 +39,3 @@
 #include <flectron/application/window.hpp>
 #include <flectron/application/layer.hpp>
 #include <flectron/application/application.hpp>
-#include <flectron/application/entry.hpp>
