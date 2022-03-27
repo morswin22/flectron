@@ -1,22 +1,22 @@
 RANGES
-idle 0;0 12;1 5
-idle_blink 0;1 12;1 5
-walking 0;2 12;1 5
-walking 0;3 6;1 5
-jump_start 6;3 6;1 5
-taunt 0;4 12;1 5
-taunt 0;5 6;1 5
-jump_loop 6;5 6;1 5
-attacking 0;6 12;1 5
-hurt 0;7 12;1 5
-dying 0;8 12;1 5
-dying 0;9 3;1 5
-dead 2;9 1;1 25
+idle 0;0 12;1 1.25
+idle_blink 0;1 12;1 1.25
+walking 0;2 12;1 1
+walking 0;3 6;1 0.5
+taunt 0;4 12;1 1
+taunt 0;5 6;1 0.5
+attacking 0;6 12;1 1
+hurt 0;7 12;1 1
+dying 0;8 12;1 1
+dying 0;9 3;1 0.25
+dead 2;9 1;1 0.4
+jump_start 6;3 6;1 0.5
+jump_loop 6;5 6;1 0.5
 CONNECTIONS
 idle idle_blink 0.5
 idle_blink idle 1.0
-jump_start jump_loop 1.0
 taunt idle 1.0
 attacking idle 1.0
 hurt idle 1.0
 dying dead 1.0
+jump_start jump_loop 1.0

@@ -50,7 +50,7 @@ public:
     player.add<BoxComponent>(3.0f, 4.4f);
     player.add<PhysicsComponent>(1.0f, 0.1f, false);
     player.add<AnimationComponent>(animationAtlas, "idle");
-    player.add<TextureVertexComponent>(Vector(0.0f, 0.4f), Vector(4.5f, 3.0f));
+    player.add<TextureVertexComponent>(Vector(0.0f, 0.4f), Vector(9.0f, 6.0f));
     player.add<ScriptComponent>([&]() {
       if (Keyboard::isPressed(Key::T))
         player.get<AnimationComponent>().play("taunt");

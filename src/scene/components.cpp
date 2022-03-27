@@ -280,7 +280,7 @@ namespace flectron
   }
 
   TextureVertexComponent::TextureVertexComponent(Entity entity, const Vector& offset, const Vector& size)
-    : entity(entity), textureOffset(offset), textureHalfSize(size), textureVertices(), isTextureUpdateRequired(true)
+    : entity(entity), textureOffset(offset), textureHalfSize(size * 0.5f), textureVertices(), isTextureUpdateRequired(true)
   {}
 
   const std::array<Vector, 4>& TextureVertexComponent::getTransformedVertices(const PositionComponent& pc)
@@ -300,6 +300,18 @@ namespace flectron
     return textureVertices;
   }
 
+  void TextureVertexComponent::setTextureOffset(const Vector& offset)
+  {
+    textureOffset = offset;
+    isTextureUpdateRequired = true;
+  }
+
+  void TextureVertexComponent::setTextureSize(const Vector& size)
+  {
+    textureHalfSize = size * 0.5f;
+    isTextureUpdateRequired = true;
+  }
+
   AnimationComponent::AnimationComponent(Entity entity)
     : entity(entity), animationAtlas(nullptr), animationState("")
   {}
@@ -313,6 +325,11 @@ namespace flectron
     if (animationState.currentName == name && !reset)
       return;
     animationState = AnimationState(name);
+  }
+  
+  void AnimationComponent::update(float elapsedTime)
+  {
+    animationAtlas->getAnimation(animationState.currentName)->update(animationState, elapsedTime);
   }
 
   LightComponent::LightComponent(Entity entity)

@@ -23,9 +23,9 @@ namespace flectron
     std::string currentName;
     size_t currentRange;
     size_t currentFrame;
-    size_t currentTick;
+    float elapsedTime;
 
-    AnimationState(const std::string& name) : currentName(name), currentRange(0u), currentFrame(0u), currentTick(0u) {}
+    AnimationState(const std::string& name) : currentName(name), currentRange(0u), currentFrame(0u), elapsedTime(0.0f) {}
   };
 
   class AnimationRange
@@ -37,13 +37,14 @@ namespace flectron
     float height;
     float unit;
     size_t total;
-    size_t interval;
+    float duration;
     Animation* animation;
 
   public:
-    AnimationRange(float x, float y, float width, float height, float unit, size_t interval, Animation* animation);
+    AnimationRange(float x, float y, float width, float height, float unit, float duration, Animation* animation);
 
     glm::vec4* getNext(AnimationState& state);
+    void update(AnimationState& state, float elapsedTime);
   };
 
   class Animation
@@ -58,10 +59,11 @@ namespace flectron
 
     Animation(const std::string& name, AnimationAtlas* atlas);
 
-    void addRange(float x, float y, float width, float height, float unit, size_t interval);
+    void addRange(float x, float y, float width, float height, float unit, float duration);
     void addPossibleFutureAnimation(const std::string& animation, float probability);
 
     glm::vec4* getNext(AnimationState& state);
+    void update(AnimationState& state, float elapsedTime);
 
     friend AnimationAtlas;
     friend AnimationRange;

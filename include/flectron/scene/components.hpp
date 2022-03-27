@@ -176,6 +176,8 @@ namespace flectron
     TextureVertexComponent(Entity entity, const Vector& offset, const Vector& size);
 
     const std::array<Vector, 4>& getTransformedVertices(const PositionComponent& pc);
+    void setTextureOffset(const Vector& offset);
+    void setTextureSize(const Vector& size);
   };
 
   struct AnimationComponent
@@ -188,6 +190,7 @@ namespace flectron
     AnimationComponent(Entity entity, const Ref<AnimationAtlas>& animationAtlas, const std::string& animationState);
 
     void play(const std::string& name, bool reset = false);
+    void update(float elapsedTime);
   };
 
   struct LightComponent

@@ -8,38 +8,39 @@
 namespace flectron 
 {
 
-  AnimationRange::AnimationRange(float x, float y, float width, float height, float unit, size_t interval, Animation* animation)
-    : x(x), y(y), width(width), height(height), unit(unit), total((size_t)(width * height)), interval(interval), animation(animation)
+  AnimationRange::AnimationRange(float x, float y, float width, float height, float unit, float duration, Animation* animation)
+    : x(x), y(y), width(width), height(height), unit(unit), total(static_cast<size_t>(width * height)), duration(duration), animation(animation)
   {}
 
   glm::vec4* AnimationRange::getNext(AnimationState& state)
   {
-    glm::vec4* frame = animation->atlas->frames[state.currentName][state.currentRange][state.currentFrame].get();
+    return animation->atlas->frames[state.currentName][state.currentRange][state.currentFrame].get();
+  }
 
-    if (state.currentTick == interval)
+  void AnimationRange::update(AnimationState& state, float elapsedTime)
+  {
+    state.elapsedTime += elapsedTime;
+
+    if (state.elapsedTime >= duration)
     {
-      state.currentTick = 0;
+      state.elapsedTime = 0;
       state.currentFrame++;
     }
-    else
-      state.currentTick++;
 
     if (state.currentFrame == total)
     {
       state.currentFrame = 0;
       state.currentRange++;
     }
-
-    return frame;
   }
 
   Animation::Animation(const std::string& name, AnimationAtlas* atlas)
     : ranges(), possibleFutureAnimations(), atlas(atlas), name(name)
   {}
 
-  void Animation::addRange(float x, float y, float width, float height, float unit, size_t interval)
+  void Animation::addRange(float x, float y, float width, float height, float unit, float duration)
   {
-    ranges.push_back(createRef<AnimationRange>(x, y, width, height, unit, interval, this));
+    ranges.push_back(createRef<AnimationRange>(x, y, width, height, unit, duration, this));
   }
 
   glm::vec4* Animation::getNext(AnimationState& state)
@@ -47,7 +48,15 @@ namespace flectron
     if (ranges.size() == 0)
       return nullptr;
 
-    glm::vec4* frame = ranges[state.currentRange]->getNext(state);
+    return ranges[state.currentRange]->getNext(state);
+  }
+
+  void Animation::update(AnimationState& state, float elapsedTime)
+  {
+    if (ranges.size() == 0)
+      return;
+    
+    ranges[state.currentRange]->update(state, elapsedTime);
 
     if (state.currentRange == ranges.size())
     {
@@ -62,8 +71,6 @@ namespace flectron
       }
       state.currentRange = 0;
     }
-
-    return frame;
   }
 
   AnimationAtlas::AnimationAtlas(const std::string& filepath, int columns, int rows, bool nearest, const std::string& descriptionFilepath) 
@@ -74,10 +81,9 @@ namespace flectron
     std::string name;
     std::string position;
     std::string size;
-    std::string sinterval;
+    std::string rangeDuration;
     std::string sx, sy, sw, sh;
-    float x, y, w, h;
-    int interval;
+    float x, y, w, h, duration;
 
     std::getline(file, line);
     if (line != "RANGES")
@@ -102,13 +108,13 @@ namespace flectron
       std::getline(ss3, sh, ';');
       w = std::stof(sw);
       h = std::stof(sh);
-      std::getline(ss, sinterval, ' ');
-      interval = std::stoi(sinterval);
+      std::getline(ss, rangeDuration, ' ');
+      duration = std::stof(rangeDuration);
 
       if (animations.count(name) == 0)
         animations[name] = createRef<Animation>(name, this);
       
-      animations[name]->addRange(x, y, w, h, 1.0f, (size_t)interval);
+      animations[name]->addRange(x, y, w, h, 1.0f, duration / (w * h)); // TODO use duration or interval?
 
       glm::vec4 frame;
       int counter = 0;

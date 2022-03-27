@@ -46,6 +46,12 @@ namespace flectron
     auto scriptsEnd = scriptComponents.end();
     auto scriptsIterator = updateScriptComponents(FLECTRON_PHYSICS, scriptComponents.begin(), scriptsEnd);
 
+    if (dateTime)
+      dateTime->update(application.elapsedTime, environment);
+
+    for (auto& entity : registry.view<AnimationComponent>())
+      registry.get<AnimationComponent>(entity).update(application.elapsedTime);
+
     updatePhysics(application.elapsedTime, physicsIterations);
     
     scriptsIterator = updateScriptComponents(FLECTRON_RENDER, scriptsIterator, scriptsEnd);
@@ -57,10 +63,6 @@ namespace flectron
   void Scene::updatePhysics(float elapsedTime, size_t iterations)
   {
     FLECTRON_PROFILE_EVENT("Scene::updatePhysics");
-
-    if (dateTime)
-      dateTime->update(elapsedTime, environment);
-
     iterations = std::clamp(iterations, minIterations, maxIterations);
     float timeStep = elapsedTime / (float)iterations;
 
