@@ -6,40 +6,6 @@
 namespace flectron 
 {
 
-  float clamp(float value, float min, float max)
-  {
-    if (min == max)
-      return min;
-
-    if (min > max)
-      throw std::invalid_argument("Min must be less than max");
-
-    if (value < min)
-      return min;
-
-    if (value > max)
-      return max;
-
-    return value;
-  } 
-
-  int clamp(int value, int min, int max)
-  {
-    if (min == max)
-      return min;
-
-    if (min > max)
-      throw std::invalid_argument("Min must be less than max");
-
-    if (value < min)
-      return min;
-
-    if (value > max)
-      return max;
-
-    return value;
-  }
-
   float length(const Vector& v)
   {
     return sqrtf(v.x * v.x + v.y * v.y);

@@ -1,6 +1,7 @@
 #pragma once
 #include <flectron/utils/platform.hpp>
 #include <flectron/application/application.hpp>
+#include <flectron/assert/assert.hpp>
 
 extern flectron::Scope<flectron::Application> flectron::createApplication(const flectron::ApplicationArguments& arguments);
 
@@ -29,7 +30,19 @@ int main(int argc, char** argv)
 
   {
     auto application = flectron::createApplication(arguments);
-    application->run();
+
+    try
+    {
+      application->run();
+    }
+    catch (const flectron::AssertionException& exception)
+    {
+      std::cerr << "Flectron assertion failed saying: " << exception.what() << "\nSet FLECTRON_ENABLE_DEBUG to TRUE for more information" << std::endl;
+    }
+    catch (const std::exception& exception)
+    {
+      std::cerr << exception.what() << std::endl;
+    }
   }
 
   return 0;

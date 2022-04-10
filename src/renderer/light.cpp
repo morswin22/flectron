@@ -1,5 +1,6 @@
 #include <flectron/renderer/light.hpp>
 #include <flectron/scene/entity.hpp>
+#include <flectron/assert/assert.hpp>
 
 namespace flectron
 {
@@ -82,8 +83,7 @@ namespace flectron
 
   void LightRenderer::addLight(const Vector& position, float radius, const Color& color)
   {
-    if (currentLight >= FLECTRON_NUM_LIGHTS)
-      throw std::runtime_error("Too many lights");
+    FLECTRON_ASSERT(currentLight < FLECTRON_NUM_LIGHTS, "Too many lights");
 
     lightsData[currentData++] = position.x;
     lightsData[currentData++] = position.y;
@@ -99,8 +99,7 @@ namespace flectron
 
   void LightRenderer::addLight(Entity entity)
   {
-    if (currentLight >= FLECTRON_NUM_LIGHTS)
-      throw std::runtime_error("Too many lights");
+    FLECTRON_ASSERT(currentLight < FLECTRON_NUM_LIGHTS, "Too many lights");
 
     auto& pc = entity.get<PositionComponent>();
     auto& lc = entity.get<LightComponent>();

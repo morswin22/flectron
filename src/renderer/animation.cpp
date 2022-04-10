@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <flectron/utils/random.hpp>
+#include <flectron/assert/assert.hpp>
 
 namespace flectron 
 {
@@ -14,6 +15,10 @@ namespace flectron
 
   glm::vec4* AnimationRange::getNext(AnimationState& state)
   {
+    FLECTRON_ASSERT(
+      state.currentRange <= animation->atlas->frames[state.currentName].size() && 
+      state.currentFrame <= animation->atlas->frames[state.currentName][state.currentRange].size(), 
+      "Animation out of range");
     return animation->atlas->frames[state.currentName][state.currentRange][state.currentFrame].get();
   }
 
@@ -86,8 +91,7 @@ namespace flectron
     float x, y, w, h, duration;
 
     std::getline(file, line);
-    if (line != "RANGES")
-      throw std::runtime_error("Invalid description file!");
+    FLECTRON_ASSERT(line == "RANGES", "Invalid animation description file");
 
     while (std::getline(file, line))
     {
@@ -152,8 +156,7 @@ namespace flectron
       std::getline(ss, sweight, ' ');
       weight = std::stof(sweight);
 
-      if (animations.count(nameA) == 0 || animations.count(nameB) == 0)
-        throw std::runtime_error("Invalid description file!");
+      FLECTRON_ASSERT(animations.count(nameA) > 0 && animations.count(nameB) > 0, "Invalid animation description file");
 
       animations[nameA]->possibleFutureAnimations[nameB] = weight;
     }
@@ -161,8 +164,7 @@ namespace flectron
 
   Animation* AnimationAtlas::getAnimation(const std::string& name)
   {
-    if (animations.count(name) == 0)
-      throw std::runtime_error("Animation not found!");
+    FLECTRON_ASSERT(animations.count(name) > 0, "Animation not found");
     
     return animations[name].get();
   }

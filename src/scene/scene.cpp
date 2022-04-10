@@ -138,8 +138,7 @@ namespace flectron
     auto lights = registry.view<LightComponent>();
     if (!lights.empty())
     {
-      if (lightRenderer == nullptr)
-        throw std::runtime_error("LightRenderer not initialized");
+      FLECTRON_ASSERT(lightRenderer != nullptr, "LightRenderer not initialized");
       
       for (auto entity : lights)
         lightRenderer->addLight({ entity, &registry });

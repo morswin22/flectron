@@ -5,9 +5,6 @@
 namespace flectron 
 {
 
-  float clamp(float value, float min, float max);
-  int clamp(int value, int min, int max);
-
   float length(const Vector& v);
   float lengthSquared(const Vector& v);
 
@@ -21,5 +18,22 @@ namespace flectron
   float cross(const Vector& a, const Vector& b);
   Vector cross(const Vector& a, float b);
   Vector cross(float a, const Vector& b);
+
+  template<typename T>
+  T clamp(T value, T min, T max)
+  {
+    if (min == max)
+      return min;
+
+    FLECTRON_ASSERT(min < max, "min must be less than max");
+
+    if (value < min)
+      return min;
+
+    if (value > max)
+      return max;
+
+    return value;
+  }
 
 }

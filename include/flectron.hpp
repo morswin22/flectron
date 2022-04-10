@@ -1,5 +1,9 @@
 #pragma once
 
+// Debug
+#include <flectron/assert/debug.hpp>
+#include <flectron/assert/assert.hpp>
+
 // Utils
 #include <flectron/utils/platform.hpp>
 #include <flectron/utils/input.hpp>

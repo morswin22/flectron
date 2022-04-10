@@ -5,6 +5,7 @@
 #include <flectron/renderer/renderer.hpp>
 #include <flectron/utils/profile.hpp>
 #include <flectron/scene/entity.hpp>
+#include <flectron/assert/assert.hpp>
 #include <sstream>
 
 namespace flectron
@@ -147,6 +148,7 @@ namespace flectron
 
   void Window::setSize(int width, int height)
   {
+    FLECTRON_ASSERT(width > 0 && height > 0, "Invalid window size");
     glfwSetWindowSize(window, width, height);
     glViewport(0, 0, width, height);
     properties.width = width;
@@ -165,6 +167,7 @@ namespace flectron
 
   void Window::setDesiredFrameRate(float desiredFrameRate)
   {
+    FLECTRON_ASSERT(desiredFrameRate > 0.0f, "Desired frame rate must be greater than zero");
     properties.fps = desiredFrameRate;
     desiredInterval = 1.0f / properties.fps;
   }

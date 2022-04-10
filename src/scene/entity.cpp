@@ -53,9 +53,7 @@ namespace flectron {
         Renderer::quad(vertices[0], vertices[1], vertices[2], vertices[3], static_cast<Texture*>(ac.animationAtlas.get())->get(), *frame, color);
       }
       else
-      {
-        throw std::runtime_error("Use TextureVertexComponent for non-box bodies");
-      }
+        FLECTRON_ASSERT(false, "Use TextureVertexComponent for non-box bodies");
     }
     else if (has<TextureComponent>())
     {
@@ -73,9 +71,7 @@ namespace flectron {
         Renderer::quad(vertices[0], vertices[1], vertices[2], vertices[3], tc.textureIndex, tc.texturePositions, color);
       }
       else
-      {
-        throw std::runtime_error("Use TextureVertexComponent for non-box bodies");
-      }
+        FLECTRON_ASSERT(false, "Use TextureVertexComponent for non-box bodies");
     }
     else if (has<FillComponent>())
     {

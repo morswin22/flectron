@@ -1,5 +1,7 @@
 #pragma once
 #include <entt/entt.hpp>
+#include <flectron/assert/assert.hpp>
+
 namespace flectron {
 
   class Entity
@@ -33,24 +35,21 @@ namespace flectron {
     template<typename Component, typename... Args>
     Component& add(Args&&... args)
     {
-      if (has<Component>())
-        throw std::runtime_error("Entity already has component");
+      FLECTRON_ASSERT(!has<Component>(), "Entity already has component");
       return registry->emplace<Component>(entityHandle, *this, std::forward<Args>(args)...);
     }
 
     template<typename Component>
     Component& get()
     {
-      if (!has<Component>())
-        throw std::runtime_error("Entity does not have component");
+      FLECTRON_ASSERT(has<Component>(), "Entity does not have component");
       return registry->get<Component>(entityHandle);
     }
 
     template<typename Component>
     void remove()
     {
-      if (!has<Component>())
-        throw std::runtime_error("Entity does not have component");
+      FLECTRON_ASSERT(has<Component>(), "Entity does not have component");
       registry->remove<Component>(entityHandle);
     }
 
@@ -59,8 +58,7 @@ namespace flectron {
     template<typename Component>
     void patch()
     {
-      if (!has<Component>())
-        throw std::runtime_error("Entity does not have component");
+      FLECTRON_ASSERT(has<Component>(), "Entity does not have component");
       registry->patch<Component>(entityHandle);
     }
 

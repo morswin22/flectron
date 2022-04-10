@@ -2,6 +2,7 @@
 #include <flectron/utils/profile.hpp>
 #include <flectron/utils/input.hpp>
 #include <flectron/application/layer.hpp>
+#include <flectron/assert/assert.hpp>
 
 namespace flectron
 {
@@ -62,6 +63,7 @@ namespace flectron
 
   void Application::popLayer()
   {
+    FLECTRON_ASSERT(layers.size() > 0, "No layer to pop");
     layers.back()->cleanup();
     layers.pop_back();
   }

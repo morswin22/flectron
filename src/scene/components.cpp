@@ -4,6 +4,7 @@
 #include <flectron/scene/scene.hpp>
 #include <flectron/utils/vertex.hpp>
 #include <flectron/physics/collisions.hpp>
+#include <flectron/assert/assert.hpp>
 #include <cmath>
 
 namespace flectron
@@ -78,7 +79,7 @@ namespace flectron
       shape = ShapeType::Circle;
     }
     else
-      throw std::runtime_error("Entity must have a body defining component");
+      FLECTRON_ASSERT(false, "Entity must have a body defining component");
     
     transformedVertices.resize(vertices.size());
     triangles = trianglesFromVertices(vertices);
@@ -165,24 +166,16 @@ namespace flectron
     else if (entity.has<CircleComponent>())
     {
       auto& cc = entity.get<CircleComponent>();
-      if (cc.thickness != 1.0f)
-        throw std::runtime_error("CircleComponent thickness must be 1.0f for physics");
+      FLECTRON_ASSERT(cc.thickness == 1.0f, "CircleComponent thickness must be 1.0f for physics");
       area = (float)M_PI * cc.radius * cc.radius;
     }
     else
       area = polygonArea(entity.get<VertexComponent>().vertices);
 
-    if (area < Scene::minBodySize)
-      throw std::invalid_argument("Body size too small");
-
-    if (area > Scene::maxBodySize)
-      throw std::invalid_argument("Body size too large");
-
-    if (density < Scene::minBodyDensity)
-      throw std::invalid_argument("Body density too small");
-
-    if (density > Scene::maxBodyDensity)
-      throw std::invalid_argument("Body density too large");
+    FLECTRON_ASSERT(area >= Scene::minBodySize, "Body area must be greater than or equal to " + std::to_string(Scene::minBodySize));
+    FLECTRON_ASSERT(area <= Scene::maxBodySize, "Body area must be less than or equal to " + std::to_string(Scene::maxBodySize));
+    FLECTRON_ASSERT(density >= Scene::minBodyDensity, "Body density must be greater than or equal to " + std::to_string(Scene::minBodyDensity));
+    FLECTRON_ASSERT(density <= Scene::maxBodyDensity, "Body density must be less than or equal to " + std::to_string(Scene::maxBodyDensity));
 
     mass = area * density;
 

@@ -1,4 +1,5 @@
 #include <flectron/renderer/shader.hpp>
+#include <flectron/assert/assert.hpp>
 
 #include <sstream>
 #include <fstream>
@@ -80,8 +81,7 @@ namespace flectron
       return locationCache[name];
 
     int location = glGetUniformLocation(this->rendererID, name.c_str());
-    if (location == -1)
-      throw std::runtime_error("Warning: uniform " + name + " doesn't exist!\n");
+    FLECTRON_ASSERT(location != -1, "Uniform " + name + " not found");
     
     locationCache[name] = location;
     return location;
@@ -91,8 +91,7 @@ namespace flectron
   {
     std::ifstream file(filepath);
 
-    if (!file.is_open())
-      throw std::runtime_error("Error: could not open file " + filepath + "\n");
+    FLECTRON_ASSERT(file.is_open(), "Could not open file " + filepath);
     
     std::string source;
     std::string line;
@@ -117,10 +116,11 @@ namespace flectron
       glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
       char* message = (char*)alloca(length * sizeof(char));
       glGetShaderInfoLog(id, length, &length, message);
-      std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << " shader!\n";
-      std::cout << message << "\n";
+      std::stringstream ss;
+      ss << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << " shader!" << std::endl;
+      ss << message << std::endl;
       glDeleteShader(id);
-      return 0;
+      FLECTRON_ASSERT(false, ss.str());
     }
 
     return id;

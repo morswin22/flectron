@@ -2,25 +2,20 @@
 
 #include <flectron/scene/components.hpp>
 #include <flectron/physics/math.hpp>
+#include <flectron/assert/assert.hpp>
 
 namespace flectron
 {
 
   std::vector<size_t> trianglesFromVertices(std::vector<Vector>& vertices)
   {
-    if (vertices.size() < 3)
-      throw std::invalid_argument("Too few vertices");
-
-    if (!isSimplePolygon(vertices))
-      throw std::invalid_argument("Not a simple polygon");
-    
-    if (containsColinearEdges(vertices))
-      throw std::invalid_argument("Polygon contains colinear edges");
+    FLECTRON_ASSERT(vertices.size() >= 3, "Too few vertices");
+    FLECTRON_ASSERT(isSimplePolygon(vertices), "Not a simple polygon");
+    FLECTRON_ASSERT(!containsColinearEdges(vertices), "Polygon contains colinear edges");
 
     WindingOrder order = getWindingOrder(vertices);
-    if (order == WindingOrder::Invalid)
-      throw std::invalid_argument("Invalid winding order");
-    
+    FLECTRON_ASSERT(order != WindingOrder::Invalid, "Invalid winding order");
+
     if (order == WindingOrder::CounterClockwise)
       for (size_t i = 0; i < vertices.size(); i++)
         std::swap(vertices[i], vertices[vertices.size() - 1 - i]);
