@@ -17,7 +17,6 @@ function(flectron_add_executable executable_name sources display_name desciption
   if (no_console)
     if (WIN32)
       set_target_properties("flectron-${executable_name}" PROPERTIES WIN32_EXECUTABLE TRUE)
-      target_compile_definitions("flectron-${executable_name}" PUBLIC "-DFLECTRON_ENABLE_DEBUG=1") # TODO detect debug mode
     endif()
     target_compile_definitions("flectron-${executable_name}" PUBLIC "-DFLECTRON_NO_CONSOLE")
   endif()

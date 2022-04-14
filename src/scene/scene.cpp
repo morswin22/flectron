@@ -30,12 +30,18 @@ namespace flectron
   Scene::Scene(size_t physicsIterations, size_t gridSize)
     : registry(), grid(static_cast<int>(gridSize), registry), environment(), lightRenderer(nullptr), dateTime(nullptr), physicsIterations(physicsIterations)
   {
+    FLECTRON_LOG_TRACE("Creating scene");
     registry.on_construct<PhysicsComponent>().connect<&Scene::onPhysicsComponentCreate>(this);
     registry.on_destroy<SpatialHashGridComponent>().connect<&Scene::onSpatialHashGridComponentDestroy>(this);
     registry.on_update<PositionComponent>().connect<&Scene::onPositionComponentUpdate>();
     registry.on_construct<PolygonComponent>().connect<&Scene::onBodyDefiningComponentCreate>();
     registry.on_construct<BoxComponent>().connect<&Scene::onBodyDefiningComponentCreate>();
     registry.on_construct<CircleComponent>().connect<&Scene::onBodyDefiningComponentCreate>();
+  }
+
+  Scene::~Scene()
+  {
+    FLECTRON_LOG_TRACE("Destroying scene");
   }
 
   void Scene::update(Application& application)

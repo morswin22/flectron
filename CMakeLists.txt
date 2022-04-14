@@ -34,6 +34,7 @@ target_include_directories(flectron
   PUBLIC ${STB_IMAGE_INCLUDE_DIR}
   PUBLIC ${OPTICK_INCLUDE_DIR}
   PUBLIC ${ENTT_INCLUDE_DIR}
+  PUBLIC ${SPDLOG_INCLUDE_DIR}
 )
 
 target_link_libraries(flectron 
@@ -42,6 +43,7 @@ target_link_libraries(flectron
   glm
   stb_image
   EnTT
+  spdlog::spdlog
 )
 
 if(MSVC)

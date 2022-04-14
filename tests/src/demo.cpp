@@ -87,6 +87,8 @@ public:
         if (randomFloat(0.0f, 1.0f) < 0.1f)
           entity.add<LightComponent>(std::max(bc.width, bc.height) * 3.0f, Colors::random());
       }
+
+      FLECTRON_ASSERT(!Keyboard::isClicked(Key::P), "P is the forbidden key!");
     });
 
     scene.createScript("Mouse Light", [&]() {

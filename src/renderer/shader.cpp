@@ -129,6 +129,8 @@ namespace flectron
   Shader::Shader(const std::string& filepathVertex, const std::string& filepathFragment)
     : filepathVertex(filepathVertex), filepathFragment(filepathFragment)
   {
+    FLECTRON_LOG_TRACE("Creating shader from {} and {}", filepathVertex, filepathFragment);
+
     std::string vertexShader = getSource(filepathVertex);
     std::string fragmentShader = getSource(filepathFragment);
 
@@ -148,6 +150,8 @@ namespace flectron
   ComputeShader::ComputeShader(const std::string& filepath)
     : filepath(filepath)
   {
+    FLECTRON_LOG_TRACE("Creating compute shader from {}", filepath);
+
     std::string source = getSource(filepath);
 
     rendererID = glCreateProgram();

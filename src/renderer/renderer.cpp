@@ -13,6 +13,7 @@
 #include <flectron/physics/aabb.hpp>
 #include <flectron/utils/random.hpp>
 #include <flectron/utils/profile.hpp>
+#include <flectron/assert/log.hpp>
 #include <stb_image.h>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -247,6 +248,7 @@ namespace flectron
 
   void Renderer::init(int width, int height, GLuint& buffer)
   {
+    FLECTRON_LOG_TRACE("Initializing renderer");
     initTextureRendering();
     initCircleRendering();
     initLineRendering();
@@ -255,6 +257,8 @@ namespace flectron
 
   void Renderer::shutdown()
   {
+    FLECTRON_LOG_TRACE("Shutting down renderer");
+
     glDeleteVertexArrays(1, &rendererData.textureVertexArray);
     glDeleteBuffers(1, &rendererData.textureVertexBuffer);
     glDeleteBuffers(1, &rendererData.textureIndexBuffer);

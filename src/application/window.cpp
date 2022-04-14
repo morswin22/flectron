@@ -11,10 +11,31 @@
 namespace flectron
 {
 
+  std::string glDebugTypeToString(GLenum type);
+  std::string glDebugSourceToString(GLenum source);
+
+  #define __FLECTRON_GL_ERROR_MESSAGE(source, type, message) "OpenGL {} {}: {}", glDebugSourceToString(source), glDebugTypeToString(type), message
+
   void GLAPIENTRY
-  GLMessageCallback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei, const GLchar* message, const void* )
+  GLMessageCallback( GLenum source, GLenum type, GLuint, GLenum severity, GLsizei, const GLchar* message, const void* )
   {
-    if (type == GL_DEBUG_TYPE_ERROR) fprintf(stderr, "GL CALLBACK: source = 0x%x, type = 0x%x, id = 0x%x, severity = 0x%x, message = %s\n", source, type, id, severity, message);
+    if (type == GL_DEBUG_TYPE_OTHER) // TODO figure out what is causing this to spam
+      return;
+    switch (severity)
+    {
+      case GL_DEBUG_SEVERITY_HIGH:
+        FLECTRON_LOG_CRITICAL(__FLECTRON_GL_ERROR_MESSAGE(source, type, message));
+        break;
+      case GL_DEBUG_SEVERITY_MEDIUM:
+        FLECTRON_LOG_ERROR(__FLECTRON_GL_ERROR_MESSAGE(source, type, message));
+        break;
+      case GL_DEBUG_SEVERITY_LOW:
+        FLECTRON_LOG_WARN(__FLECTRON_GL_ERROR_MESSAGE(source, type, message));
+        break;
+      case GL_DEBUG_SEVERITY_NOTIFICATION:
+        FLECTRON_LOG_DEBUG(__FLECTRON_GL_ERROR_MESSAGE(source, type, message));
+        break;
+    }
   }
   
   WindowProperties::WindowProperties(const std::string& title, WindowFlags flags)
@@ -37,6 +58,8 @@ namespace flectron
     desiredInterval(1.0f / properties.fps), lastMeasuredTime(0), 
     camera(-properties.width * 0.5f, properties.width * 0.5f, -properties.height * 0.5f, properties.height * 0.5f)
   {
+    FLECTRON_LOG_TRACE("Creating window");
+
     if (!glfwInit())
       return;
 
@@ -72,6 +95,7 @@ namespace flectron
 
   Window::~Window()
   {
+    FLECTRON_LOG_TRACE("Destroying window");
     Renderer::shutdown();
     glfwDestroyWindow(window);
     glfwTerminate();
@@ -182,6 +206,54 @@ namespace flectron
     FLECTRON_PROFILE_EVENT("Window::regulateFrameRate");
     while ((float) glfwGetTime() - lastMeasuredTime < desiredInterval && !shouldClose())
       glfwPollEvents();
+  }
+
+  std::string glDebugTypeToString(GLenum type)
+  {
+    switch (type)
+    {
+    case GL_DEBUG_TYPE_ERROR:
+      return "Error";
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+      return "Deprecated behavior";
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+      return "Undefined behavior";
+    case GL_DEBUG_TYPE_PORTABILITY:
+      return "Portability";
+    case GL_DEBUG_TYPE_PERFORMANCE:
+      return "Performance";
+    case GL_DEBUG_TYPE_OTHER:
+      return "Other";
+    case GL_DEBUG_TYPE_MARKER:
+      return "Marker";
+    case GL_DEBUG_TYPE_PUSH_GROUP:
+      return "Push group";
+    case GL_DEBUG_TYPE_POP_GROUP:
+      return "Pop group";
+    default:
+      return "Unknown";
+    }
+  }
+
+  std::string glDebugSourceToString(GLenum source)
+  {
+    switch (source)
+    {
+    case GL_DEBUG_SOURCE_API:
+      return "API";
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+      return "Window system";
+    case GL_DEBUG_SOURCE_SHADER_COMPILER:
+      return "Shader compiler";
+    case GL_DEBUG_SOURCE_THIRD_PARTY:
+      return "Third party";
+    case GL_DEBUG_SOURCE_APPLICATION:
+      return "Application";
+    case GL_DEBUG_SOURCE_OTHER:
+      return "Other";
+    default:
+      return "Unknown";
+    }
   }
 
 }

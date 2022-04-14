@@ -3,6 +3,7 @@
 #include <flectron/utils/input.hpp>
 #include <flectron/application/layer.hpp>
 #include <flectron/assert/assert.hpp>
+#include <flectron/assert/log.hpp>
 
 namespace flectron
 {
@@ -27,12 +28,15 @@ namespace flectron
   Application::Application(const ApplicationArguments& arguments, const WindowProperties& properties)
     : arguments(arguments), window(properties)
   {
+    FLECTRON_LOG_INFO("Application created");
   }
 
   Application::~Application()
   {
-    for (auto layer : layers)
-      delete layer;
+    FLECTRON_LOG_TRACE("Destroying application");
+    while (!layers.empty())
+      popLayer();
+    FLECTRON_LOG_INFO("Application destroyed");
   }
 
   void Application::run()
@@ -64,8 +68,11 @@ namespace flectron
   void Application::popLayer()
   {
     FLECTRON_ASSERT(layers.size() > 0, "No layer to pop");
+    FLECTRON_LOG_TRACE("Popping layer");
     layers.back()->cleanup();
+    delete layers.back();
     layers.pop_back();
+    FLECTRON_LOG_INFO("Layer popped");
   }
 
 }

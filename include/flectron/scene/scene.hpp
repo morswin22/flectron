@@ -52,6 +52,7 @@ namespace flectron
 
   public:
     Scene(size_t physicsIterations, size_t gridSize);
+    ~Scene();
 
     void update(Application& application);
     void updatePhysics(float elapsedTime, size_t iterations);

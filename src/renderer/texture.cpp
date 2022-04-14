@@ -1,5 +1,6 @@
 #include <flectron/renderer/texture.hpp>
 
+#include <flectron/assert/assert.hpp>
 #include <stb_image.h>
 
 namespace flectron
@@ -7,9 +8,11 @@ namespace flectron
 
   GLuint loadTexture(const std::string& filepath, bool nearest, bool repeat)
   {
+    FLECTRON_LOG_TRACE("Loading texture from {}", filepath);
     int w, h, bits;
     // stbi_set_flip_vertically_on_load(true);
     auto* pixels = stbi_load(filepath.c_str(), &w, &h, &bits, STBI_rgb_alpha);
+    FLECTRON_ASSERT(pixels, "Failed to load texture");
     GLuint textureID;
     glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
@@ -43,10 +46,13 @@ namespace flectron
  
   Texture::Texture(const std::string& filepath, bool nearest, bool repeat)
     : rendererID(loadTexture(filepath, nearest, repeat)), filepath(filepath)
-  {}
+  {
+    FLECTRON_LOG_TRACE("Creating texture from {}", filepath);
+  }
 
   Texture::~Texture()
   {
+    FLECTRON_LOG_TRACE("Destroying texture {}", filepath);
     glDeleteTextures(1, &rendererID);
   }
 
@@ -58,6 +64,7 @@ namespace flectron
   TextureAtlas::TextureAtlas(const std::string& filepath, int columns, int rows, bool nearest)
     : Texture(filepath, nearest, false), columns(columns), rows(rows)
   {
+    FLECTRON_LOG_TRACE("Creating texture atlas from {}", filepath);
     xOffset = 1.0f / (float)columns;
     yOffset = 1.0f / (float)rows;
   }
@@ -74,6 +81,7 @@ namespace flectron
   FontAtlas::FontAtlas(const std::string& filepath, int columns, int rows, const std::string& alphabet)
     : TextureAtlas(filepath, columns, rows, true), alphabet(alphabet)
   {
+    FLECTRON_LOG_TRACE("Creating font atlas from {}", filepath);
     for (size_t i = 0; i < alphabet.size(); i++)
       indexMap[(char)alphabet[i]] = (int)i;
   }

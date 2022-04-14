@@ -40,8 +40,10 @@ namespace flectron
     template<typename T, typename ... Args>
     void pushLayer(Args&& ... args)
     {
+      FLECTRON_LOG_TRACE("Pushing layer");
       layers.push_back(new T(*this, std::forward<Args>(args)...));
       layers.back()->setup();
+      FLECTRON_LOG_INFO("Layer pushed");
     }
 
     void popLayer();

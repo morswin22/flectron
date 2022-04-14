@@ -1,4 +1,5 @@
 #include <flectron/utils/input.hpp>
+#include <flectron/assert/log.hpp>
 
 namespace flectron
 {
@@ -8,6 +9,7 @@ namespace flectron
 
   void Keyboard::init(GLFWwindow* window)
   {
+    FLECTRON_LOG_TRACE("Initializing keyboard");
     pressed.fill(false);
     clicked.fill(false);
     glfwSetKeyCallback(window, keyboardCallback);
@@ -41,6 +43,7 @@ namespace flectron
 
   void Mouse::init(GLFWwindow* window)
   {
+    FLECTRON_LOG_TRACE("Initializing mouse");
     pressed.fill(false);
     clicked.fill(false);
     glfwSetMouseButtonCallback(window, mouseCallback);

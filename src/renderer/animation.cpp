@@ -81,6 +81,7 @@ namespace flectron
   AnimationAtlas::AnimationAtlas(const std::string& filepath, int columns, int rows, bool nearest, const std::string& descriptionFilepath) 
     : TextureAtlas(filepath, columns, rows, nearest), animations(), frames()
   {
+    FLECTRON_LOG_TRACE("Creating animation atlas from {} and {}", filepath, descriptionFilepath);
     std::ifstream file(descriptionFilepath);
     std::string line;
     std::string name;
@@ -160,6 +161,8 @@ namespace flectron
 
       animations[nameA]->possibleFutureAnimations[nameB] = weight;
     }
+
+    FLECTRON_LOG_DEBUG("Animation atlas loaded {} animations", animations.size());
   }
 
   Animation* AnimationAtlas::getAnimation(const std::string& name)

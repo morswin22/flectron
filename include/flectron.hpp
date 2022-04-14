@@ -3,6 +3,7 @@
 // Debug
 #include <flectron/assert/debug.hpp>
 #include <flectron/assert/assert.hpp>
+#include <flectron/assert/log.hpp>
 
 // Utils
 #include <flectron/utils/platform.hpp>

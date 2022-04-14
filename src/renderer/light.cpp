@@ -9,6 +9,8 @@ namespace flectron
     : shader(createRef<Shader>(vertexPath, fragmentPath)),
       currentLight(0), currentData(0), currentColor(0)
   {
+    FLECTRON_LOG_TRACE("Creating light renderer");
+
     constexpr float positions[]{
       -1.0f, -1.0f,
       -1.0f,  1.0f,
@@ -41,6 +43,7 @@ namespace flectron
 
   LightRenderer::~LightRenderer()
   {
+    FLECTRON_LOG_TRACE("Destroying light renderer");
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ibo);
     glDeleteVertexArrays(1, &vao);
