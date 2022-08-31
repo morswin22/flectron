@@ -55,3 +55,5 @@ set(STB_IMAGE_INCLUDE_DIR "${stb_image_SOURCE_DIR}/")
 set(OPTICK_INCLUDE_DIR "${optick_SOURCE_DIR}/src")
 set(ENTT_INCLUDE_DIR "${entt_SOURCE_DIR}/single_include")
 set(SPDLOG_INCLUDE_DIR "${spdlog_SOURCE_DIR}/include")
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake")

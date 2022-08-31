@@ -11,6 +11,7 @@
 
 #include <flectron/utils/memory.hpp>
 #include <flectron/renderer/texture.hpp>
+#include <flectron/assets/text.hpp>
 
 namespace flectron
 {
@@ -71,12 +72,16 @@ namespace flectron
 
   class AnimationAtlas : public TextureAtlas
   {
+  public:
+    TextView description;
+
   private:
     std::unordered_map<std::string, Ref<Animation>> animations;
     std::unordered_map<std::string, std::vector<std::vector<Ref<glm::vec4>>>> frames;
 
   public:
-    AnimationAtlas(const std::string& filepath, int columns, int rows, bool nearest, const std::string& descriptionFilepath);
+    AnimationAtlas(const Image& image, int columns, int rows, const Text& description);
+    AnimationAtlas(const ImageView& image, int columns, int rows, const TextView& description);
 
     AnimationAtlas(const AnimationAtlas&) = delete;
     AnimationAtlas& operator=(const AnimationAtlas&) = delete;

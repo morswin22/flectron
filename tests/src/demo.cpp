@@ -2,12 +2,19 @@
 #include <flectron/application/entry.hpp>
 #include <sstream>
 
+FLECTRON_EMBED(ATLAS_PNG);
+FLECTRON_EMBED(FONT_PNG);
+FLECTRON_EMBED(GREENGOBLIN_PNG);
+FLECTRON_EMBED(GREENGOBLIN_TXT);
+
 using namespace flectron;
 
 class DemoLayer : public SceneLayer
 {
 private:
   Stopwatch physicsTimer;
+  Image atlasImage, fontImage, greenGoblinImage;
+  Text greenGoblinText;
   Ref<TextureAtlas> textureAtlas;
   Ref<AnimationAtlas> animationAtlas;
   Ref<FontAtlas> fontAtlas;
@@ -17,22 +24,42 @@ private:
 public:
   DemoLayer(Application& application)
   : SceneLayer(application, 4u, 4u), physicsTimer(),
-    textureAtlas(createRef<TextureAtlas>("assets/atlas.png", 9, 2, true)),
-    animationAtlas(createRef<AnimationAtlas>("assets/greenGoblin.png", 12, 10, true, "assets/greenGoblin.txt")),
-    fontAtlas(createRef<FontAtlas>("assets/font.png", 13, 7, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()[]{}-=+/\\|?.,<>~:; "))
+    atlasImage(Image::fromEmbed(ATLAS_PNG())),
+    fontImage(Image::fromEmbed(FONT_PNG())),
+    greenGoblinImage(Image::fromEmbed(GREENGOBLIN_PNG())),
+    greenGoblinText(Text::fromEmbed(GREENGOBLIN_TXT())),
+    textureAtlas(nullptr), animationAtlas(nullptr), fontAtlas(nullptr)
+  {}
+
+  void setup() override
   {
     application.window.setBackground(Colors::darkGray());
     application.window.camera.setScale(0.06f);
 
     scene.environment.nightColor = { 0.0f, 0.39f, 0.53f, 1.0f };
     scene.dateTime = createScope<DateTime>(8.0f/24.0f, 5.0f/24.0f, 18.0f/24.0f, 3.0f/24.0f, 1.0f/24.0f, 0.0f, 1.0f);
-    scene.lightRenderer = createScope<LightRenderer>("shaders/light.vert", "shaders/light.frag");
+    scene.lightRenderer = createScope<LightRenderer>();
 
     Renderer::debugLineWidth(1.0f);
-  }
 
-  void setup() override
-  {
+    atlasImage.load();
+    atlasImage.loadGPU();
+    atlasImage.unload();
+
+    fontImage.load();
+    fontImage.loadGPU();
+    fontImage.unload();
+
+    greenGoblinImage.load();
+    greenGoblinImage.loadGPU();
+    greenGoblinImage.unload();
+
+    greenGoblinText.load();
+
+    textureAtlas = createRef<TextureAtlas>(atlasImage, 9, 2);
+    animationAtlas = createRef<AnimationAtlas>(greenGoblinImage, 12, 10, greenGoblinText);
+    fontAtlas = createRef<FontAtlas>(fontImage, 13, 7, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()[]{}-=+/\\|?.,<>~:; ");
+
     const Constraints& cc = application.window.camera.getConstraints();
     float padding = (cc.right - cc.left) * 0.10f;
     platform = scene.createEntity("Platform", { 0.0f, -10.0f }, 0.0f);
@@ -129,6 +156,15 @@ public:
       application.window.camera.handleWASD();
       application.window.camera.handleScroll();
     }, FLECTRON_RENDER + 1);
+  }
+
+  void cleanup() override
+  {
+    atlasImage.unloadGPU();
+    fontImage.unloadGPU();
+    greenGoblinImage.unloadGPU();
+
+    greenGoblinText.unload();
   }
 };
 

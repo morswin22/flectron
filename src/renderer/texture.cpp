@@ -6,25 +6,6 @@
 namespace flectron
 {
 
-  GLuint loadTexture(const std::string& filepath, bool nearest, bool repeat)
-  {
-    FLECTRON_LOG_TRACE("Loading texture from {}", filepath);
-    int w, h, bits;
-    // stbi_set_flip_vertically_on_load(true);
-    auto* pixels = stbi_load(filepath.c_str(), &w, &h, &bits, STBI_rgb_alpha);
-    FLECTRON_ASSERT(pixels, "Failed to load texture");
-    GLuint textureID;
-    glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, nearest ? GL_NEAREST : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, nearest ? GL_NEAREST : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-    stbi_image_free(pixels);
-    return textureID;
-  }
-
   GLuint createFrameBuffer(int width, int height, GLuint& buffer)
   {
     GLuint fbo;
@@ -43,28 +24,14 @@ namespace flectron
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     return fbo;
   }
- 
-  Texture::Texture(const std::string& filepath, bool nearest, bool repeat)
-    : rendererID(loadTexture(filepath, nearest, repeat)), filepath(filepath)
-  {
-    FLECTRON_LOG_TRACE("Creating texture from {}", filepath);
-  }
 
-  Texture::~Texture()
-  {
-    FLECTRON_LOG_TRACE("Destroying texture {}", filepath);
-    glDeleteTextures(1, &rendererID);
-  }
+  TextureAtlas::TextureAtlas(const Image& image, int columns, int rows) : TextureAtlas(static_cast<ImageView>(image), columns, rows) {}
 
-  GLuint Texture::get() const
+  TextureAtlas::TextureAtlas(const ImageView& image, int columns, int rows)
+    : image(image), columns(columns), rows(rows)
   {
-    return rendererID;
-  }
-
-  TextureAtlas::TextureAtlas(const std::string& filepath, int columns, int rows, bool nearest)
-    : Texture(filepath, nearest, false), columns(columns), rows(rows)
-  {
-    FLECTRON_LOG_TRACE("Creating texture atlas from {}", filepath);
+    FLECTRON_LOG_TRACE("Creating texture atlas");
+    FLECTRON_LOG_DEBUG("\tSource: {} ({}x{} | {})", image->info(), image->width, image->height, image->textureID);
     xOffset = 1.0f / (float)columns;
     yOffset = 1.0f / (float)rows;
   }
@@ -75,13 +42,15 @@ namespace flectron
     texturePosition.y = yOffset * row;
     texturePosition.p = xOffset * width;
     texturePosition.q = yOffset * height;
-    return rendererID;
+    return image->getGPU();
   }
 
-  FontAtlas::FontAtlas(const std::string& filepath, int columns, int rows, const std::string& alphabet)
-    : TextureAtlas(filepath, columns, rows, true), alphabet(alphabet)
+  FontAtlas::FontAtlas(const Image& image, int columns, int rows, const std::string& alphabet) : FontAtlas(static_cast<ImageView>(image), columns, rows, alphabet) {}
+
+  FontAtlas::FontAtlas(const ImageView& image, int columns, int rows, const std::string& alphabet)
+    : TextureAtlas(image, columns, rows), alphabet(alphabet)
   {
-    FLECTRON_LOG_TRACE("Creating font atlas from {}", filepath);
+    FLECTRON_LOG_TRACE("Creating font atlas");
     for (size_t i = 0; i < alphabet.size(); i++)
       indexMap[(char)alphabet[i]] = (int)i;
   }
@@ -99,7 +68,7 @@ namespace flectron
       texturePositions[i].p = xOffset;
       texturePositions[i].q = yOffset;
     }
-    return rendererID;
+    return image->getGPU();
   }
 
   glm::vec2 FontAtlas::getOffsets() const

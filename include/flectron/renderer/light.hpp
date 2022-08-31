@@ -16,7 +16,10 @@ namespace flectron
   class LightRenderer
   {
   private:
+    Text vertexSource;
+    Text fragmentSource;
     Ref<Shader> shader;
+
     float lightsData[FLECTRON_NUM_LIGHTS * 3];
     float lightsColors[FLECTRON_NUM_LIGHTS * 4];
 
@@ -29,7 +32,7 @@ namespace flectron
     GLuint ibo;
 
   public:
-    LightRenderer(const std::string& vertexPath, const std::string& fragmentPath);
+    LightRenderer();
     ~LightRenderer();
 
     void reset();

@@ -7,6 +7,7 @@
 #include <array>
 #include <numeric>
 #include <cmath>
+#include <regex>
 
 namespace flectron { namespace WFC{
 
@@ -25,10 +26,12 @@ namespace flectron { namespace WFC{
     return sP;
   }
 
-  TileInfo::TileInfo(const std::string& path)
-    : tiles(), weights(), neighbors()
+  TileInfo::TileInfo(const Text& source) : TileInfo(static_cast<TextView>(source)) {}
+
+  TileInfo::TileInfo(const TextView& source)
+    : source(source), tiles(), weights(), neighbors()
   {
-    std::ifstream file(path);
+    std::stringstream file(std::regex_replace(static_cast<std::string>(source), std::regex("\\r\\n"), "\n"));
     std::string line;
     ReadState state = NONE;
     while (std::getline(file, line))
@@ -69,7 +72,6 @@ namespace flectron { namespace WFC{
         neighbors.push_back(std::make_pair(left, right));
       }
     }
-    file.close();
   }
 
   Tile::Tile(GLuint texture, const glm::vec4& textureCoords, const glm::vec4& ab, const glm::vec4& cd) 
@@ -139,11 +141,13 @@ namespace flectron { namespace WFC{
     return std::make_pair(left, right);
   }
 
-  TileModel::TileModel(const Ref<TileInfo>& config, const std::string& path, int numTiles, int width, int height, bool periodic)
-    : TextureAtlas(path, 1, numTiles, true), width(width), height(height), numPatterns(0), periodic(periodic), foundation(kInvalidIndex), 
+  TileModel::TileModel(const Ref<TileInfo>& config, const Image& image, int numTiles, int width, int height, bool periodic) : TileModel(config, static_cast<ImageView>(image), numTiles, width, height, periodic) {}
+
+  TileModel::TileModel(const Ref<TileInfo>& config, const ImageView& image, int numTiles, int width, int height, bool periodic)
+    : TextureAtlas(image, 1, numTiles), width(width), height(height), numPatterns(0), periodic(periodic), foundation(kInvalidIndex), 
       weights(), config(config), propagator(nullptr), tiles(nullptr), tileSize(32), tileMap()
   {
-    tileMap[-1] = new Tile(rendererID, {0.0f, 0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 0.0f, 1.0f});
+    tileMap[-1] = new Tile(image->getGPU(), {0.0f, 0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 0.0f, 1.0f});
 
     std::vector<std::array<int, 8>> action;
     std::unordered_map<std::string, size_t> firstOccurrence;
@@ -238,7 +242,7 @@ namespace flectron { namespace WFC{
         }
 
         const size_t index = patternsSoFar + t;
-        tileMap[index] = new Tile(rendererID, {(float)currentTile/(float)numTiles, 0.0f, 1.0f/(float)numTiles, 1.0f}, {pa.x, pa.y, pb.x, pb.y}, {pc.x, pc.y, pd.x, pd.y});
+        tileMap[index] = new Tile(image->getGPU(), {(float)currentTile/(float)numTiles, 0.0f, 1.0f/(float)numTiles, 1.0f}, {pa.x, pa.y, pb.x, pb.y}, {pc.x, pc.y, pd.x, pd.y});
       }
 
       for (int t = 0; t < cardinality; ++t)

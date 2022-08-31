@@ -45,12 +45,12 @@ namespace flectron {
       {
         auto& tvc = get<TextureVertexComponent>();
         auto& vertices = tvc.getTransformedVertices(pc);
-        Renderer::quad(vertices[0], vertices[1], vertices[2], vertices[3], static_cast<Texture*>(ac.animationAtlas.get())->get(), *frame, color);
+        Renderer::quad(vertices[0], vertices[1], vertices[2], vertices[3], ac.animationAtlas->image->getGPU(), *frame, color);
       }
       else if (has<BoxComponent>())
       {
         auto& vertices = vc.getTransformedVertices(pc);
-        Renderer::quad(vertices[0], vertices[1], vertices[2], vertices[3], static_cast<Texture*>(ac.animationAtlas.get())->get(), *frame, color);
+        Renderer::quad(vertices[0], vertices[1], vertices[2], vertices[3], ac.animationAtlas->image->getGPU(), *frame, color);
       }
       else
         FLECTRON_ASSERT(false, "Use TextureVertexComponent for non-box bodies");

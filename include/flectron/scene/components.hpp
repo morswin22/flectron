@@ -160,8 +160,8 @@ namespace flectron
     glm::vec4 texturePositions;
 
     TextureComponent(Entity entity);
-    TextureComponent(Entity entity, GLuint textureIndex, const glm::vec4& texturePositions);
-    TextureComponent(Entity entity, const Ref<Texture>& texture);
+    TextureComponent(Entity entity, GLuint textureIndex, const glm::vec4& texturePositions = { 0.0f, 0.0f, 1.0f, 1.0f });
+    TextureComponent(Entity entity, const ImageView& image, const glm::vec4& texturePositions = { 0.0f, 0.0f, 1.0f, 1.0f });
     TextureComponent(Entity entity, const Ref<TextureAtlas>& textureAtlas, float x, float y, float width, float height);
   };
 

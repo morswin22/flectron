@@ -16,6 +16,14 @@
 #include <flectron/assert/log.hpp>
 #include <stb_image.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <flectron/assets/text.hpp>
+
+FLECTRON_EMBED(FLECTRON_SHADER_TEXTURE_VERT);
+FLECTRON_EMBED(FLECTRON_SHADER_TEXTURE_FRAG);
+FLECTRON_EMBED(FLECTRON_SHADER_CIRCLE_VERT);
+FLECTRON_EMBED(FLECTRON_SHADER_CIRCLE_FRAG);
+FLECTRON_EMBED(FLECTRON_SHADER_LINE_VERT);
+FLECTRON_EMBED(FLECTRON_SHADER_LINE_FRAG);
 
 namespace flectron
 {
@@ -72,6 +80,8 @@ namespace flectron
     uint32_t* textureSlots = nullptr;
     uint32_t textureSlotIndex = 1;
 
+    Text textureShaderVertex;
+    Text textureShaderFragment;
     Scope<Shader> textureShader = nullptr;
 
     // Circle rendering
@@ -86,6 +96,8 @@ namespace flectron
 
     glm::vec2 circleVertexPositions[4];
 
+    Text circleShaderVertex;
+    Text circleShaderFragment;
     Scope<Shader> circleShader = nullptr;
 
     // Line rendering
@@ -96,7 +108,9 @@ namespace flectron
     LineVertex* lineBufferPointer = nullptr;
 
     uint32_t lineIndexCount = 0;
-
+    
+    Text lineShaderVertex;
+    Text lineShaderFragment;
     Scope<Shader> lineShader = nullptr;
   };
 
@@ -156,7 +170,13 @@ namespace flectron
     for (size_t i = 0; i < MaxTextureSlots; i++)
       samplers[i] = (int)i;
 
-    rendererData.textureShader = createScope<Shader>("shaders/texture.vert", "shaders/texture.frag");
+    rendererData.textureShaderVertex = Text::fromEmbed(FLECTRON_SHADER_TEXTURE_VERT());
+    rendererData.textureShaderVertex.load();
+
+    rendererData.textureShaderFragment = Text::fromEmbed(FLECTRON_SHADER_TEXTURE_FRAG());
+    rendererData.textureShaderFragment.load();
+
+    rendererData.textureShader = createScope<Shader>(TextView(rendererData.textureShaderVertex), TextView(rendererData.textureShaderFragment));
     rendererData.textureShader->bind();
     rendererData.textureShader->setUniform1iv("uTextures", samplers, tempMaxTextureSlots);
     rendererData.textureShader->setUniform1f("uZIndex", 0.3f);
@@ -217,7 +237,13 @@ namespace flectron
 		rendererData.circleVertexPositions[2] = glm::vec2( 0.5f,  0.5f) * 2.0f;
 		rendererData.circleVertexPositions[3] = glm::vec2(-0.5f,  0.5f) * 2.0f;
 
-    rendererData.circleShader = createScope<Shader>("shaders/circle.vert", "shaders/circle.frag");
+    rendererData.circleShaderVertex = Text::fromEmbed(FLECTRON_SHADER_CIRCLE_VERT());
+    rendererData.circleShaderVertex.load();
+
+    rendererData.circleShaderFragment = Text::fromEmbed(FLECTRON_SHADER_CIRCLE_FRAG());
+    rendererData.circleShaderFragment.load();
+    
+    rendererData.circleShader = createScope<Shader>(TextView(rendererData.circleShaderVertex), TextView(rendererData.circleShaderFragment));
     rendererData.circleShader->bind();
     rendererData.circleShader->setUniform1f("uZIndex", 0.2f);
   }
@@ -239,7 +265,13 @@ namespace flectron
     glEnableVertexArrayAttrib(rendererData.lineVertexArray, 1);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (const void*)offsetof(LineVertex, color));
 
-    rendererData.lineShader = createScope<Shader>("shaders/line.vert", "shaders/line.frag");
+    rendererData.lineShaderVertex = Text::fromEmbed(FLECTRON_SHADER_LINE_VERT());
+    rendererData.lineShaderVertex.load();
+
+    rendererData.lineShaderFragment = Text::fromEmbed(FLECTRON_SHADER_LINE_FRAG());
+    rendererData.lineShaderFragment.load();
+
+    rendererData.lineShader = createScope<Shader>(TextView(rendererData.lineShaderVertex), TextView(rendererData.lineShaderFragment));
     rendererData.lineShader->bind();
     rendererData.lineShader->setUniform1f("uZIndex", 0.1f);
 
@@ -281,6 +313,15 @@ namespace flectron
     delete[] rendererData.circleBuffer;
 
     delete[] rendererData.lineBuffer;
+
+    rendererData.textureShaderVertex.unload();
+    rendererData.textureShaderFragment.unload();
+    
+    rendererData.circleShaderVertex.unload();
+    rendererData.circleShaderFragment.unload();
+
+    rendererData.lineShaderVertex.unload();
+    rendererData.lineShaderFragment.unload();
   }
 
   void Renderer::setViewProjectionMatrix(const Camera& camera)

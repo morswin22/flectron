@@ -3,6 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <regex>
 #include <flectron/utils/random.hpp>
 #include <flectron/assert/assert.hpp>
 
@@ -78,11 +79,14 @@ namespace flectron
     }
   }
 
-  AnimationAtlas::AnimationAtlas(const std::string& filepath, int columns, int rows, bool nearest, const std::string& descriptionFilepath) 
-    : TextureAtlas(filepath, columns, rows, nearest), animations(), frames()
+  AnimationAtlas::AnimationAtlas(const Image& image, int columns, int rows, const Text& description) : AnimationAtlas(static_cast<ImageView>(image), columns, rows, static_cast<TextView>(description)) {}
+  
+  AnimationAtlas::AnimationAtlas(const ImageView& image, int columns, int rows, const TextView& description) 
+    : TextureAtlas(image, columns, rows), animations(), frames(), description(description)
   {
-    FLECTRON_LOG_TRACE("Creating animation atlas from {} and {}", filepath, descriptionFilepath);
-    std::ifstream file(descriptionFilepath);
+    FLECTRON_LOG_TRACE("Creating animation atlas");
+    FLECTRON_LOG_DEBUG("\tDescription source: {}", description->info());
+    std::stringstream file(std::regex_replace(static_cast<std::string>(description), std::regex("\\r\\n"), "\n")); // TODO should this happen here?
     std::string line;
     std::string name;
     std::string position;

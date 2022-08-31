@@ -7,12 +7,19 @@
 
 // Utils
 #include <flectron/utils/platform.hpp>
+#include <flectron/utils/embed.hpp>
 #include <flectron/utils/input.hpp>
 #include <flectron/utils/memory.hpp>
 #include <flectron/utils/profile.hpp>
 #include <flectron/utils/random.hpp>
 #include <flectron/utils/stopwatch.hpp>
 #include <flectron/utils/vertex.hpp>
+
+// Assets
+#include <flectron/assets/asset.hpp>
+#include <flectron/assets/text.hpp>
+#include <flectron/assets/raw.hpp>
+#include <flectron/assets/image.hpp>
 
 // Physics
 #include <flectron/physics/aabb.hpp>

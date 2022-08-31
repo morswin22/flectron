@@ -262,8 +262,8 @@ namespace flectron
     : entity(entity), textureIndex(textureIndex), texturePositions(texturePositions)
   {}
 
-  TextureComponent::TextureComponent(Entity entity, const Ref<Texture>& texture)
-    : entity(entity), textureIndex(texture->get()), texturePositions(0.0f, 0.0f, 1.0f, 1.0f)
+  TextureComponent::TextureComponent(Entity entity, const ImageView& image, const glm::vec4& texturePositions)
+    : entity(entity), textureIndex(image->getGPU()), texturePositions(texturePositions)
   {}
 
   TextureComponent::TextureComponent(Entity entity, const Ref<TextureAtlas>& textureAtlas, float x, float y, float width, float height)

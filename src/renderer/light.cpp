@@ -1,15 +1,26 @@
 #include <flectron/renderer/light.hpp>
 #include <flectron/scene/entity.hpp>
 #include <flectron/assert/assert.hpp>
+#include <flectron/utils/embed.hpp>
+
+FLECTRON_EMBED(FLECTRON_SHADER_LIGHT_VERT);
+FLECTRON_EMBED(FLECTRON_SHADER_LIGHT_FRAG);
 
 namespace flectron
 {
 
-  LightRenderer::LightRenderer(const std::string& vertexPath, const std::string& fragmentPath)
-    : shader(createRef<Shader>(vertexPath, fragmentPath)),
+  LightRenderer::LightRenderer()
+    : vertexSource(Text::fromEmbed(FLECTRON_SHADER_LIGHT_VERT())),
+      fragmentSource(Text::fromEmbed(FLECTRON_SHADER_LIGHT_FRAG())),
+      shader(nullptr),
       currentLight(0), currentData(0), currentColor(0)
   {
     FLECTRON_LOG_TRACE("Creating light renderer");
+
+    vertexSource.load();
+    fragmentSource.load();
+
+    shader = createRef<Shader>(TextView(vertexSource), TextView(fragmentSource));
 
     constexpr float positions[]{
       -1.0f, -1.0f,

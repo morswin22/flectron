@@ -8,33 +8,18 @@
 #include <string>
 #include <unordered_map>
 
+#include <flectron/assets/image.hpp>
+
 namespace flectron
 {
   
-  GLuint loadTexture(const std::string& filepath, bool nearest, bool repeat);
   GLuint createFrameBuffer(int width, int height, GLuint& buffer);
 
-  class Texture
+  class TextureAtlas
   {
-  protected:
-    GLuint rendererID;
-    std::string filepath;
-  
   public:
-    Texture(const std::string& filepath, bool nearest, bool repeat);
-    ~Texture();
+    ImageView image;
 
-    Texture(const Texture&) = delete;
-    Texture& operator=(const Texture&) = delete;
-
-    Texture(Texture&&) = delete;
-    Texture& operator=(Texture&&) = delete;
-
-    GLuint get() const;
-  };
-
-  class TextureAtlas : public Texture
-  {
   protected:
     int columns;
     int rows;
@@ -42,7 +27,8 @@ namespace flectron
     float yOffset;
 
   public:
-    TextureAtlas(const std::string& filepath, int columns, int rows, bool nearest);
+    TextureAtlas(const Image& image, int columns, int rows);
+    TextureAtlas(const ImageView& image, int columns, int rows);
 
     TextureAtlas(const TextureAtlas&) = delete;
     TextureAtlas& operator=(const TextureAtlas&) = delete;
@@ -60,7 +46,8 @@ namespace flectron
     std::unordered_map<char, int> indexMap;
 
   public:
-    FontAtlas(const std::string& filepath, int columns, int rows, const std::string& alphabet);
+    FontAtlas(const Image& image, int columns, int rows, const std::string& alphabet);
+    FontAtlas(const ImageView& image, int columns, int rows, const std::string& alphabet);
 
     FontAtlas(const FontAtlas&) = delete;
     FontAtlas& operator=(const FontAtlas&) = delete;

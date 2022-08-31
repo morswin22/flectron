@@ -87,20 +87,6 @@ namespace flectron
     return location;
   }
 
-  std::string BaseShader::getSource(const std::string& filepath) const
-  {
-    std::ifstream file(filepath);
-
-    FLECTRON_ASSERT(file.is_open(), "Could not open file " + filepath);
-    
-    std::string source;
-    std::string line;
-    while (std::getline(file, line))
-      source += line + "\n";
-    
-    return source;
-  }
-
   unsigned int BaseShader::compileShader(unsigned int type, const std::string& source)
   {
     unsigned int id = glCreateShader(type);
@@ -126,17 +112,16 @@ namespace flectron
     return id;
   }
 
-  Shader::Shader(const std::string& filepathVertex, const std::string& filepathFragment)
-    : filepathVertex(filepathVertex), filepathFragment(filepathFragment)
+  Shader::Shader(const TextView& vertexSource, const TextView& fragmentSource)
+    : vertexSource(vertexSource), fragmentSource(fragmentSource)
   {
-    FLECTRON_LOG_TRACE("Creating shader from {} and {}", filepathVertex, filepathFragment);
-
-    std::string vertexShader = getSource(filepathVertex);
-    std::string fragmentShader = getSource(filepathFragment);
+    FLECTRON_LOG_TRACE("Creating shader");
+    FLECTRON_LOG_DEBUG("\tVertex source: {}", vertexSource->info());
+    FLECTRON_LOG_DEBUG("\tFramgent source: {}", fragmentSource->info());
 
     rendererID = glCreateProgram();
-    unsigned int vs = compileShader(GL_VERTEX_SHADER, vertexShader);
-    unsigned int fs = compileShader(GL_FRAGMENT_SHADER, fragmentShader);
+    unsigned int vs = compileShader(GL_VERTEX_SHADER, vertexSource);
+    unsigned int fs = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
 
     glAttachShader(rendererID, vs);
     glAttachShader(rendererID, fs);
@@ -147,12 +132,11 @@ namespace flectron
     glDeleteShader(fs);
   }
 
-  ComputeShader::ComputeShader(const std::string& filepath)
-    : filepath(filepath)
+  ComputeShader::ComputeShader(const TextView& source)
+    : source(source)
   {
-    FLECTRON_LOG_TRACE("Creating compute shader from {}", filepath);
-
-    std::string source = getSource(filepath);
+    FLECTRON_LOG_TRACE("Creating compute shader");
+    FLECTRON_LOG_DEBUG("\tSource: {}", source->info());
 
     rendererID = glCreateProgram();
     unsigned int cs = compileShader(GL_COMPUTE_SHADER, source);

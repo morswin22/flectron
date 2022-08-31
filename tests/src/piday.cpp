@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+FLECTRON_EMBED(FONT_PNG);
+
 using namespace flectron;
 
 class Box : public Entity
@@ -55,6 +57,7 @@ public:
 class PiDayLayer : public SceneLayer
 {
 private:
+  Image fontImage;
   Ref<FontAtlas> font;
   ::Box smallBox;
   ::Box largeBox;
@@ -63,16 +66,23 @@ private:
 public:
   PiDayLayer(Application& application)
   : SceneLayer(application, 0u, 4u),
-    font(createRef<FontAtlas>("assets/font.png", 13, 7, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()[]{}-=+/\\|?.,<>~:; ")),
-    smallBox(scene.createEntity("Smaller box", {}, {}), 50.0f, 1.0),
+    fontImage(Image::fromEmbed(FONT_PNG())),
+    font(nullptr),
+    smallBox(scene.createEntity("Smaller box", {}, {}), 50.0f, 1.0), // TODO this should happen in setup()
     largeBox(scene.createEntity("Bigger box", {}, {}), 100.0f, std::pow(100.0, static_cast<double>(PI_DIGITS - 1))),
     score(0)
-  {
-    application.window.setBackground(Colors::darkGray());
-  }
+  {}
 
   void setup() override
   {
+    application.window.setBackground(Colors::darkGray());
+
+    fontImage.load();
+    fontImage.loadGPU();
+    fontImage.unload();
+
+    font = createRef<FontAtlas>(fontImage, 13, 7, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()[]{}-=+/\\|?.,<>~:; ");
+
     smallBox.get<PositionComponent>().move({ -50.0f, -25.0f });
     largeBox.get<PositionComponent>().move({ 150.0f, 0.0f });
     largeBox.applySpeed(-1.0 / static_cast<double>(STEPS_PER_FRAME));
@@ -109,6 +119,11 @@ public:
     std::string scoreString = "pi = " + std::to_string(score);
     scoreString.insert(scoreString.begin() + 6, '.');
     Renderer::text(font, { -225.0f, -50.0f }, scoreString, 200.0f);
+  }
+
+  void cleanup() override
+  {
+    fontImage.unloadGPU();
   }
 };
 

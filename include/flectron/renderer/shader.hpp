@@ -7,6 +7,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <flectron/assets/text.hpp>
 
 namespace flectron 
 {
@@ -19,7 +20,6 @@ namespace flectron
 
     int getUniformLocation(const std::string& name);
 
-    std::string getSource(const std::string& filepath) const;
     unsigned int compileShader(unsigned int type, const std::string& source);
     unsigned int createShader(const std::string& vertexShader, const std::string& fragmentShader);
 
@@ -45,23 +45,24 @@ namespace flectron
   class Shader : public BaseShader
   {
   private:
-    std::string filepathVertex;
-    std::string filepathFragment;
+    TextView vertexSource;
+    TextView fragmentSource;
 
   public:
-    Shader(const std::string& filepathVertex, const std::string& filepathFragment);
+    Shader(const TextView& vertexSource, const TextView& fragmentSource);
   };
 
   class ComputeShader : public BaseShader
   {
   private:
-    std::string filepath;
+    TextView source;
+
     int maxWorkGroupCount[3];
     int maxWorkGroupSize[3];
     int maxWorkGroupInvocations;
 
   public:
-    ComputeShader(const std::string& filepath);
+    ComputeShader(const TextView& source);
 
     void dispatch(int x, int y, int z) const;
     void barrier() const;

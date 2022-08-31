@@ -13,13 +13,17 @@ namespace flectron { namespace WFC {
 
   class TileInfo 
   {
+  public:
+    TextView source;
+
   private:
     std::vector<std::pair<std::string, Symmetry>> tiles;
     std::vector<double> weights;
     std::vector<std::pair<std::string, std::string>> neighbors;
 
   public:
-    TileInfo(const std::string& path);
+    TileInfo(const Text& source);
+    TileInfo(const TextView& source);
 
     friend class TileModel;
   };
@@ -52,7 +56,8 @@ namespace flectron { namespace WFC {
   class TileModel : public TextureAtlas
   {
   public:
-    TileModel(const Ref<TileInfo>& config, const std::string& path, int numTiles, int width, int height, bool periodic);
+    TileModel(const Ref<TileInfo>& config, const Image& image, int numTiles, int width, int height, bool periodic);
+    TileModel(const Ref<TileInfo>& config, const ImageView& image, int numTiles, int width, int height, bool periodic);
 
     bool propagate(Output* output) const;
 
@@ -63,7 +68,7 @@ namespace flectron { namespace WFC {
     Result findLowestEntropy(const Output* output, RandomDouble& random_double, int& argminx, int& argminy) const;
 
     std::vector<std::vector<Tile*>> getTiles(Ref<Output>& output);
-    GLuint getTexture() const { return rendererID; }
+    GLuint getTexture() const { return image->getGPU(); }
 
   public:
     size_t width;
