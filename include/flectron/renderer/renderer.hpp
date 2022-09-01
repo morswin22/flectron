@@ -110,6 +110,33 @@ namespace flectron
 
     // Text
     static void text(Ref<FontAtlas>& atlas, const Vector& position, const std::string& text, float scale, const Color& color = Colors::white());
+
+  public:
+    class Statistics
+    {
+    private:
+      size_t textureCalls;
+      size_t circleCalls;
+      size_t lineCalls;
+
+    public:
+      Statistics();
+
+      size_t textureDrawCalls() const;
+      size_t circleDrawCalls() const;
+      size_t lineDrawCalls() const;
+      size_t totalDrawCalls() const;
+
+      float texturePercentage() const;
+      float circlePercentage() const;
+      float linePercentage() const;
+
+      void reset();
+
+      friend class Renderer;
+    };
+
+    static Statistics& statistics();
   };
 
 }

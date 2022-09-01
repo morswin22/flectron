@@ -46,7 +46,7 @@ namespace flectron
 
   void Scene::update(Application& application)
   {
-    FLECTRON_PROFILE_FRAME("Scene::update");
+    FLECTRON_PROFILE_EVENT("Scene::update");
 
     auto scriptComponents = getScriptComponents();
     auto scriptsEnd = scriptComponents.end();

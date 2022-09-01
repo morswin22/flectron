@@ -53,6 +53,7 @@ namespace flectron
       mouseWorldPosition.x = (mousePosition.x - window.properties.width * 0.5f) * scale + cameraPosition.x;
       mouseWorldPosition.y = (window.properties.height * 0.5f - mousePosition.y) * scale + cameraPosition.y;
 
+      Renderer::statistics().reset();
       Renderer::setViewProjectionMatrix(window.camera);
       Renderer::beginBatch();
       for (auto layer : layers)

@@ -96,7 +96,7 @@ public:
         auto& cc = entity.add<CircleComponent>(randomFloat(0.75f, 1.25f));
         entity.add<PhysicsComponent>(2.0f, 0.6f, false);
         entity.add<FillComponent>(Colors::random());
-        entity.add<StrokeComponent>(Colors::white(), 1.0f);
+        entity.add<StrokeComponent>(Colors::white(), 0.05f);
         entity.add<TemporaryComponent>();
 
         if (randomFloat(0.0f, 1.0f) < 0.1f)
@@ -136,9 +136,16 @@ public:
     }, FLECTRON_PHYSICS);
 
     scene.createScript("Info Text", [&]() {
+      const auto& stats = Renderer::statistics();
+
       std::ostringstream text;
       text << "Elapsed time: " << (int)(application.elapsedTime * 1000.0f) << "ms";
       text << " (" << (int)(physicsTimer.getElapsedTime() * 1000.0f) << "ms)";
+      text << "\nRenderer stats: ";
+      text << std::floor(stats.texturePercentage() * 100.0f) << "%|";
+      text << std::floor(stats.circlePercentage() * 100.0f) << "%|";
+      text << std::floor(stats.linePercentage() * 100.0f) << "% (";
+      text << stats.totalDrawCalls() << ")";
       text << "\nSpawned entities: " << scene.getEntityCount<TemporaryComponent>();
       text << " (" << scene.getEntityCount("Circle") << "|" << scene.getEntityCount("Box") << ")";
       text << "\n" << scene.dateTime->getDay() << "d " << std::floor(scene.dateTime->getTime() * 24.0f);

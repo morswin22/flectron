@@ -112,6 +112,9 @@ namespace flectron
     Text lineShaderVertex;
     Text lineShaderFragment;
     Scope<Shader> lineShader = nullptr;
+
+    // Statistics
+    Renderer::Statistics statistics;
   };
 
   static RendererData rendererData;
@@ -284,6 +287,7 @@ namespace flectron
     initTextureRendering();
     initCircleRendering();
     initLineRendering();
+    rendererData.statistics.reset();
     rendererData.frameBuffer = createFrameBuffer(width, height, buffer);
   }
 
@@ -604,6 +608,8 @@ namespace flectron
     rendererData.textureIndicesPointer += 6;
 
     rendererData.textureOffset += 4;
+
+    rendererData.statistics.textureCalls++;
   }
 
   void Renderer::triangle(const Vector& a, const Vector& b, const Vector& c, const Color& color)
@@ -641,6 +647,8 @@ namespace flectron
       rendererData.textureIndicesPointer++;
     }
     rendererData.textureOffset += vertices.size();
+
+    rendererData.statistics.textureCalls++;
   }
 
   void Renderer::line(const Vector& a, const Vector& b, const Color& color)
@@ -678,6 +686,8 @@ namespace flectron
     rendererData.lineBufferPointer++;
 
     rendererData.lineIndexCount += 2;
+
+    rendererData.statistics.lineCalls++;
   }
 
   void Renderer::debugLineWidth(float width)
@@ -786,6 +796,8 @@ namespace flectron
     }
 
     rendererData.circleIndexCount += 6;
+
+    rendererData.statistics.circleCalls++;
   }
 
   void Renderer::text(Ref<FontAtlas>& atlas, const Vector& position, const std::string& text, float scale, const Color& color)
@@ -821,5 +833,27 @@ namespace flectron
       lineOffset += offsets.y;
     }
   }
+
+  Renderer::Statistics::Statistics()
+    : textureCalls(0u), circleCalls(0u), lineCalls(0u) 
+  {}
+
+  size_t Renderer::Statistics::textureDrawCalls() const { return textureCalls; }
+  size_t Renderer::Statistics::circleDrawCalls() const { return circleCalls; }
+  size_t Renderer::Statistics::lineDrawCalls() const { return lineCalls; }
+  size_t Renderer::Statistics::totalDrawCalls() const { return textureCalls + circleCalls + lineCalls; }
+
+  float Renderer::Statistics::texturePercentage() const { return (float)textureCalls / (float)totalDrawCalls(); }
+  float Renderer::Statistics::circlePercentage() const { return (float)circleCalls / (float)totalDrawCalls(); }
+  float Renderer::Statistics::linePercentage() const { return (float)lineCalls / (float)totalDrawCalls(); }
+
+  void Renderer::Statistics::reset()
+  {
+    textureCalls = 0u;
+    circleCalls = 0u;
+    lineCalls = 0u;
+  }
+
+  Renderer::Statistics& Renderer::statistics() { return rendererData.statistics; }
 
 }

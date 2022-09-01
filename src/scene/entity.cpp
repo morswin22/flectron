@@ -29,11 +29,19 @@ namespace flectron {
 
     if (has<StrokeComponent>())
     {
-      // TODO improve stroke rendering
-      auto& vertices = vc.getTransformedVertices(pc);
       auto& sc = get<StrokeComponent>();
-      for (int j = 0; j < vertices.size(); j++)
-        Renderer::debugLine(vertices[j], vertices[(j + 1) % vertices.size()], sc.strokeColor);
+      if (has<CircleComponent>())
+      {
+        auto& cc = get<CircleComponent>();
+        Renderer::circle(pc.position, cc.radius + sc.strokeWidth, cc.thickness, cc.fade, sc.strokeColor); // TODO what about the thickness and fade?
+      }
+      else
+      {
+        // TODO improve stroke rendering
+        auto& vertices = vc.getTransformedVertices(pc);
+        for (int j = 0; j < vertices.size(); j++)
+          Renderer::debugLine(vertices[j], vertices[(j + 1) % vertices.size()], sc.strokeColor);
+      }
     }
 
     if (has<AnimationComponent>())
