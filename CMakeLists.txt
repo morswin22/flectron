@@ -98,7 +98,25 @@ endif()
 if(FLECTRON_BUILD_DOCS)
   find_package(Doxygen)
   if(DOXYGEN_FOUND)
-    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+    include(FetchContent)
+    FetchContent_Declare(
+      doxygen_awesome_css
+      GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css.git
+      GIT_TAG v2.0.3
+    )
+    FetchContent_GetProperties(doxygen_awesome_css)
+    if(NOT doxygen_awesome_css_POPULATED)
+      FetchContent_Populate(doxygen_awesome_css)
+    endif()
+
+    file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/README.md readme_contents)
+    list(POP_FRONT readme_contents)
+    list(PREPEND readme_contents "![Flectron](${CMAKE_CURRENT_SOURCE_DIR}/docs/flectron.png)\n")
+    list(PREPEND readme_contents "# Flectron\n")
+    list(JOIN readme_contents "\n" readme_contents)
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/README.md ${readme_contents})
+
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile)
     set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
     configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)

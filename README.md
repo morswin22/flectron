@@ -1,4 +1,4 @@
-![flectron](flectron.png)
+![flectron](docs/flectron.png)
 
 ## Requirements
 * [cmake](https://cmake.org/)

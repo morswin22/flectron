@@ -7,7 +7,7 @@ DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = Flectron
 PROJECT_NUMBER         = 0.1.0
 PROJECT_BRIEF          =
-# PROJECT_LOGO           = @CMAKE_CURRENT_SOURCE_DIR@/flectron.png
+PROJECT_LOGO           = @CMAKE_CURRENT_SOURCE_DIR@/docs/flectron.png
 OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@/docs/
 CREATE_SUBDIRS         = NO
 ALLOW_UNICODE_NAMES    = NO
@@ -120,7 +120,7 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/include \
                          @CMAKE_CURRENT_SOURCE_DIR@/src \
-                         @CMAKE_CURRENT_SOURCE_DIR@/README.md
+                         @CMAKE_CURRENT_BINARY_DIR@/README.md
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.cpp \
                          *.ipp \
@@ -138,7 +138,7 @@ INPUT_FILTER           =
 FILTER_PATTERNS        =
 FILTER_SOURCE_FILES    = NO
 FILTER_SOURCE_PATTERNS =
-USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/README.md
+USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_BINARY_DIR@/README.md
 #---------------------------------------------------------------------------
 # Configuration options related to source browsing
 #---------------------------------------------------------------------------
@@ -166,11 +166,15 @@ IGNORE_PREFIX          =
 GENERATE_HTML          = YES
 HTML_OUTPUT            = html
 HTML_FILE_EXTENSION    = .html
-HTML_HEADER            =
+HTML_HEADER            = @CMAKE_CURRENT_SOURCE_DIR@/docs/doxygen.html
 HTML_FOOTER            =
 HTML_STYLESHEET        =
-HTML_EXTRA_STYLESHEET  =
-HTML_EXTRA_FILES       =
+HTML_EXTRA_STYLESHEET  = @CMAKE_CURRENT_BINARY_DIR@/_deps/doxygen_awesome_css-src/doxygen-awesome.css \
+                         @CMAKE_CURRENT_BINARY_DIR@/_deps/doxygen_awesome_css-src/doxygen-awesome-sidebar-only.css \
+                         @CMAKE_CURRENT_BINARY_DIR@/_deps/doxygen_awesome_css-src/doxygen-awesome-sidebar-only-darkmode-toggle.css
+HTML_EXTRA_FILES       = @CMAKE_CURRENT_BINARY_DIR@/_deps/doxygen_awesome_css-src/doxygen-awesome-darkmode-toggle.js \
+                         @CMAKE_CURRENT_BINARY_DIR@/_deps/doxygen_awesome_css-src/doxygen-awesome-fragment-copy-button.js \
+                         @CMAKE_CURRENT_BINARY_DIR@/_deps/doxygen_awesome_css-src/doxygen-awesome-paragraph-link.js
 HTML_COLORSTYLE_HUE    = 220
 HTML_COLORSTYLE_SAT    = 100
 HTML_COLORSTYLE_GAMMA  = 80
@@ -315,7 +319,7 @@ EXTERNAL_PAGES         = YES
 CLASS_DIAGRAMS         = YES
 DIA_PATH               =
 HIDE_UNDOC_RELATIONS   = YES
-HAVE_DOT               = NO
+HAVE_DOT               = YES
 DOT_NUM_THREADS        = 0
 DOT_FONTNAME           = Helvetica
 DOT_FONTSIZE           = 10
@@ -334,7 +338,7 @@ CALL_GRAPH             = NO
 CALLER_GRAPH           = NO
 GRAPHICAL_HIERARCHY    = YES
 DIRECTORY_GRAPH        = YES
-DOT_IMAGE_FORMAT       = png
+DOT_IMAGE_FORMAT       = svg
 INTERACTIVE_SVG        = NO
 DOT_PATH               =
 DOTFILE_DIRS           =
@@ -345,7 +349,7 @@ PLANTUML_CFG_FILE      =
 PLANTUML_INCLUDE_PATH  =
 DOT_GRAPH_MAX_NODES    = 50
 MAX_DOT_GRAPH_DEPTH    = 0
-DOT_TRANSPARENT        = NO
+DOT_TRANSPARENT        = YES
 DOT_MULTI_TARGETS      = NO
 GENERATE_LEGEND        = YES
 DOT_CLEANUP            = YES
