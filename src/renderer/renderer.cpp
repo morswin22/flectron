@@ -369,6 +369,8 @@ namespace flectron
 
     rendererData.textureShader->bind();
 
+    glBindVertexArray(rendererData.textureVertexArray);
+
     GLsizeiptr textureSize = (uint8_t*)rendererData.textureBufferPointer - (uint8_t*)rendererData.textureBuffer;
     glBindBuffer(GL_ARRAY_BUFFER, rendererData.textureVertexBuffer);
     glBufferSubData(GL_ARRAY_BUFFER, 0, textureSize, rendererData.textureBuffer);
@@ -380,7 +382,6 @@ namespace flectron
     for (uint32_t i = 0; i < rendererData.textureSlotIndex; i++)
       glBindTextureUnit(i, rendererData.textureSlots[i]);
 
-    glBindVertexArray(rendererData.textureVertexArray);
     glDrawElements(GL_TRIANGLES, rendererData.textureIndexCount, GL_UNSIGNED_INT, nullptr);
   }
 
@@ -397,11 +398,14 @@ namespace flectron
 
     rendererData.circleShader->bind();
 
+    glBindVertexArray(rendererData.circleVertexArray);
+
     GLsizeiptr circleSize = (uint8_t*)rendererData.circleBufferPointer - (uint8_t*)rendererData.circleBuffer;
     glBindBuffer(GL_ARRAY_BUFFER, rendererData.circleVertexBuffer);
     glBufferSubData(GL_ARRAY_BUFFER, 0, circleSize, rendererData.circleBuffer);
 
-    glBindVertexArray(rendererData.circleVertexArray);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererData.circleIndexBuffer);
+
     glDrawElements(GL_TRIANGLES, rendererData.circleIndexCount, GL_UNSIGNED_INT, nullptr);
   }
 
@@ -418,11 +422,12 @@ namespace flectron
 
     rendererData.lineShader->bind();
 
+    glBindVertexArray(rendererData.lineVertexArray);
+
     GLsizeiptr lineSize = (uint8_t*)rendererData.lineBufferPointer - (uint8_t*)rendererData.lineBuffer;
     glBindBuffer(GL_ARRAY_BUFFER, rendererData.lineVertexBuffer);
     glBufferSubData(GL_ARRAY_BUFFER, 0, lineSize, rendererData.lineBuffer);
 
-    glBindVertexArray(rendererData.lineVertexArray);
     glDrawArrays(GL_LINES, 0, rendererData.lineIndexCount);
   }
 
