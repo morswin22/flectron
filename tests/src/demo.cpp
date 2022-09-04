@@ -40,8 +40,6 @@ public:
     scene.dateTime = createScope<DateTime>(8.0f/24.0f, 5.0f/24.0f, 18.0f/24.0f, 3.0f/24.0f, 1.0f/24.0f, 0.0f, 1.0f);
     scene.lightRenderer = createScope<LightRenderer>();
 
-    Renderer::debugLineWidth(1.0f);
-
     atlasImage.load();
     atlasImage.loadGPU();
     atlasImage.unload();

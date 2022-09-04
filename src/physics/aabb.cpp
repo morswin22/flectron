@@ -12,12 +12,12 @@ namespace flectron
     : min(minX, minY), max(maxX, maxY)
   {}
 
-  void AABB::render(const Color& color) const
+  void AABB::render(float width, const Color& color) const
   {
-    Renderer::debugLine(min, { max.x, min.y }, color);
-    Renderer::debugLine({ max.x, min.y }, max, color);
-    Renderer::debugLine(max, { min.x, max.y }, color);
-    Renderer::debugLine({ min.x, max.y }, min, color);
+    Renderer::line(min, { max.x, min.y }, width, color);
+    Renderer::line({ max.x, min.y }, max, width, color);
+    Renderer::line(max, { min.x, max.y }, width, color);
+    Renderer::line({ min.x, max.y }, min, width, color);
   }
 
 }

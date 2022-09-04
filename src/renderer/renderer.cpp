@@ -23,6 +23,7 @@ FLECTRON_EMBED(FLECTRON_SHADER_TEXTURE_FRAG);
 FLECTRON_EMBED(FLECTRON_SHADER_CIRCLE_VERT);
 FLECTRON_EMBED(FLECTRON_SHADER_CIRCLE_FRAG);
 FLECTRON_EMBED(FLECTRON_SHADER_LINE_VERT);
+FLECTRON_EMBED(FLECTRON_SHADER_LINE_GEOM);
 FLECTRON_EMBED(FLECTRON_SHADER_LINE_FRAG);
 
 namespace flectron
@@ -55,6 +56,7 @@ namespace flectron
   {
     glm::vec2 position;
     glm::vec4 color;
+    float thickness;
   };
 
   struct RendererData
@@ -111,6 +113,7 @@ namespace flectron
     
     Text lineShaderVertex;
     Text lineShaderFragment;
+    Text lineShaderGeometry;
     Shader::Ref lineShader = nullptr;
 
     // Statistics
@@ -282,22 +285,26 @@ namespace flectron
     glEnableVertexArrayAttrib(rendererData.lineVertexArray, 1);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (const void*)offsetof(LineVertex, color));
 
+    glEnableVertexArrayAttrib(rendererData.lineVertexArray, 2);
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (const void*)offsetof(LineVertex, thickness));
+
     rendererData.lineShaderVertex = Text::fromEmbed(FLECTRON_SHADER_LINE_VERT());
     rendererData.lineShaderVertex.load();
 
     rendererData.lineShaderFragment = Text::fromEmbed(FLECTRON_SHADER_LINE_FRAG());
     rendererData.lineShaderFragment.load();
 
+    rendererData.lineShaderGeometry = Text::fromEmbed(FLECTRON_SHADER_LINE_GEOM());
+    rendererData.lineShaderGeometry.load();
+
     rendererData.lineShader = Shader::create({
       rendererData.lineShaderVertex,
-      nullptr,
+      rendererData.lineShaderGeometry,
       rendererData.lineShaderFragment,
       nullptr
     });
     rendererData.lineShader->bind();
     rendererData.lineShader->setUniform1f("uZIndex", 0.1f);
-
-    debugLineWidth(2.0f);
   }
 
   void Renderer::init(int width, int height, GLuint& buffer)
@@ -682,19 +689,6 @@ namespace flectron
 
   void Renderer::line(const Vector& a, const Vector& b, float thickness, const Color& color)
   {
-    Vector axis = normalize(b - a) * thickness;
-    Vector normal = normalize({ -axis.y, axis.x  }) * thickness;
-
-    quad(
-      a + normal - axis,
-      a - normal - axis,
-      b - normal + axis,
-      b + normal + axis,
-      color);
-  }
-
-  void Renderer::debugLine(const Vector& a, const Vector& b, const Color& color)
-  {
     if (rendererData.lineIndexCount + 2 >= MaxIndexCount)
     {
       endLineBatch();
@@ -703,20 +697,17 @@ namespace flectron
 
     rendererData.lineBufferPointer->position = { a.x, a.y };
     rendererData.lineBufferPointer->color = { color.r, color.g, color.b, color.a };
+    rendererData.lineBufferPointer->thickness = thickness;
     rendererData.lineBufferPointer++;
 
     rendererData.lineBufferPointer->position = { b.x, b.y };
     rendererData.lineBufferPointer->color = { color.r, color.g, color.b, color.a };
+    rendererData.lineBufferPointer->thickness = thickness;
     rendererData.lineBufferPointer++;
 
     rendererData.lineIndexCount += 2;
 
     rendererData.statistics.lineCalls++;
-  }
-
-  void Renderer::debugLineWidth(float width)
-  {
-    glLineWidth(width);
   }
 
   void Renderer::point(const Vector& position, const Color& color)

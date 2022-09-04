@@ -83,8 +83,6 @@ namespace flectron
     // Line
     static void line(const Vector& a, const Vector& b, const Color& color = Colors::white());
     static void line(const Vector& a, const Vector& b, float thickness, const Color& color = Colors::white());
-    static void debugLine(const Vector& a, const Vector& b, const Color& color = Colors::white());
-    static void debugLineWidth(float width);
 
     // Circle
     static void point(const Vector& position, const Color& color = Colors::white());

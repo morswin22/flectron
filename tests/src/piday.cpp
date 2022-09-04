@@ -113,8 +113,8 @@ public:
     
     SceneLayer::update();
 
-    Renderer::debugLine({ -225.0f, 100.0f }, { -225.0f, -50.0f });
-    Renderer::debugLine({ -225.0f, -50.0f }, { 300.0f, -50.0f });
+    Renderer::line({ -225.0f, 100.0f }, { -225.0f, -50.0f });
+    Renderer::line({ -225.0f, -50.0f }, { 300.0f, -50.0f });
 
     std::string scoreString = "pi = " + std::to_string(score);
     scoreString.insert(scoreString.begin() + 6, '.');

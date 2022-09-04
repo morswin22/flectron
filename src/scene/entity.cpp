@@ -37,10 +37,9 @@ namespace flectron {
       }
       else
       {
-        // TODO improve stroke rendering
         auto& vertices = vc.getTransformedVertices(pc);
         for (int j = 0; j < vertices.size(); j++)
-          Renderer::debugLine(vertices[j], vertices[(j + 1) % vertices.size()], sc.strokeColor);
+          Renderer::line(vertices[j], vertices[(j + 1) % vertices.size()], sc.strokeWidth, sc.strokeColor);
       }
     }
 
