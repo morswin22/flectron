@@ -32,6 +32,7 @@ namespace flectron
 
     operator const T&() const { return *asset; }
     const T* operator ->() const { return asset; }
+    operator bool() const { return asset != nullptr; }
   };
 
   template<typename T>

@@ -20,7 +20,12 @@ namespace flectron
     vertexSource.load();
     fragmentSource.load();
 
-    shader = createRef<Shader>(TextView(vertexSource), TextView(fragmentSource));
+    shader = Shader::create({
+      vertexSource,
+      nullptr,
+      fragmentSource,
+      nullptr
+    });
 
     constexpr float positions[]{
       -1.0f, -1.0f,

@@ -10,72 +10,72 @@
 namespace flectron 
 {
 
-  BaseShader::~BaseShader()
+  Shader::~Shader()
   {
     glDeleteProgram(rendererID);
   }
 
-  void BaseShader::bind() const
+  void Shader::bind() const
   {
     glUseProgram(rendererID);
   }
 
-  void BaseShader::unbind() const
+  void Shader::unbind() const
   {
     glUseProgram(0);
   }
 
-  GLuint BaseShader::getRendererID() const
+  GLuint Shader::getRendererID() const
   {
     return rendererID;
   }
 
-  void BaseShader::setUniform1i(const std::string& name, int value)
+  void Shader::setUniform1i(const std::string& name, int value)
   {
     glUniform1i(getUniformLocation(name), value);
   }
 
-  void BaseShader::setUniform1f(const std::string& name, float value)
+  void Shader::setUniform1f(const std::string& name, float value)
   {
     glUniform1f(getUniformLocation(name), value);
   }
   
-  void BaseShader::setUniform2f(const std::string& name, float v1, float v2)
+  void Shader::setUniform2f(const std::string& name, float v1, float v2)
   {
     glUniform2f(getUniformLocation(name), v1, v2);
   }
 
-  void BaseShader::setUniform4f(const std::string& name, float v0, float v1, float v2, float v3)
+  void Shader::setUniform4f(const std::string& name, float v0, float v1, float v2, float v3)
   {
     glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
   }
 
-  void BaseShader::setUniformMat4f(const std::string& name, const glm::mat4& matrix)
+  void Shader::setUniformMat4f(const std::string& name, const glm::mat4& matrix)
   {
     glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix));
   }
 
-  void BaseShader::setUniform1iv(const std::string& name, int* array, int size)
+  void Shader::setUniform1iv(const std::string& name, int* array, int size)
   {
     glUniform1iv(getUniformLocation(name), size, array);
   }
 
-  void BaseShader::setUniform2fv(const std::string& name, float* array, int size)
+  void Shader::setUniform2fv(const std::string& name, float* array, int size)
   {
     glUniform2fv(getUniformLocation(name), size, array);
   }
 
-  void BaseShader::setUniform3fv(const std::string& name, float* array, int size)
+  void Shader::setUniform3fv(const std::string& name, float* array, int size)
   {
     glUniform3fv(getUniformLocation(name), size, array);
   }
 
-  void BaseShader::setUniform4fv(const std::string& name, float* array, int size)
+  void Shader::setUniform4fv(const std::string& name, float* array, int size)
   {
     glUniform4fv(getUniformLocation(name), size, array);
   }
 
-  int BaseShader::getUniformLocation(const std::string& name)
+  int Shader::getUniformLocation(const std::string& name)
   {
     if (locationCache.find(name) != locationCache.end())
       return locationCache[name];
@@ -87,7 +87,7 @@ namespace flectron
     return location;
   }
 
-  unsigned int BaseShader::compileShader(unsigned int type, const std::string& source)
+  unsigned int Shader::compileShader(unsigned int type, const std::string& source)
   {
     unsigned int id = glCreateShader(type);
     const char* src = source.c_str();
@@ -112,56 +112,134 @@ namespace flectron
     return id;
   }
 
-  Shader::Shader(const TextView& vertexSource, const TextView& fragmentSource)
-    : vertexSource(vertexSource), fragmentSource(fragmentSource)
+  Shader::Shader()
+    : rendererID(0u), locationCache(), shaders({ nullptr, nullptr, nullptr, nullptr })
+  {
+    FLECTRON_LOG_TRACE("Creating empty shader");
+    rendererID = glCreateProgram();
+    glLinkProgram(rendererID);
+    glValidateProgram(rendererID);
+  }
+
+  Shader::Shader(const Shaders& shaders)
+    : rendererID(0u), locationCache(), shaders(shaders)
   {
     FLECTRON_LOG_TRACE("Creating shader");
-    FLECTRON_LOG_DEBUG("\tVertex source: {}", vertexSource->info());
-    FLECTRON_LOG_DEBUG("\tFramgent source: {}", fragmentSource->info());
-
     rendererID = glCreateProgram();
-    unsigned int vs = compileShader(GL_VERTEX_SHADER, vertexSource);
-    unsigned int fs = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
 
-    glAttachShader(rendererID, vs);
-    glAttachShader(rendererID, fs);
+    ShadersAttacher attacher(rendererID, shaders);
+
     glLinkProgram(rendererID);
     glValidateProgram(rendererID);
-
-    glDeleteShader(vs);
-    glDeleteShader(fs);
   }
 
-  ComputeShader::ComputeShader(const TextView& source)
-    : source(source)
+  Ref<Shader> Shader::create(const Shaders& shaders)
   {
-    FLECTRON_LOG_TRACE("Creating compute shader");
-    FLECTRON_LOG_DEBUG("\tSource: {}", source->info());
-
-    rendererID = glCreateProgram();
-    unsigned int cs = compileShader(GL_COMPUTE_SHADER, source);
-
-    glAttachShader(rendererID, cs);
-    glLinkProgram(rendererID);
-    glValidateProgram(rendererID);
-
-    glDeleteShader(cs);
-
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkGroupCount[0]);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkGroupCount[1]);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkGroupCount[2]);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &maxWorkGroupSize[0]);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &maxWorkGroupSize[1]);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &maxWorkGroupSize[2]);
-    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &maxWorkGroupInvocations);
+    return createRef<Shader>(shaders);
   }
 
-  void ComputeShader::dispatch(int x, int y, int z) const
+  void Shader::addShader(ShaderType type, const TextView& source)
+  {
+    switch (type)
+    {
+    case VERTEX:
+      FLECTRON_LOG_DEBUG("Adding vertex shader source: {}", source->info());
+      shaders.vertex = source;
+      break;
+    case FRAGMENT:
+      FLECTRON_LOG_DEBUG("Adding fragment shader source: {}", source->info());
+      shaders.fragment = source;
+      break;
+    case GEOMETRY:
+      FLECTRON_LOG_DEBUG("Adding geometry shader source: {}", source->info());
+      shaders.geometry = source;
+      break;
+    case COMPUTE:
+      FLECTRON_LOG_DEBUG("Adding compute shader source: {}", source->info());
+      shaders.compute = source;
+      break;
+    }
+
+    GLuint shaderID = compileShader(type, source);
+    glAttachShader(rendererID, shaderID);
+    glLinkProgram(rendererID);
+    glValidateProgram(rendererID);
+    glDeleteShader(shaderID);
+  }
+
+  void Shader::reload()
+  {
+    FLECTRON_LOG_TRACE("Reloading shader");
+    glDeleteProgram(rendererID);
+    rendererID = glCreateProgram();
+
+    ShadersAttacher attacher(rendererID, shaders);
+
+    glLinkProgram(rendererID);
+    glValidateProgram(rendererID);
+  }
+
+  Shader::ShadersAttacher::ShadersAttacher(GLuint rendererID, const Shaders& shaders)
+    : vertex(0u), geometry(0u), fragment(0u), compute(0u)
+  {
+    if (shaders.vertex)
+    {
+      FLECTRON_LOG_DEBUG("\tVertex source: {}", shaders.vertex->info());
+      vertex = compileShader(VERTEX, shaders.vertex);
+      glAttachShader(rendererID, vertex);
+    }
+    
+    if (shaders.geometry)
+    {
+      FLECTRON_LOG_DEBUG("\tGeometry source: {}", shaders.geometry->info());
+      geometry = compileShader(GEOMETRY, shaders.geometry);
+      glAttachShader(rendererID, geometry);
+    }
+
+    if (shaders.fragment)
+    {
+      FLECTRON_LOG_DEBUG("\tFragment source: {}", shaders.fragment->info());
+      fragment = compileShader(FRAGMENT, shaders.fragment);
+      glAttachShader(rendererID, fragment);
+    }
+    
+    if (shaders.compute)
+    {
+      FLECTRON_LOG_DEBUG("\tCompute source: {}", shaders.compute->info());
+      compute = compileShader(COMPUTE, shaders.compute);
+      glAttachShader(rendererID, compute);
+    }
+  }
+
+  Shader::ShadersAttacher::~ShadersAttacher()
+  {
+    glDeleteShader(vertex);
+    glDeleteShader(geometry);
+    glDeleteShader(fragment);
+    glDeleteShader(compute);
+  }
+
+  Shader::WorkGoupInfo Shader::getWorkGroupInfo() const
+  {
+    WorkGoupInfo info;
+
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &info.maxWorkGroupCount[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &info.maxWorkGroupCount[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &info.maxWorkGroupCount[2]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &info.maxWorkGroupSize[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &info.maxWorkGroupSize[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &info.maxWorkGroupSize[2]);
+    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &info.maxWorkGroupInvocations);
+
+    return info;
+  }
+
+  void Shader::dispatch(int x, int y, int z) const
   {
     glDispatchCompute((GLuint)x, (GLuint)y, (GLuint)z);
   }
 
-  void ComputeShader::barrier() const
+  void Shader::barrier() const
   {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
   }

@@ -82,7 +82,7 @@ namespace flectron
 
     Text textureShaderVertex;
     Text textureShaderFragment;
-    Scope<Shader> textureShader = nullptr;
+    Shader::Ref textureShader = nullptr;
 
     // Circle rendering
     GLuint circleVertexArray = 0;
@@ -98,7 +98,7 @@ namespace flectron
 
     Text circleShaderVertex;
     Text circleShaderFragment;
-    Scope<Shader> circleShader = nullptr;
+    Shader::Ref circleShader = nullptr;
 
     // Line rendering
     GLuint lineVertexArray = 0;
@@ -111,7 +111,7 @@ namespace flectron
     
     Text lineShaderVertex;
     Text lineShaderFragment;
-    Scope<Shader> lineShader = nullptr;
+    Shader::Ref lineShader = nullptr;
 
     // Statistics
     Renderer::Statistics statistics;
@@ -179,7 +179,16 @@ namespace flectron
     rendererData.textureShaderFragment = Text::fromEmbed(FLECTRON_SHADER_TEXTURE_FRAG());
     rendererData.textureShaderFragment.load();
 
-    rendererData.textureShader = createScope<Shader>(TextView(rendererData.textureShaderVertex), TextView(rendererData.textureShaderFragment));
+    // rendererData.textureShader = Shader::create({
+    //   .vertex = rendererData.textureShaderVertex,
+    //   .fragment = rendererData.textureShaderFragment
+    // });
+    rendererData.textureShader = Shader::create({
+      rendererData.textureShaderVertex,
+      nullptr,
+      rendererData.textureShaderFragment,
+      nullptr
+    });
     rendererData.textureShader->bind();
     rendererData.textureShader->setUniform1iv("uTextures", samplers, tempMaxTextureSlots);
     rendererData.textureShader->setUniform1f("uZIndex", 0.3f);
@@ -246,7 +255,12 @@ namespace flectron
     rendererData.circleShaderFragment = Text::fromEmbed(FLECTRON_SHADER_CIRCLE_FRAG());
     rendererData.circleShaderFragment.load();
     
-    rendererData.circleShader = createScope<Shader>(TextView(rendererData.circleShaderVertex), TextView(rendererData.circleShaderFragment));
+    rendererData.circleShader = Shader::create({
+      rendererData.circleShaderVertex,
+      nullptr,
+      rendererData.circleShaderFragment,
+      nullptr
+    });
     rendererData.circleShader->bind();
     rendererData.circleShader->setUniform1f("uZIndex", 0.2f);
   }
@@ -274,7 +288,12 @@ namespace flectron
     rendererData.lineShaderFragment = Text::fromEmbed(FLECTRON_SHADER_LINE_FRAG());
     rendererData.lineShaderFragment.load();
 
-    rendererData.lineShader = createScope<Shader>(TextView(rendererData.lineShaderVertex), TextView(rendererData.lineShaderFragment));
+    rendererData.lineShader = Shader::create({
+      rendererData.lineShaderVertex,
+      nullptr,
+      rendererData.lineShaderFragment,
+      nullptr
+    });
     rendererData.lineShader->bind();
     rendererData.lineShader->setUniform1f("uZIndex", 0.1f);
 

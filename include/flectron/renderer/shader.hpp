@@ -12,19 +12,57 @@
 namespace flectron 
 {
 
-  class BaseShader
+  class Shader
   {
-  protected:
+  public:
+    using Ref = Ref<Shader>;
+
+    enum ShaderType
+    {
+      VERTEX = GL_VERTEX_SHADER,
+      GEOMETRY = GL_GEOMETRY_SHADER,
+      FRAGMENT = GL_FRAGMENT_SHADER,
+      COMPUTE = GL_COMPUTE_SHADER
+    };
+
+    struct Shaders
+    {
+      TextView vertex;
+      TextView geometry;
+      TextView fragment;
+      TextView compute;
+    };
+
+  private:
+    struct ShadersAttacher
+    {
+      GLuint vertex;
+      GLuint geometry;
+      GLuint fragment;
+      GLuint compute;
+
+      ShadersAttacher(GLuint rendererID, const Shaders& shaders);
+      ~ShadersAttacher();
+    };
+
+  private:
     GLuint rendererID;
     std::unordered_map<std::string, int> locationCache;
+    Shaders shaders;
 
     int getUniformLocation(const std::string& name);
-
-    unsigned int compileShader(unsigned int type, const std::string& source);
-    unsigned int createShader(const std::string& vertexShader, const std::string& fragmentShader);
+    static GLuint compileShader(GLenum type, const std::string& source);
 
   public:
-    ~BaseShader();
+    Shader();
+    Shader(const Shaders& shaders);
+    ~Shader();
+
+    static Ref create(const Shaders& shaders);
+
+    void addShader(ShaderType type, const TextView& source);
+    
+    void reload();
 
     void bind() const;
     void unbind() const;
@@ -40,30 +78,16 @@ namespace flectron
     void setUniform2fv(const std::string& name, float* array, int size);
     void setUniform3fv(const std::string& name, float* array, int size);
     void setUniform4fv(const std::string& name, float* array, int size);
-  };
 
-  class Shader : public BaseShader
-  {
-  private:
-    TextView vertexSource;
-    TextView fragmentSource;
+    // Compute shader specific
+    struct WorkGoupInfo
+    {
+      int maxWorkGroupCount[3];
+      int maxWorkGroupSize[3];
+      int maxWorkGroupInvocations;
+    };
 
-  public:
-    Shader(const TextView& vertexSource, const TextView& fragmentSource);
-  };
-
-  class ComputeShader : public BaseShader
-  {
-  private:
-    TextView source;
-
-    int maxWorkGroupCount[3];
-    int maxWorkGroupSize[3];
-    int maxWorkGroupInvocations;
-
-  public:
-    ComputeShader(const TextView& source);
-
+    WorkGoupInfo getWorkGroupInfo() const;
     void dispatch(int x, int y, int z) const;
     void barrier() const;
   };
