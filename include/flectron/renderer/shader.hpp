@@ -53,6 +53,10 @@ namespace flectron
     int getUniformLocation(const std::string& name);
     static GLuint compileShader(GLenum type, const std::string& source);
 
+    void linkAndValidate();
+    static void checkShaderError(GLuint rendererID, GLenum error, const std::string& format);
+    static void checkProgramError(GLuint rendererID, GLenum error, const std::string& format);
+
   public:
     Shader();
     Shader(const Shaders& shaders);

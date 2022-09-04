@@ -94,22 +94,53 @@ namespace flectron
     glShaderSource(id, 1, &src, nullptr);
     glCompileShader(id);
 
-    int result;
-    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-    if (result == GL_FALSE)
+    switch (type)
     {
-      int length;
-      glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-      char* message = (char*)alloca(length * sizeof(char));
-      glGetShaderInfoLog(id, length, &length, message);
-      std::stringstream ss;
-      ss << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << " shader!" << std::endl;
-      ss << message << std::endl;
-      glDeleteShader(id);
-      FLECTRON_ASSERT(false, ss.str());
+    case VERTEX:
+      checkShaderError(id, GL_COMPILE_STATUS, "Failed to compile vertex shader! {}");
+      break;
+    case FRAGMENT:
+      checkShaderError(id, GL_COMPILE_STATUS, "Failed to compile fragment shader! {}");
+      break;
+    case GEOMETRY:
+      checkShaderError(id, GL_COMPILE_STATUS, "Failed to compile geometry shader! {}");
+      break;
+    case COMPUTE:
+      checkShaderError(id, GL_COMPILE_STATUS, "Failed to compile compute shader! {}");
+      break;
     }
 
     return id;
+  }
+
+  void Shader::checkShaderError(GLuint rendererID, GLenum error, const std::string& format)
+  {
+    int success;
+    glGetShaderiv(rendererID, error, &success);
+    if (success == GL_FALSE)
+    {
+      int length;
+      glGetShaderiv(rendererID, GL_INFO_LOG_LENGTH, &length);
+      char* message = (char*)alloca(length * sizeof(char));
+      glGetShaderInfoLog(rendererID, length, &length, message);
+      glDeleteShader(rendererID);
+      FLECTRON_ASSERT(false, fmt::format(format, message));
+    }
+  }
+
+  void Shader::checkProgramError(GLuint rendererID, GLenum error, const std::string& format)
+  {
+    int success;
+    glGetProgramiv(rendererID, error, &success);
+    if (success == GL_FALSE)
+    {
+      int length;
+      glGetProgramiv(rendererID, GL_INFO_LOG_LENGTH, &length);
+      char* message = (char*)alloca(length * sizeof(char));
+      glGetProgramInfoLog(rendererID, length, &length, message);
+      glDeleteProgram(rendererID);
+      FLECTRON_ASSERT(false, fmt::format(format, message));
+    }
   }
 
   Shader::Shader()
@@ -117,8 +148,7 @@ namespace flectron
   {
     FLECTRON_LOG_TRACE("Creating empty shader");
     rendererID = glCreateProgram();
-    glLinkProgram(rendererID);
-    glValidateProgram(rendererID);
+    linkAndValidate();
   }
 
   Shader::Shader(const Shaders& shaders)
@@ -129,8 +159,7 @@ namespace flectron
 
     ShadersAttacher attacher(rendererID, shaders);
 
-    glLinkProgram(rendererID);
-    glValidateProgram(rendererID);
+    linkAndValidate();
   }
 
   Ref<Shader> Shader::create(const Shaders& shaders)
@@ -162,8 +191,7 @@ namespace flectron
 
     GLuint shaderID = compileShader(type, source);
     glAttachShader(rendererID, shaderID);
-    glLinkProgram(rendererID);
-    glValidateProgram(rendererID);
+    linkAndValidate();
     glDeleteShader(shaderID);
   }
 
@@ -175,8 +203,16 @@ namespace flectron
 
     ShadersAttacher attacher(rendererID, shaders);
 
+    linkAndValidate();
+  }
+
+  void Shader::linkAndValidate()
+  {
     glLinkProgram(rendererID);
+    checkProgramError(rendererID, GL_LINK_STATUS, "Failed to link shader program! {}");
+
     glValidateProgram(rendererID);
+    checkProgramError(rendererID, GL_VALIDATE_STATUS, "Failed to validate shader program! {}");
   }
 
   Shader::ShadersAttacher::ShadersAttacher(GLuint rendererID, const Shaders& shaders)
