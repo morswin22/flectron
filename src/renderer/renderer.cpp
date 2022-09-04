@@ -118,6 +118,9 @@ namespace flectron
 
     // Statistics
     Renderer::Statistics statistics;
+
+    // Camera
+    GLuint cameraUniformBuffer = 0;
   };
 
   static RendererData rendererData;
@@ -307,6 +310,13 @@ namespace flectron
     rendererData.lineShader->setUniform1f("uZIndex", 0.1f);
   }
 
+  void Renderer::initCamera()
+  {
+    glGenBuffers(1, &rendererData.cameraUniformBuffer);
+    glBindBuffer(GL_UNIFORM_BUFFER, rendererData.cameraUniformBuffer);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW);
+  }
+
   void Renderer::init(int width, int height, GLuint& buffer)
   {
     FLECTRON_LOG_TRACE("Initializing renderer");
@@ -315,6 +325,7 @@ namespace flectron
     initLineRendering();
     rendererData.statistics.reset();
     rendererData.frameBuffer = createFrameBuffer(width, height, buffer);
+    initCamera();
   }
 
   void Renderer::shutdown()
@@ -336,6 +347,8 @@ namespace flectron
     if (rendererData.frameBuffer != 0)
       glDeleteFramebuffers(1, &rendererData.frameBuffer);
 
+    glDeleteBuffers(1, &rendererData.cameraUniformBuffer);
+
     delete[] rendererData.textureBuffer;
     delete[] rendererData.textureIndices;
     delete[] rendererData.textureSlots;
@@ -356,13 +369,8 @@ namespace flectron
 
   void Renderer::setViewProjectionMatrix(const Camera& camera)
   {
-    const auto viewProjectionMatrix = camera.getViewProjectionMatrix(); 
-    rendererData.textureShader->bind();
-    rendererData.textureShader->setUniformMat4f("uViewProjection", viewProjectionMatrix);
-    rendererData.circleShader->bind();
-    rendererData.circleShader->setUniformMat4f("uViewProjection", viewProjectionMatrix);
-    rendererData.lineShader->bind();
-    rendererData.lineShader->setUniformMat4f("uViewProjection", viewProjectionMatrix);
+    glBindBuffer(GL_UNIFORM_BUFFER, rendererData.cameraUniformBuffer);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), glm::value_ptr(camera.getViewProjectionMatrix()), GL_DYNAMIC_DRAW);
   }
 
   void Renderer::beginBatch()
@@ -394,6 +402,7 @@ namespace flectron
       return;
 
     rendererData.textureShader->bind();
+    rendererData.textureShader->setUniformBlock("CameraBlock", rendererData.cameraUniformBuffer);
 
     glBindVertexArray(rendererData.textureVertexArray);
 
@@ -423,6 +432,7 @@ namespace flectron
       return;
 
     rendererData.circleShader->bind();
+    rendererData.circleShader->setUniformBlock("CameraBlock", rendererData.cameraUniformBuffer);
 
     glBindVertexArray(rendererData.circleVertexArray);
 
@@ -447,6 +457,7 @@ namespace flectron
       return;
 
     rendererData.lineShader->bind();
+    rendererData.lineShader->setUniformBlock("CameraBlock", rendererData.cameraUniformBuffer);
 
     glBindVertexArray(rendererData.lineVertexArray);
 

@@ -36,6 +36,8 @@ namespace flectron
   private:
     struct ShadersAttacher
     {
+      GLuint rendererID;
+
       GLuint vertex;
       GLuint geometry;
       GLuint fragment;
@@ -48,9 +50,15 @@ namespace flectron
   private:
     GLuint rendererID;
     std::unordered_map<std::string, int> locationCache;
+    std::unordered_map<std::string, GLuint> uniformBlockBindings;
     Shaders shaders;
 
+    static GLint maxUniformBlockBinings;
+    static GLint getMaxUniformBlockBinings();
+
     int getUniformLocation(const std::string& name);
+    int getUniformBlockIndex(const std::string& name);
+    GLuint getUniformBlockBinding(const std::string& name);
     static GLuint compileShader(GLenum type, const std::string& source);
 
     void linkAndValidate();
@@ -62,11 +70,13 @@ namespace flectron
     Shader(const Shaders& shaders);
     ~Shader();
 
+    static void init();
     static Ref create(const Shaders& shaders);
 
     void addShader(ShaderType type, const TextView& source);
     
     void reload();
+    void resetUniformBlockBindings();
 
     void bind() const;
     void unbind() const;
@@ -82,16 +92,18 @@ namespace flectron
     void setUniform2fv(const std::string& name, float* array, int size);
     void setUniform3fv(const std::string& name, float* array, int size);
     void setUniform4fv(const std::string& name, float* array, int size);
+    void setUniformBlock(const std::string& name, GLuint bindingPoint);
 
     // Compute shader specific
-    struct WorkGoupInfo
+    struct WorkGroupInfo
     {
-      int maxWorkGroupCount[3];
-      int maxWorkGroupSize[3];
-      int maxWorkGroupInvocations;
+      int maxCount[3];
+      int maxSize[3];
+      int maxInvocations;
     };
 
-    WorkGoupInfo getWorkGroupInfo() const;
+    static WorkGroupInfo workGroupInfo;
+    static WorkGroupInfo getWorkGroupInfo();
     void dispatch(int x, int y, int z) const;
     void barrier() const;
   };

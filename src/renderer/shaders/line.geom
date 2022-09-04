@@ -3,7 +3,11 @@
 layout (lines) in;
 layout (triangle_strip, max_vertices = 4) out;
 
-uniform mat4 uViewProjection;
+layout (std140) uniform CameraBlock
+{
+  mat4 uViewProjection;
+};
+
 uniform float uZIndex;
 
 in vec4 vColor[];

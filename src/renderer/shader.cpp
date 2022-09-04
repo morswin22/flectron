@@ -10,6 +10,9 @@
 namespace flectron 
 {
 
+  GLint Shader::maxUniformBlockBinings = 0;
+  Shader::WorkGroupInfo Shader::workGroupInfo = { 0, 0, 0, 0, 0, 0, 0 };
+
   Shader::~Shader()
   {
     glDeleteProgram(rendererID);
@@ -75,6 +78,13 @@ namespace flectron
     glUniform4fv(getUniformLocation(name), size, array);
   }
 
+  void Shader::setUniformBlock(const std::string& name, GLuint ubo)
+  {
+    GLuint binding = getUniformBlockBinding(name);
+    glBindBufferBase(GL_UNIFORM_BUFFER, binding, ubo);
+    glUniformBlockBinding(rendererID, getUniformBlockIndex(name), binding);
+  }
+
   int Shader::getUniformLocation(const std::string& name)
   {
     if (locationCache.find(name) != locationCache.end())
@@ -85,6 +95,37 @@ namespace flectron
     
     locationCache[name] = location;
     return location;
+  }
+
+  int Shader::getUniformBlockIndex(const std::string& name)
+  {
+    if (locationCache.find(name) != locationCache.end())
+      return locationCache[name];
+
+    int location = glGetUniformBlockIndex(this->rendererID, name.c_str());
+    FLECTRON_ASSERT(location != -1, "Uniform block " + name + " not found");
+
+    locationCache[name] = location;
+    return location;
+  }
+
+  GLuint Shader::getUniformBlockBinding(const std::string& name)
+  {
+    if (uniformBlockBindings.find(name) != uniformBlockBindings.end())
+      return uniformBlockBindings[name];
+
+    GLuint binding = uniformBlockBindings.size();
+    FLECTRON_ASSERT(binding < maxUniformBlockBinings, "Maximum number of uniform block bindings reached");
+    
+    uniformBlockBindings[name] = binding;
+    return binding;
+  }
+
+  GLint Shader::getMaxUniformBlockBinings()
+  {
+    GLint max;
+    glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &max);
+    return max;
   }
 
   unsigned int Shader::compileShader(unsigned int type, const std::string& source)
@@ -162,6 +203,12 @@ namespace flectron
     linkAndValidate();
   }
 
+  void Shader::init()
+  {
+    maxUniformBlockBinings = getMaxUniformBlockBinings();
+    workGroupInfo = getWorkGroupInfo();
+  }
+
   Ref<Shader> Shader::create(const Shaders& shaders)
   {
     return createRef<Shader>(shaders);
@@ -206,6 +253,11 @@ namespace flectron
     linkAndValidate();
   }
 
+  void Shader::resetUniformBlockBindings()
+  {
+    uniformBlockBindings.clear();
+  }
+
   void Shader::linkAndValidate()
   {
     glLinkProgram(rendererID);
@@ -216,7 +268,7 @@ namespace flectron
   }
 
   Shader::ShadersAttacher::ShadersAttacher(GLuint rendererID, const Shaders& shaders)
-    : vertex(0u), geometry(0u), fragment(0u), compute(0u)
+    : rendererID(rendererID), vertex(0u), geometry(0u), fragment(0u), compute(0u)
   {
     if (shaders.vertex)
     {
@@ -249,23 +301,27 @@ namespace flectron
 
   Shader::ShadersAttacher::~ShadersAttacher()
   {
+    glDetachShader(rendererID, vertex);
     glDeleteShader(vertex);
+    glDetachShader(rendererID, geometry);
     glDeleteShader(geometry);
+    glDetachShader(rendererID, fragment);
     glDeleteShader(fragment);
+    glDetachShader(rendererID, compute);
     glDeleteShader(compute);
   }
 
-  Shader::WorkGoupInfo Shader::getWorkGroupInfo() const
+  Shader::WorkGroupInfo Shader::getWorkGroupInfo()
   {
-    WorkGoupInfo info;
+    WorkGroupInfo info;
 
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &info.maxWorkGroupCount[0]);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &info.maxWorkGroupCount[1]);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &info.maxWorkGroupCount[2]);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &info.maxWorkGroupSize[0]);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &info.maxWorkGroupSize[1]);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &info.maxWorkGroupSize[2]);
-    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &info.maxWorkGroupInvocations);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &info.maxCount[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &info.maxCount[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &info.maxCount[2]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &info.maxSize[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &info.maxSize[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &info.maxSize[2]);
+    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &info.maxInvocations);
 
     return info;
   }

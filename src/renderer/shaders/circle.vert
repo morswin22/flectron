@@ -6,7 +6,11 @@ layout(location = 2) in vec4 color;
 layout(location = 3) in float thickness;
 layout(location = 4) in float fade;
 
-uniform mat4 uViewProjection;
+layout (std140) uniform CameraBlock
+{
+  mat4 uViewProjection;
+};
+
 uniform float uZIndex;
 
 out vec2 vLocalPosition;

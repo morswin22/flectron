@@ -90,6 +90,7 @@ namespace flectron
     Keyboard::init(window);
     Mouse::init(window);
 
+    Shader::init();
     Renderer::init(properties.width, properties.height, rendererBuffer);
   }
 

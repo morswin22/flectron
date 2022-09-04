@@ -25,6 +25,7 @@ namespace flectron
     static void initTextureRendering();
     static void initCircleRendering();
     static void initLineRendering();
+    static void initCamera();
 
   public:
     static void init(int width, int height, GLuint& buffer);

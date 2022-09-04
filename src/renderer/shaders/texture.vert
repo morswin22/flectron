@@ -6,7 +6,11 @@ layout(location = 2) in vec2 textureCoord;
 layout(location = 3) in float textureIndex;
 layout(location = 4) in float tilingFactor;
 
-uniform mat4 uViewProjection;
+layout (std140) uniform CameraBlock
+{
+  mat4 uViewProjection;
+};
+
 uniform float uZIndex;
 
 out vec4 vColor;
