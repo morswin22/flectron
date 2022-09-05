@@ -66,10 +66,10 @@ namespace flectron
 
     if (state.currentRange == ranges.size())
     {
+      std::uniform_real_distribution<float> dist(0.0f, 1.0f);
       for (auto& range : possibleFutureAnimations)
       {
-        float r = randomFloat(0.0f, 1.0f);
-        if (r < range.second)
+        if (dist(randomEngine) < range.second)
         {
           state.currentName = range.first;
           break;

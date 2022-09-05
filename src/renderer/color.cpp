@@ -40,7 +40,11 @@ namespace flectron
     Color lightMagenta() { return Color(1.0f, 0.5f, 1.0f, 1.0f); }
     Color lightOrange() { return Color(1.0f, 0.75f, 0.5f, 1.0f); }
     Color lightPurple() { return Color(0.75f, 0.5f, 0.75f, 1.0f); }
-    Color random() { return Color(randomFloat(0.0f, 1.0f), randomFloat(0.0f, 1.0f), randomFloat(0.0f, 1.0f), 1.0f); }
+    Color random() 
+    { 
+      std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+      return Color(dist(randomEngine), dist(randomEngine), dist(randomEngine), 1.0f); 
+    }
   }
 
 }
