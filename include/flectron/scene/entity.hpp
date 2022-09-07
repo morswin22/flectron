@@ -63,6 +63,10 @@ namespace flectron {
     }
 
     operator bool() const;
+    bool operator==(const Entity& other) const;
+    bool operator!=(const Entity& other) const;
+    bool operator==(const entt::entity& other) const;
+    bool operator!=(const entt::entity& other) const;
 
     void render();
 

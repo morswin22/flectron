@@ -29,6 +29,19 @@ namespace flectron
     TagComponent(Entity entity, const std::string& tag);
   };
 
+  struct UUIDComponent
+  {
+    Entity entity;
+    uint64_t uuid;
+
+    UUIDComponent(Entity entity);
+    UUIDComponent(Entity entity, uint64_t uuid);
+
+    bool operator==(const UUIDComponent& other) const;
+    bool operator!=(const UUIDComponent& other) const;
+    operator uint64_t() const;
+  };
+
   struct PositionComponent
   {
     Entity entity;
@@ -64,10 +77,10 @@ namespace flectron
   {
     Entity entity;
     float radius;
-    float thickness = 1.0f;
-    float fade = 0.005f;
+    float thickness;
+    float fade;
 
-    CircleComponent(Entity entity, float radius);
+    CircleComponent(Entity entity, float radius, float thickness = 1.0f, float fade = 0.005f);
   };
 
   struct VertexComponent
@@ -118,6 +131,7 @@ namespace flectron
     float staticFriction;
     float dynamicFriction;
 
+    PhysicsComponent(Entity entity);
     PhysicsComponent(Entity entity, float density, float resitution, bool isStatic);
 
     void update(PositionComponent& pc, float deltaTime, const Vector& gravity);
@@ -216,6 +230,26 @@ namespace flectron
     int order;
 
     ScriptComponent(Entity entity, std::function<void()> callback, int order = 0);
+  };
+
+  struct SerializationComponent
+  {
+    Entity entity;
+    std::function<void(std::vector<char>&, Entity)> serializer;
+
+    SerializationComponent(Entity entity, std::function<void(std::vector<char>&, Entity)> serializer);
+    
+    void serialize(std::vector<char>& buffer);
+  };
+
+  struct DeserializationComponent
+  {
+    Entity entity;
+    std::function<void(Entity)> deserializer;
+
+    DeserializationComponent(Entity entity, std::function<void(Entity)> deserializer);
+    
+    void deserialize();
   };
 
 }

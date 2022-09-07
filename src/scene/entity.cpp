@@ -18,8 +18,29 @@ namespace flectron {
     entityHandle = entt::null;
   }
 
-  Entity::operator bool() const {
+  Entity::operator bool() const 
+  {
     return entityHandle != entt::null;
+  }
+
+  bool Entity::operator==(const Entity& other) const
+  {
+    return entityHandle == other.entityHandle && registry == other.registry;
+  }
+
+  bool Entity::operator!=(const Entity& other) const
+  {
+    return entityHandle != other.entityHandle || registry != other.registry;
+  }
+
+  bool Entity::operator==(const entt::entity& other) const
+  {
+    return entityHandle == other;
+  }
+
+  bool Entity::operator!=(const entt::entity& other) const
+  {
+    return entityHandle != other;
   }
 
   void Entity::render()

@@ -21,6 +21,7 @@ namespace flectron
 
   public:
     DateTime(float startTime, float nightToDay, float dayToNight, float transitionTime, float scale, float minDarkness, float maxDarkness);
+    DateTime(const DateTime& other) = default;
 
     void reset();
     void setTime(float time);

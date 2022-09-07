@@ -5,6 +5,7 @@
 #include <flectron/utils/vertex.hpp>
 #include <flectron/physics/collisions.hpp>
 #include <flectron/assert/assert.hpp>
+#include <flectron/utils/random.hpp>
 #include <cmath>
 
 namespace flectron
@@ -13,6 +14,29 @@ namespace flectron
   TagComponent::TagComponent(Entity entity, const std::string& tag)
     : tag(tag) 
   {}
+
+  UUIDComponent::UUIDComponent(Entity entity)
+    : entity(entity), uuid(randomUUID())
+  {}
+
+  UUIDComponent::UUIDComponent(Entity entity, uint64_t uuid)
+    : entity(entity), uuid(uuid)
+  {}
+
+  bool UUIDComponent::operator==(const UUIDComponent& other) const
+  {
+    return uuid == other.uuid;
+  }
+
+  bool UUIDComponent::operator!=(const UUIDComponent& other) const
+  {
+    return uuid != other.uuid;
+  }
+
+  UUIDComponent::operator uint64_t() const
+  {
+    return uuid;
+  }
   
   PositionComponent::PositionComponent(Entity entity)
     : entity(entity), position(), rotation(0.0f)
@@ -48,8 +72,8 @@ namespace flectron
     : entity(entity), width(width), height(height)
   {}
 
-  CircleComponent::CircleComponent(Entity entity, float radius)
-    : entity(entity), radius(radius)
+  CircleComponent::CircleComponent(Entity entity, float radius, float thickness, float fade)
+    : entity(entity), radius(radius), thickness(thickness), fade(fade)
   {}
 
   VertexComponent::VertexComponent(Entity entity)
@@ -148,6 +172,10 @@ namespace flectron
     isAABBUpdateRequired = false;
     return aabb;
   }
+
+  PhysicsComponent::PhysicsComponent(Entity entity)
+    : entity(entity)
+  {}
 
   PhysicsComponent::PhysicsComponent(Entity entity, float density, float resitution, bool isStatic)
     : entity(entity),
@@ -340,5 +368,23 @@ namespace flectron
   ScriptComponent::ScriptComponent(Entity entity, std::function<void()> callback, int order)
     : entity(entity), callback(callback), order(order)
   {}
+
+  SerializationComponent::SerializationComponent(Entity entity, std::function<void(std::vector<char>&, Entity)> serializer)
+    : entity(entity), serializer(serializer)
+  {}
+
+  void SerializationComponent::serialize(std::vector<char>& buffer)
+  {
+    serializer(buffer, entity);
+  }
+
+  DeserializationComponent::DeserializationComponent(Entity entity, std::function<void(Entity)> deserializer)
+    : entity(entity), deserializer(deserializer)
+  {}
+    
+  void DeserializationComponent::deserialize()
+  {
+    deserializer(entity);
+  }
 
 }

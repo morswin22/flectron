@@ -20,6 +20,7 @@ private:
   Ref<FontAtlas> fontAtlas;
   Entity platform;
   Entity player;
+  SceneAsset sceneFile;
 
 public:
   DemoLayer(Application& application)
@@ -28,7 +29,8 @@ public:
     fontImage(Image::fromEmbed(FONT_PNG())),
     greenGoblinImage(Image::fromEmbed(GREENGOBLIN_PNG())),
     greenGoblinText(Text::fromEmbed(GREENGOBLIN_TXT())),
-    textureAtlas(nullptr), animationAtlas(nullptr), fontAtlas(nullptr)
+    textureAtlas(nullptr), animationAtlas(nullptr), fontAtlas(nullptr),
+    sceneFile(SceneAsset::fromFile("scene.demo"))
   {}
 
   void setup() override
@@ -61,6 +63,7 @@ public:
     const Constraints& cc = application.window.camera.getConstraints();
     float padding = (cc.right - cc.left) * 0.10f;
     platform = scene.createEntity("Platform", { 0.0f, -10.0f }, 0.0f);
+    platform.add<UUIDComponent>();
     platform.add<BoxComponent>(cc.right - cc.left - padding * 2.0f, 3.0f);
     platform.add<PhysicsComponent>(1.0f, 0.5f, true);
     platform.add<TextureComponent>(textureAtlas, 0.0f, 0.0f, 9.0f, 1.0f);
@@ -72,6 +75,7 @@ public:
     });
 
     player = scene.createEntity("Player", { 0.0f, 0.0f }, 0.0f);
+    player.add<UUIDComponent>();
     player.add<BoxComponent>(3.0f, 4.4f);
     player.add<PhysicsComponent>(1.0f, 0.1f, false);
     player.add<AnimationComponent>(animationAtlas, "idle");
@@ -82,6 +86,7 @@ public:
     });
 
     auto triangle = scene.createEntity("Triangle", { 8.0f, 0.0f }, 0.0f);
+    triangle.add<UUIDComponent>();
     triangle.add<PolygonComponent>(std::vector<Vector>{ { -1.0f, -1.0f }, { 1.0f, -1.0f }, { 0.0f,  1.0f } });
     triangle.add<PhysicsComponent>(1.0f, 0.1f, false);
     triangle.add<FillComponent>(Colors::lightCyan());
@@ -96,6 +101,7 @@ public:
         entity.add<FillComponent>(Colors::random());
         entity.add<StrokeComponent>(Colors::white(), 0.05f);
         entity.add<TemporaryComponent>();
+        entity.add<UUIDComponent>();
 
         if (randomFloat(0.0f, 1.0f) < 0.1f)
           entity.add<LightComponent>(cc.radius * 3.0f, Colors::random());
@@ -108,6 +114,7 @@ public:
         entity.add<PhysicsComponent>(2.0f, 0.6f, false);
         entity.add<TextureComponent>(textureAtlas, (float)randomInt(0, 5), 1.0f, 1.0f, 1.0f);
         entity.add<TemporaryComponent>();
+        entity.add<UUIDComponent>();
 
         if (randomFloat(0.0f, 1.0f) < 0.1f)
           entity.add<LightComponent>(std::max(bc.width, bc.height) * 3.0f, Colors::random());
@@ -161,6 +168,58 @@ public:
       application.window.camera.handleWASD();
       application.window.camera.handleScroll();
     }, FLECTRON_RENDER + 1);
+
+    scene.createScript("Scene Saver", [&]() {
+      if (Keyboard::isPressed(Key::LEFT_CONTROL) && Keyboard::isClicked(Key::S))
+        scene.serialize(sceneFile);
+      if (Keyboard::isPressed(Key::LEFT_CONTROL) && Keyboard::isClicked(Key::X))
+      {
+        // TODO file might not exist
+        sceneFile.load();
+        {
+          auto view = scene.registry.view<TagComponent>();
+          for (auto entity : view)
+            if (view.get<TagComponent>(entity).tag == "Circle" || view.get<TagComponent>(entity).tag == "Box")
+              scene.registry.destroy(entity);
+        }
+        scene.deserialize(sceneFile, [&](Entity entity) {
+          const auto& tag = entity.get<TagComponent>().tag;
+          if (tag == "Player")
+          {
+            player.destroy();
+            player = entity;
+            player.add<AnimationComponent>().animationAtlas = animationAtlas;
+            player.add<ScriptComponent>([&]() {
+            if (Keyboard::isPressed(Key::T))
+              player.get<AnimationComponent>().play("taunt");
+            });
+          }
+          else if (tag == "Platform")
+          {
+            platform.destroy();
+            platform = entity;
+            platform.add<TextureComponent>(textureAtlas, 0.0f, 0.0f, 9.0f, 1.0f);
+            platform.add<ScriptComponent>([&]() {
+              if (Keyboard::isPressed(Key::Q))
+                platform.get<PositionComponent>().rotate(application.elapsedTime * (float)M_PI * 0.5f);
+              if (Keyboard::isPressed(Key::E))
+                platform.get<PositionComponent>().rotate(-application.elapsedTime * (float)M_PI * 0.5f);
+            });
+          }
+          else if (tag == "Triangle")
+          {
+            auto view = scene.registry.view<TagComponent>();
+            for (auto other : view)
+              if (view.get<TagComponent>(other).tag == "Triangle" && entity != other)
+                scene.registry.destroy(other);
+          }
+          else if (tag == "Box")
+          {
+            entity.add<TextureComponent>(textureAtlas->image->getGPU());
+          }
+        });
+      }
+    });
   }
 
   void cleanup() override

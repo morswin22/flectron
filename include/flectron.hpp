@@ -18,8 +18,8 @@
 // Assets
 #include <flectron/assets/asset.hpp>
 #include <flectron/assets/text.hpp>
-#include <flectron/assets/raw.hpp>
 #include <flectron/assets/image.hpp>
+#include <flectron/assets/scene.hpp>
 
 // Physics
 #include <flectron/physics/aabb.hpp>

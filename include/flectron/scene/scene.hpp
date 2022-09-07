@@ -6,12 +6,29 @@
 #include <flectron/application/window.hpp>
 #include <flectron/renderer/light.hpp>
 #include <flectron/scene/entity.hpp>
+#include <flectron/assets/scene.hpp>
 
 #define FLECTRON_PHYSICS 100
 #define FLECTRON_RENDER 200
 
 namespace flectron
 {
+
+  struct SerializationTargets
+  {
+    enum Target
+    {
+      None = 0,
+      Entities = 1,
+      Environment = 2,
+      EntitiesAndEnvironment = Entities | Environment,
+      DateTime = 4,
+      EntitiesAndDateTime = Entities | DateTime,
+      EnvironmentAndDateTime = Environment | DateTime,
+      All = Entities | Environment | DateTime
+    };
+  };
+  using sts = SerializationTargets;
 
   class Application;
   using ScriptComponentIterator = entt::sparse_set::iterator;
@@ -40,7 +57,7 @@ namespace flectron
     static size_t minIterations;
     static size_t maxIterations;
 
-  private:
+  public: // TODO provide a more protected interface
     entt::registry registry;
     SpatialHashGrid grid;
 
@@ -53,6 +70,9 @@ namespace flectron
   public:
     Scene(size_t physicsIterations, size_t gridSize);
     ~Scene();
+
+    void serialize(SceneAsset& to, sts::Target targets = sts::All);
+    void deserialize(const SceneAsset& from, std::function<void(Entity)> onEntityCreation = [](Entity) {});
 
     void update(Application& application);
     void updatePhysics(float elapsedTime, size_t iterations);
