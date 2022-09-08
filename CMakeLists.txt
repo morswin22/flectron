@@ -52,6 +52,37 @@ endif()
 
 EMBED_INTO(flectron "./src/renderer/shaders/*.*" FLECTRON_SHADER)
 
+find_package(Git)
+if (Git_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} log -1 --format=%h
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+    OUTPUT_VARIABLE GIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  target_compile_definitions(flectron PUBLIC "-DFLECTRON_GIT_HASH=\"${GIT_HASH}\"")
+
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} status --porcelain
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+    OUTPUT_VARIABLE GIT_STATUS
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  if("${GIT_STATUS}" STREQUAL "")
+    target_compile_definitions(flectron PUBLIC "-DFLECTRON_GIT_STATUS_IS_DIRTY=false")
+  else()
+    target_compile_definitions(flectron PUBLIC "-DFLECTRON_GIT_STATUS_IS_DIRTY=true")
+  endif()
+else()
+  target_compile_definitions(flectron PUBLIC "-DFLECTRON_GIT_HASH=\"\"")
+  target_compile_definitions(flectron PUBLIC "-DFLECTRON_GIT_STATUS_IS_DIRTY=false")
+endif()
+
+target_compile_definitions(flectron PUBLIC "-DFLECTRON_VERSION=\"${PROJECT_VERSION}\"")
+target_compile_definitions(flectron PUBLIC "-DFLECTRON_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}")
+target_compile_definitions(flectron PUBLIC "-DFLECTRON_VERSION_MINOR=${PROJECT_VERSION_MINOR}")
+target_compile_definitions(flectron PUBLIC "-DFLECTRON_VERSION_PATCH=${PROJECT_VERSION_PATCH}")
+
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   set(FLECTRON_STANDALONE TRUE)
 endif()
@@ -111,8 +142,8 @@ if(FLECTRON_BUILD_DOCS)
 
     file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/README.md readme_contents)
     list(POP_FRONT readme_contents)
-    list(PREPEND readme_contents "![Flectron](${CMAKE_CURRENT_SOURCE_DIR}/docs/flectron.png)\n")
-    list(PREPEND readme_contents "# Flectron\n")
+    list(PREPEND readme_contents "![Flectron](flectron.png)")
+    list(PREPEND readme_contents "# Flectron")
     list(JOIN readme_contents "\n" readme_contents)
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/README.md ${readme_contents})
 

@@ -5,9 +5,9 @@
 #---------------------------------------------------------------------------
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = Flectron
-PROJECT_NUMBER         = 0.1.0
-PROJECT_BRIEF          =
-PROJECT_LOGO           = @CMAKE_CURRENT_SOURCE_DIR@/docs/flectron.png
+PROJECT_NUMBER         = @PROJECT_VERSION@
+PROJECT_BRIEF          = "Rendering and physics in 2D"
+PROJECT_LOGO           = @CMAKE_CURRENT_SOURCE_DIR@/docs/icon.svg
 OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@/docs/
 CREATE_SUBDIRS         = NO
 ALLOW_UNICODE_NAMES    = NO
@@ -61,7 +61,7 @@ INLINE_GROUPED_CLASSES = NO
 INLINE_SIMPLE_STRUCTS  = NO
 TYPEDEF_HIDES_STRUCT   = NO
 LOOKUP_CACHE_SIZE      = 0
-NUM_PROC_THREADS       = 1
+NUM_PROC_THREADS       = 0
 #---------------------------------------------------------------------------
 # Build related configuration options
 #---------------------------------------------------------------------------
@@ -174,7 +174,9 @@ HTML_EXTRA_STYLESHEET  = @CMAKE_CURRENT_BINARY_DIR@/_deps/doxygen_awesome_css-sr
                          @CMAKE_CURRENT_BINARY_DIR@/_deps/doxygen_awesome_css-src/doxygen-awesome-sidebar-only-darkmode-toggle.css
 HTML_EXTRA_FILES       = @CMAKE_CURRENT_BINARY_DIR@/_deps/doxygen_awesome_css-src/doxygen-awesome-darkmode-toggle.js \
                          @CMAKE_CURRENT_BINARY_DIR@/_deps/doxygen_awesome_css-src/doxygen-awesome-fragment-copy-button.js \
-                         @CMAKE_CURRENT_BINARY_DIR@/_deps/doxygen_awesome_css-src/doxygen-awesome-paragraph-link.js
+                         @CMAKE_CURRENT_BINARY_DIR@/_deps/doxygen_awesome_css-src/doxygen-awesome-paragraph-link.js \
+                         @CMAKE_CURRENT_SOURCE_DIR@/docs/icon.svg \
+                         @CMAKE_CURRENT_SOURCE_DIR@/docs/flectron.png
 HTML_COLORSTYLE_HUE    = 220
 HTML_COLORSTYLE_SAT    = 100
 HTML_COLORSTYLE_GAMMA  = 80

@@ -164,6 +164,18 @@ public:
       Renderer::text(fontAtlas, { cc.left, cc.bottom }, text.str(), 175.0f * scale);
     }, FLECTRON_RENDER);
 
+    scene.createScript("Version Text", [&]() {
+      std::ostringstream text;
+      text << "v" << FLECTRON_VERSION;
+      text << "\n" << FLECTRON_GIT_HASH;
+      if (FLECTRON_GIT_STATUS_IS_DIRTY)
+        text << "*";
+
+      const float scale = application.window.camera.getScale();
+      const Constraints& cc = application.window.camera.getConstraints();
+      Renderer::text(fontAtlas, { cc.left, cc.top + 42.0f * scale }, text.str(), 150.0f * scale, Colors::gray());
+    }, FLECTRON_RENDER);
+
     scene.createScript("Camera Controller", [&]() {
       application.window.camera.handleWASD();
       application.window.camera.handleScroll();
