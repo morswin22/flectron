@@ -68,25 +68,26 @@ EMBED_RES(${target}, ${EMBED_RES_ID});\n"
     set(output "${CMAKE_CURRENT_BINARY_DIR}/embed/${target}.c")
 
     if(APPLE)
-      set(Section ".const_data")
+      set(section ".const_data")
     else()
-      set(Section ".section .rodata")
+      set(section ".section \\\".rodata\\\", \\\"a\\\", @progbits")
     endif()
-
+# \".align ${CMAKE_SIZEOF_VOID_P}\\n\"
     file(WRITE ${output}
 "${EMBED_STRUCT}
 
+extern char data_start[];
+extern char data_end[];
 asm(
-  \"${Section}\\n\"
-  \".align ${CMAKE_SIZEOF_VOID_P}\\n\"
-  \"data: .incbin \\\"${InputAbs}\\\"\\n\"
-  \"end_data:\\n\"
-)\;
-extern const char data[];
-extern const char end_data[];
+  \"${section}\\n\"
+  \"data_start:\\n\"
+    \".incbin \\\"${absolute_path}\\\"\\n\"
+  \"data_end:\\n\"
+    \".previous\\n\"
+);
 
-struct Res ${Name}(void) {
-  struct Res r = { data, end_data - data };
+struct Res ${target}(void) {
+  struct Res r = { data_start, data_end - data_start };
   return r;
 }"
     )
@@ -97,7 +98,7 @@ struct Res ${Name}(void) {
       DEPENDS ${input}
     )
 
-    set(${target}_OUTPUT ${output} PARENT_SCOPE)
+    set(${target}_OUTPUTS ${output} PARENT_SCOPE)
   endif()
 
   set(${target}_DEFINED TRUE PARENT_SCOPE)

@@ -30,6 +30,14 @@ cd tests/Release
 ./flectron-piday
 ```
 
+## Run in Docker
+```sh
+docker build -t flectron -f ./docker/Dockerfile .
+xhost +
+docker run -ti --rm -e DISPLAY=host.docker.internal:0.0 flectron
+xhost -
+```
+
 ## Dependencies
 * [glfw](https://github.com/glfw/glfw/tree/076bfd55be45e7ba5c887d4b32aa03d26881a1fb)
 * [glew](https://github.com/Perlmint/glew-cmake/tree/883e35a3d493d93fa27da5abb6225654c360f9d0)

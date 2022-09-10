@@ -15,7 +15,7 @@ namespace flectron
   class Shader
   {
   public:
-    using Ref = Ref<Shader>;
+    using Pointer = Ref<Shader>;
 
     enum ShaderType
     {
@@ -71,7 +71,7 @@ namespace flectron
     ~Shader();
 
     static void init();
-    static Ref create(const Shaders& shaders);
+    static Pointer create(const Shaders& shaders);
 
     void addShader(ShaderType type, const TextView& source);
     

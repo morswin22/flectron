@@ -1,6 +1,17 @@
 #include <flectron/assert/debug.hpp>
 #include <flectron/utils/platform.hpp>
 
+#ifdef FLECTRON_PLATFORM_WINDOWS
+  #include <windows.h>
+#elif defined(FLECTRON_PLATFORM_LINUX)
+  // From https://stackoverflow.com/a/24969863
+  #include <sys/stat.h>
+  #include <string.h>
+  #include <fcntl.h>
+  #include <unistd.h>
+  #include <ctype.h>
+#endif
+
 namespace flectron
 {
 
@@ -12,11 +23,6 @@ namespace flectron
   }
 #elif defined(FLECTRON_PLATFORM_LINUX)
   // From https://stackoverflow.com/a/24969863
-  #include <sys/stat.h>
-  #include <string.h>
-  #include <fcntl.h>
-  #include <unistd.h>
-  #include <ctype.h>
   bool isDebuggerPresent()
   {
     char buf[4096];

@@ -13,12 +13,12 @@ namespace flectron
 
       virtual void operator()(DataPointer&, DataSize&) const
       {
-        throw std::exception("Scene loader was not specified");
+        throw std::runtime_error("Scene loader was not specified");
       }
 
       virtual void save(const DataPointer&, const DataSize&) const
       {
-        throw std::exception("Scene saver was not specified");
+        throw std::runtime_error("Scene saver was not specified");
       }
     };
     
@@ -73,7 +73,7 @@ namespace flectron
 
       void save(const DataPointer& destination, const DataSize& size) const
       {
-        throw std::exception("Cannot save to embedded scene");
+        throw std::runtime_error("Cannot save to embedded scene");
       }
 
       std::string info() const override

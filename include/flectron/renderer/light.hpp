@@ -18,7 +18,7 @@ namespace flectron
   private:
     Text vertexSource;
     Text fragmentSource;
-    Ref<Shader> shader;
+    Shader::Pointer shader;
 
     float lightsData[FLECTRON_NUM_LIGHTS * 3];
     float lightsColors[FLECTRON_NUM_LIGHTS * 4];

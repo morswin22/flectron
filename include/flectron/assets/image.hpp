@@ -23,7 +23,7 @@ namespace flectron
     {
       virtual void operator()(DataPointer&, DataSize&, Dim&, Dim&, Dim&) const
       {
-        throw std::exception("Image loader was not specified");
+        throw std::runtime_error("Image loader was not specified");
       }
     };
 

@@ -84,7 +84,7 @@ namespace flectron
 
     Text textureShaderVertex;
     Text textureShaderFragment;
-    Shader::Ref textureShader = nullptr;
+    Shader::Pointer textureShader = nullptr;
 
     // Circle rendering
     GLuint circleVertexArray = 0;
@@ -100,7 +100,7 @@ namespace flectron
 
     Text circleShaderVertex;
     Text circleShaderFragment;
-    Shader::Ref circleShader = nullptr;
+    Shader::Pointer circleShader = nullptr;
 
     // Line rendering
     GLuint lineVertexArray = 0;
@@ -114,7 +114,7 @@ namespace flectron
     Text lineShaderVertex;
     Text lineShaderFragment;
     Text lineShaderGeometry;
-    Shader::Ref lineShader = nullptr;
+    Shader::Pointer lineShader = nullptr;
 
     // Statistics
     Renderer::Statistics statistics;

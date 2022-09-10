@@ -38,8 +38,8 @@ namespace flectron
   template<typename T>
   struct AssetView : AssetViewBase<Asset<T>>
   {
-    AssetView(const Asset<T>* asset) : AssetViewBase(asset) {}
-    AssetView(const Asset<T>& asset) : AssetViewBase(asset) {}
+    AssetView(const Asset<T>* asset) : AssetViewBase<Asset<T>>(asset) {}
+    AssetView(const Asset<T>& asset) : AssetViewBase<Asset<T>>(asset) {}
   };
 
   template<typename T>
@@ -55,7 +55,7 @@ namespace flectron
     {
       virtual void operator()(DataPointer&, DataSize&) const
       {
-        throw std::exception("Asset loader was not specified");
+        throw std::runtime_error("Asset loader was not specified");
       };
 
       virtual std::string info() const
