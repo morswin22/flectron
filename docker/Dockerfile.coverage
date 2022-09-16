@@ -1,0 +1,14 @@
+FROM flectron:latest
+
+RUN curl -Os https://uploader.codecov.io/latest/linux/codecov && \
+    chmod +x codecov
+
+COPY . /flectron
+
+WORKDIR /flectron/build
+RUN cmake -D CMAKE_BUILD_TYPE=Debug -D FLECTRON_COVERAGE=On /flectron
+RUN cmake --build . --config Debug -- -j"$(nproc)"
+
+# CMD cmake --build . --config Debug --target flectron-demo-coverage-html
+CMD cmake --build . --config Debug --target flectron-demo-coverage-xml && \
+    /codecov -f ./flectron-demo-coverage.xml

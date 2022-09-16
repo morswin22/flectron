@@ -1,5 +1,8 @@
 ![flectron](docs/flectron.png)
 
+[![GitHub](https://img.shields.io/github/license/morswin22/flectron)](https://github.com/morswin22/flectron/blob/main/LICENSE)
+[![codecov](https://codecov.io/github/morswin22/flectron/branch/main/graph/badge.svg?token=8IUQUQVPKO)](https://codecov.io/github/morswin22/flectron)
+
 ## Requirements
 * [cmake](https://cmake.org/)
 
@@ -32,11 +35,14 @@ cd tests/Release
 
 ## Run in Docker
 ```sh
-docker build -t flectron -f ./docker/Dockerfile .
+docker build -t flectron -f ./docker/Dockerfile.base .
+docker build -t flectron-prod -f ./docker/Dockerfile.prod .
 xhost +
-docker run -ti --rm -e DISPLAY=host.docker.internal:0.0 flectron
+docker run -ti --rm -e DISPLAY=host.docker.internal:0.0 flectron-prod
 xhost -
 ```
+
+More Docker commands can be found in [docker/README.md](docker/README.md).
 
 ## Dependencies
 * [glfw](https://github.com/glfw/glfw/tree/076bfd55be45e7ba5c887d4b32aa03d26881a1fb)

@@ -90,6 +90,7 @@ endif()
 option(FLECTRON_BUILD_TESTS "Build flectron tests" ${FLECTRON_STANDALONE})
 option(FLECTRON_BUILD_DOCS "Build flectron documentation" ON)
 option(FLECTRON_INSTALL "Install the flectron library" ON)
+option(FLECTRON_COVERAGE "Enable coverage reporting" OFF)
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_NAME "Flectron")
@@ -188,4 +189,27 @@ set(flectron_MODES Debug Release RelWithDebInfo MinSizeRel)
 
 if(FLECTRON_BUILD_TESTS)
   add_subdirectory(tests)
+endif()
+
+if (FLECTRON_COVERAGE)
+  if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+    enable_coverage()
+    enable_coverage_for(flectron)
+    enable_coverage_for(flectron-demo)
+    
+    add_coverage(
+      NAME flectron-demo-coverage
+      EXECUTABLE flectron-demo
+      DEPENDENCIES 
+        flectron
+        flectron-demo
+      SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/*"
+        "${CMAKE_CURRENT_BINARY_DIR}/embed/*"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/src/demo.cpp"
+      XML ON
+      HTML ON
+    )
+  endif()
 endif()

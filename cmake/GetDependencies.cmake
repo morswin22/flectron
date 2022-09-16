@@ -57,3 +57,4 @@ set(ENTT_INCLUDE_DIR "${entt_SOURCE_DIR}/single_include")
 set(SPDLOG_INCLUDE_DIR "${spdlog_SOURCE_DIR}/include")
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/coverage.cmake")
