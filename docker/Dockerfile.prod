@@ -1,9 +1,11 @@
 # Build stage
 FROM flectron:latest AS build
 
-COPY . /flectron
+# when running with local changes:
+# RUN cmake -D CMAKE_BUILD_TYPE=Release /flectron
+# RUN cmake --build . --config Release -- -j"$(nproc)"
+# COPY . /flectron
 
-WORKDIR /flectron/build
 RUN cmake -D CMAKE_BUILD_TYPE=Release /flectron
 RUN cmake --build . --config Release -- -j"$(nproc)"
 
@@ -12,8 +14,11 @@ FROM nvidia/opengl:1.0-glvnd-devel-ubuntu20.04
 
 ENV NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES},display
 
-COPY --from=build /flectron/build/tests/flectron-demo /root/flectron-demo
-COPY --from=build /flectron/build/tests/flectron-piday /root/flectron-piday
-COPY --from=build /flectron/build/tests/flectron-terrain /root/flectron-terrain
+COPY --from=build /flectron/build/examples/flectron-demo /root/flectron-demo
+COPY --from=build /flectron/build/examples/flectron-piday /root/flectron-piday
+COPY --from=build /flectron/build/examples/flectron-terrain /root/flectron-terrain
 
 WORKDIR /root
+# CMD ./flectron-piday
+# CMD ./flectron-terrain
+CMD ./flectron-demo

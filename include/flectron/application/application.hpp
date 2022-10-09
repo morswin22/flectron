@@ -47,6 +47,8 @@ namespace flectron
     }
 
     void popLayer();
+
+    size_t numLayers() const;
   };
 
   Scope<Application> createApplication(const ApplicationArguments& arguments);

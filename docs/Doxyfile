@@ -120,7 +120,8 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/include \
                          @CMAKE_CURRENT_SOURCE_DIR@/src \
-                         @CMAKE_CURRENT_BINARY_DIR@/README.md
+                         @CMAKE_CURRENT_BINARY_DIR@/README.md \
+                         @CMAKE_CURRENT_SOURCE_DIR@/docker/README.md
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.cpp \
                          *.ipp \

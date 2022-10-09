@@ -76,4 +76,9 @@ namespace flectron
     FLECTRON_LOG_INFO("Layer popped");
   }
 
+  size_t Application::numLayers() const
+  {
+    return layers.size();
+  }
+
 }

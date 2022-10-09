@@ -1,0 +1,23 @@
+function(flectron_add_executable executable_name sources display_name desciption no_console)
+  project("flectron-${executable_name}")
+  add_executable("flectron-${executable_name}" ${sources})
+  if (no_console)
+    if (WIN32)
+      set_target_properties("flectron-${executable_name}" PROPERTIES WIN32_EXECUTABLE TRUE)
+    endif()
+    target_compile_definitions("flectron-${executable_name}" PUBLIC "-DFLECTRON_NO_CONSOLE")
+  endif()
+  target_link_libraries("flectron-${executable_name}" flectron)
+  install(TARGETS "flectron-${executable_name}" RUNTIME DESTINATION bin COMPONENT flectron_${executable_name})
+  cpack_add_component(flectron_${executable_name} DISPLAY_NAME ${display_name} DESCRIPTION ${desciption} GROUP flectron_examples)
+endfunction()
+
+cpack_add_component_group(flectron_examples DISPLAY_NAME "Examples" DESCRIPTION "Flectron Examples")
+
+flectron_add_executable(demo src/demo.cpp "Demo" "Demo Application" true)
+flectron_add_executable(terrain src/terrain.cpp "Terrain Generator" "Uses the Flectron library to generate a terrain" false)
+flectron_add_executable(piday src/piday.cpp "Pi Day" "Pi Day Celebration" true)
+
+EMBED_INTO(flectron-demo "assets/*.*")
+EMBED_INTO(flectron-terrain "assets/pipes.*")
+EMBED_INTO(flectron-piday "assets/font.png")

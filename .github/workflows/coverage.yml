@@ -1,0 +1,15 @@
+on: [push]
+
+jobs:
+  coverage_report:
+    runs-on: ubuntu-latest
+    name: Coverage report
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Build flectron base image
+        run: docker build -t flectron -f ./docker/Dockerfile.base .
+      - name: Build flectron coverage image
+        run: docker build -t flectron-coverage -f ./docker/Dockerfile.coverage .
+      - name: Run flectron coverage image
+        run: docker run --rm -e "CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }}" flectron-coverage

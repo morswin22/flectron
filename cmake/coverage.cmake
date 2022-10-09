@@ -13,8 +13,8 @@ function(enable_coverage)
   
   find_program(GENHTML_PATH NAMES genhtml genhtml.perl genhtml.bat)
 
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fprofile-arcs -ftest-coverage")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fprofile-arcs -ftest-coverage" PARENT_SCOPE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage" PARENT_SCOPE)
 endfunction()
 
 function(enable_coverage_for target)
@@ -23,22 +23,25 @@ endfunction()
 
 function(add_coverage)
   set(options HTML XML)
-  set(oneValueArgs NAME EXECUTABLE)
+  set(oneValueArgs NAME EXECUTABLE SOURCE)
   set(multiValueArgs SOURCES EXCLUDES EXECUTABLE_ARGS DEPENDENCIES)
   cmake_parse_arguments(COVERAGE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  set(sources "")
-  foreach(source ${COVERAGE_SOURCES})
-    get_filename_component(source ${source} ABSOLUTE)
-    list(APPEND sources "-f ${source}")
-  endforeach()
-  list(REMOVE_DUPLICATES sources)
-  string(JOIN " " sources ${sources})
+  # TODO make sources work
+  # set(sources "")
+  # foreach(source ${COVERAGE_SOURCES})
+  #   get_filename_component(source ${source} ABSOLUTE)
+  #   list(APPEND sources "-f '${source}'") # source should be a regex https://gcovr.github.io/guide.html#id8
+  # endforeach()
+  # list(REMOVE_DUPLICATES sources)
+  # string(JOIN " " sources ${sources})
+  get_filename_component(source ${COVERAGE_SOURCE} ABSOLUTE)
+  set(sources "-r ${source}")
 
   set(excludes "")
-  foreach(excludes ${COVERAGE_EXCLUDES})
+  foreach(exclude ${COVERAGE_EXCLUDES})
     get_filename_component(exclude ${exclude} ABSOLUTE)
-    list(APPEND excludes "-e ${exclude}")
+    list(APPEND excludes "-e '${exclude}'")
   endforeach()
   list(REMOVE_DUPLICATES excludes)
   string(JOIN " " excludes ${excludes})
@@ -51,7 +54,7 @@ function(add_coverage)
     add_custom_target(${COVERAGE_NAME}-html
       COMMAND ${COVERAGE_EXECUTABLE} ${COVERAGE_EXECUTABLE_ARGS}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/${COVERAGE_NAME}-html
-      COMMAND ${GCOVR_PATH} --html ${COVERAGE_NAME}-html/index.html --html-details ${sources} ${excludes} --object-directory=${CMAKE_CURRENT_BINARY_DIR}
+      COMMAND ${GCOVR_PATH} --html ${COVERAGE_NAME}-html/index.html --html-details -r /flectron ${excludes} --object-directory=${CMAKE_CURRENT_BINARY_DIR}
 
       BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/${COVERAGE_NAME}-html/index.html
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -62,25 +65,25 @@ function(add_coverage)
 
     add_custom_command(TARGET ${COVERAGE_NAME}-html POST_BUILD
       COMMAND ;
-      COMMENT "Open ./${COVERAGE_NAME}-html/index.html in your browser to view the coverage report."
+      COMMENT "Open ${CMAKE_CURRENT_BINARY_DIR}/${COVERAGE_NAME}-html/index.html in your browser to view the coverage report."
     )
   endif()
 
   if (COVERAGE_XML)
-  add_custom_target(${COVERAGE_NAME}-xml
-    COMMAND ${COVERAGE_EXECUTABLE} ${COVERAGE_EXECUTABLE_ARGS}
-    COMMAND ${GCOVR_PATH} --xml ${COVERAGE_NAME}.xml ${sources} ${excludes} --object-directory=${CMAKE_CURRENT_BINARY_DIR}
+    add_custom_target(${COVERAGE_NAME}-xml
+      COMMAND ${COVERAGE_EXECUTABLE} ${COVERAGE_EXECUTABLE_ARGS}
+      COMMAND ${GCOVR_PATH} --xml ${COVERAGE_NAME}.xml -r /flectron ${excludes} --object-directory=${CMAKE_CURRENT_BINARY_DIR}
 
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/${COVERAGE_NAME}.xml
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${COVERAGE_DEPENDENCIES}
-    VERBATIM
-    COMMENT "Running gcovr to produce XML code coverage report."
-  )
+      BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/${COVERAGE_NAME}.xml
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      DEPENDS ${COVERAGE_DEPENDENCIES}
+      VERBATIM
+      COMMENT "Running gcovr to produce XML code coverage report."
+    )
 
-  add_custom_command(TARGET ${COVERAGE_NAME}-html POST_BUILD
-    COMMAND ;
-    COMMENT "Upload ./${COVERAGE_NAME}.xml to codecov.io to view the coverage report."
-  )
+    add_custom_command(TARGET ${COVERAGE_NAME}-xml POST_BUILD
+      COMMAND ;
+      COMMENT "Upload ${CMAKE_CURRENT_BINARY_DIR}/${COVERAGE_NAME}.xml to codecov.io to view the coverage report."
+    )
   endif()
 endfunction()

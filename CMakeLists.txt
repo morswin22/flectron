@@ -88,6 +88,7 @@ if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
 endif()
 
 option(FLECTRON_BUILD_TESTS "Build flectron tests" ${FLECTRON_STANDALONE})
+option(FLECTRON_BUILD_EXAMPLES "Build flectron examples" ${FLECTRON_STANDALONE})
 option(FLECTRON_BUILD_DOCS "Build flectron documentation" ON)
 option(FLECTRON_INSTALL "Install the flectron library" ON)
 option(FLECTRON_COVERAGE "Enable coverage reporting" OFF)
@@ -191,25 +192,26 @@ if(FLECTRON_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
 
-if (FLECTRON_COVERAGE)
-  if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-    enable_coverage()
-    enable_coverage_for(flectron)
-    enable_coverage_for(flectron-demo)
-    
-    add_coverage(
-      NAME flectron-demo-coverage
-      EXECUTABLE flectron-demo
-      DEPENDENCIES 
-        flectron
-        flectron-demo
-      SOURCES
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/*"
-        "${CMAKE_CURRENT_SOURCE_DIR}/include/*"
-        "${CMAKE_CURRENT_BINARY_DIR}/embed/*"
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/src/demo.cpp"
-      XML ON
-      HTML ON
-    )
-  endif()
+if(FLECTRON_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
+
+# this results in "No tests found"
+if (FLECTRON_COVERAGE AND NOT MSVC)
+  enable_coverage()
+  enable_coverage_for(flectron)
+  enable_coverage_for(flectron-tests)
+  enable_coverage_for(flectron-tests-main)
+
+  add_coverage(
+    NAME flectron-tests-coverage
+    EXECUTABLE flectron-tests
+    DEPENDENCIES 
+      flectron
+      flectron-tests
+      flectron-tests-main
+    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}
+    XML ON
+    HTML ON
+  )
 endif()

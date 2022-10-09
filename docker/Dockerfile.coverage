@@ -3,12 +3,18 @@ FROM flectron:latest
 RUN curl -Os https://uploader.codecov.io/latest/linux/codecov && \
     chmod +x codecov
 
-COPY . /flectron
+# when testing with local changes:
+# WORKDIR /flectron/build
+# RUN cmake -D CMAKE_BUILD_TYPE=Debug -D FLECTRON_COVERAGE=On -D FLECTRON_HEADLESS_TESTS=On /flectron
+# RUN cmake --build . --config Debug -- -j"$(nproc)"
+# COPY . /flectron
 
 WORKDIR /flectron/build
-RUN cmake -D CMAKE_BUILD_TYPE=Debug -D FLECTRON_COVERAGE=On /flectron
+RUN cmake -D CMAKE_BUILD_TYPE=Debug -D FLECTRON_COVERAGE=On -D FLECTRON_HEADLESS_TESTS=On /flectron
 RUN cmake --build . --config Debug -- -j"$(nproc)"
 
-# CMD cmake --build . --config Debug --target flectron-demo-coverage-html
-CMD cmake --build . --config Debug --target flectron-demo-coverage-xml && \
-    /codecov -f ./flectron-demo-coverage.xml
+# for generating html coverage report:
+# CMD cmake --build . --config Debug --target flectron-tests-coverage-
+
+CMD cmake --build . --config Debug --target flectron-tests-coverage-xml && \
+    /codecov -f ./flectron-tests-coverage.xml 

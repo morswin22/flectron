@@ -1,19 +1,16 @@
 FROM flectron:latest
 
 WORKDIR /flectron/build
+
+# when running with local changes:
+# RUN cmake -D CMAKE_BUILD_TYPE=Debug /flectron
+# RUN cmake --build . --config Debug -- -j"$(nproc)"
+# COPY . /flectron
+
 RUN cmake -D CMAKE_BUILD_TYPE=Debug /flectron
 RUN cmake --build . --config Debug -- -j"$(nproc)"
-# RUN cmake -D CMAKE_BUILD_TYPE=Release /flectron
-# RUN cmake --build . --config Release -- -j"$(nproc)"
 
-COPY . /flectron
-
-RUN cmake -D CMAKE_BUILD_TYPE=Debug /flectron
-RUN cmake --build . --config Debug -- -j"$(nproc)"
-# RUN cmake -D CMAKE_BUILD_TYPE=Release /flectron
-# RUN cmake --build . --config Release -- -j"$(nproc)"
-
-# CMD cmake --build . --config Debug --target flectron-demo-coverage-html
-
-WORKDIR /flectron/build/tests/
+WORKDIR /flectron/build/examples/
+# CMD ./flectron-piday
+# CMD ./flectron-terrain
 CMD ./flectron-demo

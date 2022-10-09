@@ -1,0 +1,15 @@
+on: [pull_request]
+
+jobs:
+  coverage_report:
+    runs-on: ubuntu-latest
+    name: Tests
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Build flectron base image
+        run: docker build -t flectron -f ./docker/Dockerfile.base .
+      - name: Build flectron tests image
+        run: docker build -t flectron-tests -f ./docker/Dockerfile.tests .
+      - name: Run flectron tests image
+        run: docker run --rm flectron-tests

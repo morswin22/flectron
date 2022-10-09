@@ -1,0 +1,14 @@
+FROM flectron:latest
+
+# when testing with local changes:
+# WORKDIR /flectron/build
+# RUN cmake -D CMAKE_BUILD_TYPE=Debug -D FLECTRON_HEADLESS_TESTS=On /flectron
+# RUN cmake --build . --config Debug -- -j"$(nproc)"
+# COPY . /flectron
+
+WORKDIR /flectron/build
+RUN cmake -D CMAKE_BUILD_TYPE=Debug -D FLECTRON_HEADLESS_TESTS=On /flectron
+RUN cmake --build . --config Debug -- -j"$(nproc)"
+
+WORKDIR /flectron/build/tests
+CMD ./flectron-tests
